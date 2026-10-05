@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows;
 using CouchLink.Core.Diagnostics;
 
@@ -64,9 +65,31 @@ internal static class CrashHandler
             saveError = e.Message;
         }
 
-        CrashDialog.ShowAndWait(Heading, path, saveError);
-        if (path is not null)
-            AppServices.CrashReports.MarkShown(path);
+        try
+        {
+            CrashDialog.ShowAndWait(Heading, path, saveError);
+            if (path is not null)
+                AppServices.CrashReports.MarkShown(path);
+        }
+        finally
+        {
+            Terminate();
+        }
+    }
+
+    /// <summary>
+    /// Exits with code 1. Environment.Exit runs ProcessExit handlers that can wait on a
+    /// dispatcher blocked by a second crash, so a watchdog kills the process if it lingers.
+    /// </summary>
+    private static void Terminate()
+    {
+        var watchdog = new Thread(() =>
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(3));
+            Process.GetCurrentProcess().Kill();
+        })
+        { IsBackground = true };
+        watchdog.Start();
         Environment.Exit(1);
     }
 

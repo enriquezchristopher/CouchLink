@@ -39,7 +39,7 @@ public partial class App : Application
         base.OnExit(e);
     }
 
-    /// <summary>Deliberate crashes for verifying crash reports: --crash-test=ui|background|double|startup.</summary>
+    /// <summary>Deliberate crashes for verifying crash reports: --crash-test=ui|background|double|bg-then-ui|startup.</summary>
     private static void RunCrashTest(string kind)
     {
         switch (kind)
@@ -48,6 +48,20 @@ public partial class App : Application
                 throw new InvalidOperationException("Crash test: UI thread");
             case "background":
                 new Thread(() => throw new InvalidOperationException("Crash test: background thread")).Start();
+                break;
+            case "bg-then-ui":
+                new Thread(() =>
+                {
+                    Thread.Sleep(200);
+                    throw new InvalidOperationException("Crash test: bg then ui (background)");
+                }).Start();
+                var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
+                timer.Tick += (_, _) =>
+                {
+                    timer.Stop();
+                    throw new InvalidOperationException("Crash test: bg then ui (UI thread)");
+                };
+                timer.Start();
                 break;
             case "double":
                 new Thread(() => throw new InvalidOperationException("Crash test: double A")).Start();
