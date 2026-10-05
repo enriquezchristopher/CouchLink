@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace CouchLink.Core.Diagnostics;
 
 /// <summary>
@@ -21,6 +23,24 @@ public sealed class CrashReportStore
 
     public string PrimaryDirectory { get; }
 
+    /// <summary>The folder to show the user: the primary one if it exists or can be created, otherwise the fallback.</summary>
+    public string ReportsDirectory()
+    {
+        foreach (var directory in new[] { PrimaryDirectory, _fallback })
+        {
+            try
+            {
+                Directory.CreateDirectory(directory);
+                return directory;
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                // Try the next one.
+            }
+        }
+        return PrimaryDirectory;
+    }
+
     public static CrashReportStore Default() => new(
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CouchLink", "CrashReports"),
         Path.Combine(Path.GetTempPath(), "CouchLink", "CrashReports"));
@@ -28,7 +48,7 @@ public sealed class CrashReportStore
     /// <summary>Writes the report and returns its full path. Throws IOException only if both folders fail.</summary>
     public string Save(string content, DateTime localNow)
     {
-        var name = $"couchlink-crash-{localNow:yyyyMMdd-HHmmss}";
+        var name = "couchlink-crash-" + localNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
         Exception? firstError = null;
         foreach (var directory in new[] { PrimaryDirectory, _fallback })
         {
@@ -37,7 +57,14 @@ public sealed class CrashReportStore
                 Directory.CreateDirectory(directory);
                 var path = UniquePath(directory, name);
                 File.WriteAllText(path, content);
-                Prune(directory);
+                try
+                {
+                    Prune(directory);
+                }
+                catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+                {
+                    // The report is saved; a locked old report is not a save failure.
+                }
                 return path;
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)

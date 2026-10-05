@@ -1,3 +1,4 @@
+using System.Globalization;
 using CouchLink.Core.Diagnostics;
 
 namespace CouchLink.Core.Tests;
@@ -106,5 +107,50 @@ public sealed class CrashReportStoreTests : IDisposable
         Assert.Equal(
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CouchLink", "CrashReports"),
             store.PrimaryDirectory);
+    }
+
+    [Fact]
+    public void ReportsDirectory_is_primary_when_creatable()
+    {
+        Assert.Equal(Primary, new CrashReportStore(Primary, Fallback).ReportsDirectory());
+        Assert.True(Directory.Exists(Primary));
+    }
+
+    [Fact]
+    public void ReportsDirectory_falls_back_when_primary_is_blocked()
+    {
+        Block(Primary);
+        var dir = new CrashReportStore(Primary, Fallback).ReportsDirectory();
+        Assert.Equal(Fallback, dir);
+        Assert.True(Directory.Exists(Fallback));
+    }
+
+    [Fact]
+    public void Prune_failure_does_not_duplicate_the_report()
+    {
+        var store = new CrashReportStore(Primary, Fallback);
+        for (int i = 0; i < 20; i++)
+            store.Save($"r{i}", T0.AddMinutes(i));
+        var oldest = Directory.GetFiles(Primary, "couchlink-crash-*.txt").Order().First();
+        using var locked = new FileStream(oldest, FileMode.Open, FileAccess.Read, FileShare.None);
+
+        var path = store.Save("new", T0.AddMinutes(30));
+
+        Assert.StartsWith(Primary, path);
+        Assert.Equal("new", File.ReadAllText(path));
+        Assert.False(Directory.Exists(Fallback) && Directory.GetFiles(Fallback, "couchlink-crash-*.txt").Length > 0);
+    }
+
+    [Fact]
+    public void File_name_ignores_current_culture()
+    {
+        var old = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("th-TH");
+            var path = new CrashReportStore(Primary, Fallback).Save("x", T0);
+            Assert.Equal("couchlink-crash-20261005-194012.txt", Path.GetFileName(path));
+        }
+        finally { CultureInfo.CurrentCulture = old; }
     }
 }

@@ -54,4 +54,23 @@ public class RedactorTests
         Assert.DoesNotContain(Environment.MachineName, redacted, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(Environment.UserName, redacted, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void Names_match_only_at_word_boundaries()
+    {
+        var r = new Redactor([("User", "<user>"), ("HOST", "<host>")]);
+        Assert.Equal(@"C:\Users\<user>\x", r.Redact(@"C:\Users\User\x"));
+        Assert.Equal("HostInputService", r.Redact("HostInputService"));
+        Assert.Equal("connect to <host> failed", r.Redact("connect to host failed"));
+        Assert.Equal("<host>.corp.local", r.Redact("HOST.corp.local"));
+    }
+
+    [Theory]
+    [InlineData("Version=10.0.0.0, Culture=neutral")]
+    [InlineData("version 1.2.3.4")]
+    [InlineData("built v1.22.0.0")]
+    public void Four_part_versions_are_not_ips(string input)
+    {
+        Assert.Equal(input, R.Redact(input));
+    }
 }

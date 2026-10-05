@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace CouchLink.Core.Diagnostics;
 
 /// <summary>
@@ -31,7 +33,7 @@ public sealed class FileLog
 
     public void Write(string message)
     {
-        var line = $"{_time.GetLocalNow():yyyy-MM-dd HH:mm:ss.fff} {message}";
+        var line = $"{_time.GetLocalNow().ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)} {message}";
         lock (_gate)
         {
             _tail.Enqueue(line);

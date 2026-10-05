@@ -11,8 +11,8 @@ public sealed class Redactor
     private const string IpPlaceholder = "<ip>";
 
     private static readonly Regex Ipv4 = new(
-        @"(?<!\d)(?<!\d\.)(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?!\.?\d)",
-        RegexOptions.Compiled);
+        @"(?<!\d)(?<!\d\.)(?<!version[= ])(?<!v)(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?!\.?\d)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     // Candidate IPv6; only replaced when it has "::" or all 7 colons, so times like 19:40:12 survive.
     private static readonly Regex Ipv6Candidate = new(
@@ -25,12 +25,15 @@ public sealed class Redactor
     {
         _names = names
             .Where(n => n.Value.Length >= 2)
-            .Select(n => (new Regex(Regex.Escape(n.Value), RegexOptions.IgnoreCase), n.Placeholder))
+            .Select(n => (new Regex(@"(?<![\p{L}\p{N}])" + Regex.Escape(n.Value) + @"(?![\p{L}\p{N}])", RegexOptions.IgnoreCase), n.Placeholder))
             .ToArray();
     }
 
     public static Redactor ForThisMachine() =>
-        new([(Environment.MachineName, "<host>"), (Environment.UserName, "<user>")]);
+        new([
+            (Environment.MachineName, "<host>"),
+            (Environment.UserName, "<user>"),
+            (Path.GetFileName(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile).TrimEnd('\\', '/')), "<user>")]);
 
     public string Redact(string text)
     {
