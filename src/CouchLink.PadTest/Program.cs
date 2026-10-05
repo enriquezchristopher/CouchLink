@@ -2,7 +2,12 @@ using CouchLink.Core.Input;
 using CouchLink.Core.Pads;
 using CouchLink.Pads;
 
-int count = args.Length > 0 && int.TryParse(args[0], out var n) ? Math.Clamp(n, 1, 9) : 9;
+bool check = args.Length > 0 && args[0].Equals("check", StringComparison.OrdinalIgnoreCase);
+var countArg = check ? args.Skip(1).FirstOrDefault() : args.FirstOrDefault();
+int count = int.TryParse(countArg, out var n) ? Math.Clamp(n, 1, 9) : 9;
+
+if (check)
+    return CouchLink.PadTest.CheckMode.Run(count);
 
 if (!ViGEmPadFactory.TryCreate(out var factory, out var error))
 {
