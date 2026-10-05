@@ -1,7 +1,7 @@
 <Window x:Class="CouchLink.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="CouchLink (dev)" Width="460" Height="320">
+        Title="CouchLink (dev)" Width="460" Height="380">
     <StackPanel Margin="16">
         <Button x:Name="HostButton" Content="Host (create pads)" Height="40" Click="OnHost"/>
         <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
@@ -12,5 +12,7 @@
         </StackPanel>
         <Button x:Name="JoinButton" Content="Join (send input)" Height="40" Margin="0,8,0,0" Click="OnJoin"/>
         <TextBlock x:Name="StatusText" Margin="0,16,0,0" TextWrapping="Wrap" FontFamily="Consolas"/>
+        <Button x:Name="CrashReportsButton" Content="Crash reports" Height="28" Margin="0,16,0,0"
+                HorizontalAlignment="Left" Padding="12,0" Click="OnOpenCrashReports"/>
     </StackPanel>
 </Window>

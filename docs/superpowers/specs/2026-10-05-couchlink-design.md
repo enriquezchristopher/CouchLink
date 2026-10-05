@@ -289,7 +289,8 @@ The folder keeps the newest 20 reports; older ones are deleted.
 - "CouchLink crashed. A report was saved to:" followed by the **full
   file path**.
 - Buttons: **Open folder** (opens Explorer with the file selected),
-  **Copy path**, **Report on GitHub** (opens the new-issue page in the
+  **Copy path**, **Report on GitHub** (opens
+  `https://github.com/enriquezchristopher/CouchLink/issues/new` in the
   browser), **Close**.
 - A short line: "Please attach this file to a new issue so we can fix it."
 

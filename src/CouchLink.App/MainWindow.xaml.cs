@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.Windows;
 using System.Windows.Interop;
@@ -35,6 +37,8 @@ public partial class MainWindow : Window
             return;
         }
         HostButton.IsEnabled = JoinButton.IsEnabled = false;
+        AppServices.DescribeMode = () => $"Host (virtual pads: {_host?.PadCount ?? 0})";
+        AppServices.Log.Write("Hosting started");
     }
 
     private void OnJoin(object sender, RoutedEventArgs e)
@@ -54,6 +58,22 @@ public partial class MainWindow : Window
         var inputSender = new InputSender(new IPEndPoint(ip, Ports.Input), (byte)(int)SlotBox.SelectedItem);
         _client = new ClientInputLoop(_mapper, inputSender);
         HostButton.IsEnabled = JoinButton.IsEnabled = false;
+        var slot = (int)SlotBox.SelectedItem;
+        AppServices.DescribeMode = () => $"Client (slot P{slot})";
+        AppServices.Log.Write($"Joined as P{slot}");
+    }
+
+    private void OnOpenCrashReports(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var directory = AppServices.CrashReports.ReportsDirectory();
+            Process.Start("explorer.exe", $"\"{directory}\"");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Could not open the crash reports folder:\n{ex.Message}", "CouchLink");
+        }
     }
 
     private void UpdateStatus()

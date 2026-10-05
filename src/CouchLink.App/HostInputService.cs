@@ -40,7 +40,11 @@ internal sealed class HostInputService : IDisposable
         }
     }
 
-    private void OnError(Exception e) => LastError = $"{e.GetType().Name}: {e.Message}";
+    private void OnError(Exception e)
+    {
+        LastError = $"{e.GetType().Name}: {e.Message}";
+        AppServices.Log.Write($"Pad error: {e}");
+    }
 
     public static bool TryStart(out HostInputService? service, out string? error)
     {
