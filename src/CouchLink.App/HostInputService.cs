@@ -19,11 +19,28 @@ internal sealed class HostInputService : IDisposable
         _factory = factory;
         _pads = new PadManager(factory, TimeProvider.System);
         _receiver = new InputReceiver(Ports.Input);
-        _receiveLoop = _receiver.RunAsync(p => _pads.Handle(p), _cts.Token);
-        _staleTimer = new Timer(_ => _pads.ReleaseStale(), null, 100, 100);
+        _receiveLoop = _receiver.RunAsync(p => _pads.Handle(p), _cts.Token, OnError);
+        _staleTimer = new Timer(_ => ReleaseStale(), null, 100, 100);
     }
 
     public int PadCount => _pads.Count;
+
+    /// <summary>Most recent pad error, shown to the host instead of failing silently.</summary>
+    public string? LastError { get; private set; }
+
+    private void ReleaseStale()
+    {
+        try
+        {
+            _pads.ReleaseStale();
+        }
+        catch (Exception e)
+        {
+            OnError(e); // an unhandled exception here would kill the host process
+        }
+    }
+
+    private void OnError(Exception e) => LastError = $"{e.GetType().Name}: {e.Message}";
 
     public static bool TryStart(out HostInputService? service, out string? error)
     {

@@ -13,7 +13,12 @@ public sealed class InputReceiver : IDisposable
 
     public int LocalPort => ((IPEndPoint)_udp.Client.LocalEndPoint!).Port;
 
-    public async Task RunAsync(Action<InputPacket> onPacket, CancellationToken ct)
+    /// <summary>
+    /// Receives until cancelled. An exception from <paramref name="onPacket"/> (e.g. a
+    /// virtual pad failing to plug in) is reported to <paramref name="onError"/> and the
+    /// loop keeps going, so one bad packet never stops input for every player.
+    /// </summary>
+    public async Task RunAsync(Action<InputPacket> onPacket, CancellationToken ct, Action<Exception>? onError = null)
     {
         while (!ct.IsCancellationRequested)
         {
@@ -31,8 +36,16 @@ public sealed class InputReceiver : IDisposable
                 continue; // e.g. ICMP port-unreachable reset on Windows; keep listening
             }
 
-            if (InputPacket.TryParse(result.Buffer, out var packet))
+            if (!InputPacket.TryParse(result.Buffer, out var packet))
+                continue;
+            try
+            {
                 onPacket(packet);
+            }
+            catch (Exception e)
+            {
+                onError?.Invoke(e);
+            }
         }
     }
 
