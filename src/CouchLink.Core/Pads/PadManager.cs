@@ -14,6 +14,9 @@ public sealed class PadManager : IDisposable
     public const byte LastSlot = 10;
     public static readonly TimeSpan StaleAfter = TimeSpan.FromMilliseconds(500);
 
+    /// <summary>How often <see cref="ReleaseStale"/> should run; a silent pad is released within StaleAfter + CheckInterval.</summary>
+    public static readonly TimeSpan CheckInterval = TimeSpan.FromMilliseconds(25);
+
     private sealed class Entry(IVirtualPad pad)
     {
         public IVirtualPad Pad { get; } = pad;
@@ -62,7 +65,7 @@ public sealed class PadManager : IDisposable
         }
     }
 
-    /// <summary>Call periodically (e.g. every 100 ms).</summary>
+    /// <summary>Call every <see cref="CheckInterval"/>.</summary>
     public void ReleaseStale()
     {
         lock (_gate)

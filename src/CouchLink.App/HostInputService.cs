@@ -20,7 +20,7 @@ internal sealed class HostInputService : IDisposable
         _pads = new PadManager(factory, TimeProvider.System);
         _receiver = new InputReceiver(Ports.Input);
         _receiveLoop = _receiver.RunAsync(p => _pads.Handle(p), _cts.Token, OnError);
-        _staleTimer = new Timer(_ => ReleaseStale(), null, 100, 100);
+        _staleTimer = new Timer(_ => ReleaseStale(), null, PadManager.CheckInterval, PadManager.CheckInterval);
     }
 
     public int PadCount => _pads.Count;
