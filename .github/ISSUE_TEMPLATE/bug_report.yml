@@ -1,0 +1,65 @@
+name: Bug or crash report
+description: Something went wrong, or CouchLink crashed
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! If CouchLink crashed, it saved a report file and showed you where.
+        Reports live in `%LOCALAPPDATA%\CouchLink\CrashReports\` (paste that into the Explorer address bar).
+        They contain no PC names, user names, or IP addresses.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Host on PC A
+        2. Join from PC B as P2
+        3. ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: crash-report
+    attributes:
+      label: Crash report file
+      description: Drag the `couchlink-crash-YYYYMMDD-HHMMSS.txt` file into this box to attach it (leave empty if there was no crash).
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: CouchLink version
+      placeholder: e.g. 0.2.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: role
+    attributes:
+      label: Where did it happen?
+      options:
+        - Host PC
+        - Client PC
+        - PadTest
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: game
+    attributes:
+      label: Game (if any)
+      placeholder: e.g. NBA 2K22
+    validations:
+      required: false
