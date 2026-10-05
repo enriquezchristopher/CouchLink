@@ -111,6 +111,20 @@ public class InputMapperTests
     }
 
     [Fact]
+    public void SyncHeld_drops_keys_whose_key_up_was_lost()
+    {
+        // e.g. Ctrl+Alt+Del / Win+L: Ctrl's key-down arrived, its key-up never did
+        var m = NewMapper();
+        m.KeyDown(VirtualKeys.Control);
+        m.KeyDown(W);
+        m.SyncHeld(vk => vk == W); // only W is still physically down
+        var s = m.Tick(0.001);
+        Assert.Equal(PadButtons.None, s.Buttons);
+        Assert.Equal((byte)0, s.L2);
+        Assert.Equal((byte)1, s.LY);
+    }
+
+    [Fact]
     public void ReleaseAll_clears_held_keys_and_mouse_stick()
     {
         var m = NewMapper();

@@ -64,6 +64,9 @@ internal static partial class NativeMethods
     public static unsafe partial uint GetRawInputData(
         IntPtr rawInput, uint command, void* data, ref uint size, uint headerSize);
 
+    [LibraryImport("user32.dll")]
+    public static partial short GetAsyncKeyState(int virtualKey);
+
     [LibraryImport("winmm.dll")]
     public static partial uint timeBeginPeriod(uint milliseconds);
 
