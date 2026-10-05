@@ -29,12 +29,16 @@ To try virtual controllers locally, install the
 We use [Conventional Commits](https://www.conventionalcommits.org/). The type
 decides the next version number and the changelog:
 
-| Type | Use for | Version effect (before 1.0) |
+| Type | Use for | Version effect |
 |---|---|---|
-| `feat:` | new user-facing feature | minor (0.1.0 -> 0.2.0) |
-| `fix:` | bug fix | patch (0.1.0 -> 0.1.1) |
+| `feat!:` or a `BREAKING CHANGE:` footer | incompatible change | major (1.0.0 -> 2.0.0) |
+| `feat:` | new user-facing feature | minor (1.0.0 -> 1.1.0) |
+| `fix:` | bug fix | patch (1.0.0 -> 1.0.1) |
 | `perf:` | performance improvement | patch |
 | `docs:`, `test:`, `build:`, `ci:`, `chore:`, `refactor:` | everything else | none |
+
+All commits must be **signed** (`main` requires signed commits). See
+[GitHub's guide to signing commits](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits).
 
 Add a scope when it helps, e.g. `feat(core): ...`, `fix(app): ...`.
 

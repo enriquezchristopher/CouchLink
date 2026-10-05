@@ -10,7 +10,8 @@ network, with **no accounts, no cloud, and no internet** required.
 
 > **Status: early development.** The virtual-controller input path works
 > (one virtual DualShock 4 per joining PC). Screen and audio streaming, the
-> lobby, and the join/approval flow are being built. See
+> lobby, and the join/approval flow are being built. See the
+> [roadmap](ROADMAP.md) and
 > [the design spec](docs/superpowers/specs/2026-10-05-couchlink-design.md).
 
 ## Target setup
