@@ -16,3 +16,8 @@ Host GPU / Windows build: <fill in> / Windows 10
 Notes:
 - 2K14 picked up only 1 of 9 virtual DS4 pads. Reported limit for 2K14 on PC: 4 XInput (Xbox) + 2 DirectInput controllers (https://steamcommunity.com/groups/morethan4localmultiplayer/discussions/0/135514823815392980). DS4 counts as DirectInput.
 - 2K22: Steam detected 9 controllers; in-game controller-select count not checked yet.
+
+## Decision (2026-10-05)
+Gate accepted by the project owner on the basis that Steam detects all 9
+virtual controllers and `PadTest check 9` passes. In-game 2K22 count is not
+required. Known limitation: 2K14 uses only 1 of the virtual DS4 pads.
