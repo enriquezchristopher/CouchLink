@@ -65,8 +65,15 @@ public partial class MainWindow : Window
 
     private void OnOpenCrashReports(object sender, RoutedEventArgs e)
     {
-        Directory.CreateDirectory(AppServices.CrashReports.PrimaryDirectory);
-        Process.Start("explorer.exe", $"\"{AppServices.CrashReports.PrimaryDirectory}\"");
+        try
+        {
+            var directory = AppServices.CrashReports.ReportsDirectory();
+            Process.Start("explorer.exe", $"\"{directory}\"");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Could not open the crash reports folder:\n{ex.Message}", "CouchLink");
+        }
     }
 
     private void UpdateStatus()
