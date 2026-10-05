@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.1.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.0.0...v1.1.0) (2026-10-05)
+
+
+### Features
+
+* **app:** crash reports with dialog, pending-report notice and crash tests ([447298a](https://github.com/enriquezchristopher/CouchLink/commit/447298af47022226f3f37d7b4f1b53b7d8285ba5))
+* **core:** crash report builder with redacted exception and log tail ([4057b0b](https://github.com/enriquezchristopher/CouchLink/commit/4057b0b4fbe4be5be2ffc778a2ec00100378f6f5))
+* **core:** crash report store with fallback, pruning and shown tracking ([c4e206f](https://github.com/enriquezchristopher/CouchLink/commit/c4e206f7f4e141e009cdb5fdbae788f227117399))
+* **core:** redactor for PC name, user name and IP addresses ([2b8b6ab](https://github.com/enriquezchristopher/CouchLink/commit/2b8b6ab52d6b1296d25c3d184ae6d4509ce6811c))
+* **core:** rolling file log with in-memory tail ([9ec658e](https://github.com/enriquezchristopher/CouchLink/commit/9ec658e77bd53229c6802dc300e74da78a7d49af))
+* crash reports ([#8](https://github.com/enriquezchristopher/CouchLink/issues/8)) ([f745c73](https://github.com/enriquezchristopher/CouchLink/commit/f745c731e4dacf0b0038b3ac63908982ed7c1b17))
+
+
+### Bug Fixes
+
+* **app:** make crash exit unable to hang on a second UI crash ([73b3970](https://github.com/enriquezchristopher/CouchLink/commit/73b3970efafbc3a34564540f3bfc8024381ee3de))
+* **app:** open crash reports folder safely, include fallback location ([660a0e9](https://github.com/enriquezchristopher/CouchLink/commit/660a0e94f9b1356b4e6242c57d51dd9e33849ede))
+* **core:** redact names at word boundaries, keep versions, invariant timestamps, safe prune ([80c2eb5](https://github.com/enriquezchristopher/CouchLink/commit/80c2eb5332bb9e599ba1a9ddc3bed47166749391))
+
 ## 1.0.0 (2026-10-05)
 
 
