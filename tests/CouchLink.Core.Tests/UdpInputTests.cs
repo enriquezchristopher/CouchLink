@@ -87,4 +87,26 @@ public class UdpInputTests
         using var b = new InputSender(host, 2);
         Assert.NotEqual(a.Epoch, b.Epoch);
     }
+
+    [Fact]
+    public void TryCreate_reports_a_port_that_is_already_in_use()
+    {
+        using var taken = new UdpClient(new IPEndPoint(IPAddress.Any, 0));
+        int port = ((IPEndPoint)taken.Client.LocalEndPoint!).Port;
+
+        Assert.False(InputReceiver.TryCreate(port, out var receiver, out var error));
+        Assert.Null(receiver);
+        Assert.Equal($"UDP port {port} is already in use. Is CouchLink already hosting on this PC?", error);
+    }
+
+    [Fact]
+    public void TryCreate_opens_a_free_port()
+    {
+        Assert.True(InputReceiver.TryCreate(0, out var receiver, out var error));
+        using (receiver)
+        {
+            Assert.Null(error);
+            Assert.NotEqual(0, receiver!.LocalPort);
+        }
+    }
 }

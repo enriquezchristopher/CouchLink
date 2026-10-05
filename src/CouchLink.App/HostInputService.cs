@@ -14,11 +14,11 @@ internal sealed class HostInputService : IDisposable
     private readonly Task _receiveLoop;
     private readonly Timer _staleTimer;
 
-    private HostInputService(ViGEmPadFactory factory)
+    private HostInputService(InputReceiver receiver, ViGEmPadFactory factory)
     {
         _factory = factory;
         _pads = new PadManager(factory, TimeProvider.System);
-        _receiver = new InputReceiver(Ports.Input);
+        _receiver = receiver;
         _receiveLoop = _receiver.RunAsync(p => _pads.Handle(p), _cts.Token, OnError);
         _staleTimer = new Timer(_ => ReleaseStale(), null, PadManager.CheckInterval, PadManager.CheckInterval);
     }
@@ -49,9 +49,15 @@ internal sealed class HostInputService : IDisposable
     public static bool TryStart(out HostInputService? service, out string? error)
     {
         service = null;
-        if (!ViGEmPadFactory.TryCreate(out var factory, out error))
+        // Port first: it's the step most likely to fail, and nothing needs cleaning up yet.
+        if (!InputReceiver.TryCreate(Ports.Input, out var receiver, out error))
             return false;
-        service = new HostInputService(factory!);
+        if (!ViGEmPadFactory.TryCreate(out var factory, out error))
+        {
+            receiver!.Dispose();
+            return false;
+        }
+        service = new HostInputService(receiver!, factory!);
         return true;
     }
 
