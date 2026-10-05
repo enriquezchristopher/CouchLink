@@ -1,0 +1,11 @@
+<Project>
+  <!-- Single source of the version, maintained by release-please (added by the OSS setup PR). -->
+  <Import Project="$(MSBuildThisFileDirectory)eng/version.props" Condition="Exists('$(MSBuildThisFileDirectory)eng/version.props')" />
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>
