@@ -54,6 +54,16 @@ public sealed class InputMapper
         }
     }
 
+    /// <summary>
+    /// Drops held keys that are no longer physically down. Catches key-ups lost to
+    /// a secure-desktop switch (Ctrl+Alt+Del, Win+L, UAC) where no deactivate fires.
+    /// </summary>
+    public void SyncHeld(Func<ushort, bool> isPhysicallyDown)
+    {
+        lock (_gate)
+            _held.RemoveWhere(vk => !isPhysicallyDown(vk));
+    }
+
     public PadState Tick(double dtSeconds)
     {
         lock (_gate)

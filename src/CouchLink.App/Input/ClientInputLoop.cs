@@ -8,6 +8,8 @@ namespace CouchLink.App.Input;
 /// <summary>Ticks the mapper every ~1 ms and sends state on change or every 8 ms.</summary>
 internal sealed class ClientInputLoop : IDisposable
 {
+    private static readonly TimeSpan SyncInterval = TimeSpan.FromMilliseconds(50);
+
     private readonly InputMapper _mapper;
     private readonly InputSender _sender;
     private readonly Thread _thread;
@@ -32,9 +34,15 @@ internal sealed class ClientInputLoop : IDisposable
             var policy = new SendPolicy();
             var clock = Stopwatch.StartNew();
             var lastTick = TimeSpan.Zero;
+            var lastSync = TimeSpan.Zero;
             while (_running)
             {
                 var now = clock.Elapsed;
+                if (now - lastSync >= SyncInterval)
+                {
+                    _mapper.SyncHeld(vk => (GetAsyncKeyState(vk) & 0x8000) != 0);
+                    lastSync = now;
+                }
                 var state = _mapper.Tick((now - lastTick).TotalSeconds);
                 lastTick = now;
                 if (policy.ShouldSend(state, now))
