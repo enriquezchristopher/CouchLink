@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/CouchLink.App/CouchLink.App.csproj" />
     <Project Path="src/CouchLink.Core/CouchLink.Core.csproj" />
     <Project Path="src/CouchLink.Pads/CouchLink.Pads.csproj" />
     <Project Path="src/CouchLink.PadTest/CouchLink.PadTest.csproj" />
