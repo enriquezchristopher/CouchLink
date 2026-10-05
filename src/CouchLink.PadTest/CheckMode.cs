@@ -43,11 +43,12 @@ internal static class CheckMode
                 {
                     var readers = streams.Select(s => new LatestReader(s)).ToList();
                     bool simultaneous = SimultaneousTest(pads, readers);
-                    bool oneAtATime = OneAtATimeTest(pads, readers);
-                    bool pass = simultaneous && oneAtATime;
+                    bool oneAtATime = OneAtATimeTest(pads, readers, out var deviceOfPad);
+                    bool everyAction = oneAtATime && EveryActionTest(pads, readers, deviceOfPad);
+                    bool pass = simultaneous && oneAtATime && everyAction;
                     Console.WriteLine();
                     Console.WriteLine(pass
-                        ? $"PASS: all {count} pads are separate controllers; no input leaked between them."
+                        ? $"PASS: all {count} pads are separate controllers, every control works on every pad, and no input leaked between them."
                         : "FAIL: see the tables above.");
                     return pass ? 0 : 1;
                 }
@@ -77,14 +78,14 @@ internal static class CheckMode
         var matches = sent.Select(s => IsolationCheck.FindExactlyOne(s, read)).ToList();
         Console.WriteLine($"  {"Pad",-4} {"Sent",-28} {"Device",-7} Result");
         for (int i = 0; i < pads.Count; i++)
-            Console.WriteLine($"  P{i + 2,-3} {Describe(sent[i]),-28} {(matches[i] is { } d ? $"#{d + 1}" : "-"),-7} {(matches[i] is null ? "FAIL" : "ok")}");
+            Console.WriteLine($"  P{i + 2,-3} {$"{sent[i].Buttons}, LX={sent[i].LX}",-28}{(matches[i] is { } d ? $"#{d + 1}" : "-"),-7} {(matches[i] is null ? "FAIL" : "ok")}");
 
         bool pass = IsolationCheck.AllDistinct(matches);
         Console.WriteLine(pass ? "  Test 1 PASS" : "  Test 1 FAIL");
         return pass;
     }
 
-    private static bool OneAtATimeTest(List<IVirtualPad> pads, List<LatestReader> readers)
+    private static bool OneAtATimeTest(List<IVirtualPad> pads, List<LatestReader> readers, out List<int?> deviceOfPad)
     {
         Console.WriteLine();
         Console.WriteLine("Test 2: one pad presses Cross + stick right, all others neutral");
@@ -106,13 +107,55 @@ internal static class CheckMode
 
         bool pass = othersStayedNeutral && IsolationCheck.AllDistinct(matches);
         Console.WriteLine(pass ? "  Test 2 PASS" : "  Test 2 FAIL");
+        deviceOfPad = matches;
+        return pass;
+    }
+
+    private static bool EveryActionTest(List<IVirtualPad> pads, List<LatestReader> readers, List<int?> deviceOfPad)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"Test 3: every control ({ControlActions.All.Count} actions) on every pad, others stay neutral");
+        foreach (var pad in pads)
+            pad.Apply(PadState.Neutral);
+
+        bool pass = true;
+        for (int i = 0; i < pads.Count; i++)
+        {
+            var reader = readers[deviceOfPad[i]!.Value];
+            var failures = new List<string>();
+            foreach (var action in ControlActions.All)
+            {
+                pads[i].Apply(action.State);
+                var read = reader.ReadLatest();
+                if (read != action.State)
+                    failures.Add($"{action.Name} -> read {(read is { } r ? Describe(r) : "nothing")}");
+            }
+            pads[i].Apply(PadState.Neutral);
+            if (reader.ReadLatest() != PadState.Neutral)
+                failures.Add("did not return to neutral");
+
+            int othersNeutral = readers
+                .Where((_, d) => d != deviceOfPad[i])
+                .Count(r => r.ReadLatest() == PadState.Neutral);
+            if (othersNeutral != pads.Count - 1)
+                failures.Add($"only {othersNeutral}/{pads.Count - 1} other pads stayed neutral");
+
+            int ok = ControlActions.All.Count - failures.Count(f => f.Contains(" -> "));
+            Console.WriteLine($"  P{i + 2,-3} {ok}/{ControlActions.All.Count} actions ok, others neutral {othersNeutral}/{pads.Count - 1}  {(failures.Count == 0 ? "ok" : "FAIL")}");
+            foreach (var f in failures)
+                Console.WriteLine($"         {f}");
+            pass &= failures.Count == 0;
+        }
+
+        Console.WriteLine(pass ? "  Test 3 PASS" : "  Test 3 FAIL");
         return pass;
     }
 
     private static List<PadState?> ReadAll(List<LatestReader> readers) =>
         readers.Select(r => r.ReadLatest()).ToList();
 
-    private static string Describe(PadState s) => $"{s.Buttons}, LX={s.LX}";
+    private static string Describe(PadState s) =>
+        $"{s.Buttons}, LX={s.LX} LY={s.LY} RX={s.RX} RY={s.RY} L2={s.L2} R2={s.R2}";
 
     private static HashSet<string> Ds4Paths() =>
         DeviceList.Local.GetHidDevices(SonyVendorId, Ds4ProductId).Select(d => d.DevicePath).ToHashSet();

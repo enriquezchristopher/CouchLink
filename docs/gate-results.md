@@ -7,6 +7,7 @@ Host GPU / Windows build: <fill in> / Windows 10
 |---|---|---|
 | Windows sees 9 pads (9 "HID-compliant game controller" devices appear while PadTest runs, 0 after it exits) | pass (checked automatically 2026-10-05) | (same) |
 | `PadTest check 9`: 9 separate DS4 devices, each pad's input reaches exactly one device, no leaks (game-free) | pass (2026-10-05) | (same) |
+| `PadTest check 9` Test 3: all 32 controls (every button, 8 D-pad directions, both ends of all 4 stick axes, L2/R2 half + full) read back exactly on each of the 9 pads, other pads stay neutral (game-free) | pass (2026-10-05) | (same) |
 | joy.cpl: pressing a pad's number key moves only that pad's X axis + button | <pass/fail> | (same) |
 | Controller select shows 9 pad icons + keyboard | **fail: only 1 pad icon (labelled P4)** | <pass/fail> |
 | Each pad key moves exactly one player | <pass/fail> | <pass/fail> |
