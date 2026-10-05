@@ -41,6 +41,9 @@ Goals:
 - Hardware: wired **gigabit** switch, **Windows 10** on all PCs; every PC
   that may host or join has CouchLink and the ViGEmBus driver installed.
 - Language: **C#**.
+- **Crash reports:** on a crash the app writes a report file and tells
+  the user exactly where it is, so they can attach it to a GitHub issue
+  by hand (section 7.1).
 
 ### Explicitly out of scope
 - Different players seeing different screens (each player gets the same
@@ -252,7 +255,55 @@ Edits are kept in memory only and reset when CouchLink closes, by design.
 | Host lost | Client "Reconnecting..." 10 s, then back to list |
 
 **Diagnostics:** F2 overlay on the client: fps, bitrate, packet loss,
-FEC repairs, estimated latency. Log file in `%TEMP%`.
+FEC repairs, estimated latency. Log file in
+`%LOCALAPPDATA%\CouchLink\Logs\couchlink.log` (rolling, last 5 files).
+
+### 7.1 Crash reports
+
+When CouchLink crashes, it writes a **crash report file** that the user
+uploads manually to the project's GitHub issue tracker. The report is
+the starting point for diagnosing the problem.
+
+**When a report is written:** any unhandled exception on any thread
+(UI dispatcher, background threads, unobserved tasks). The report is
+written first, then the user is told, then the app exits.
+
+**Where it is stored:** `%LOCALAPPDATA%\CouchLink\CrashReports\`, one
+file per crash, named `couchlink-crash-YYYYMMDD-HHMMSS.txt` (local time).
+Plain text, so it opens in Notepad and attaches to a GitHub issue as-is.
+The folder keeps the newest 20 reports; older ones are deleted.
+
+**Contents:**
+- CouchLink version and build, date/time, uptime.
+- Windows version, .NET version, CPU, RAM, GPU name and driver version.
+- Mode at the time (Host / Client / Lobby), player slot, number of
+  virtual pads, chosen encoder (AMF / NVENC / software), resolution and fps.
+- ViGEmBus installed and version.
+- The exception: type, message, full stack trace, all inner exceptions.
+- The last 200 lines of the log.
+- **No personal data:** no PC names, IP addresses, or Windows user
+  names. These are replaced with placeholders such as `<host>` and `<ip>`,
+  because the file is posted publicly.
+
+**Telling the user:** after the report is written, a dialog shows:
+- "CouchLink crashed. A report was saved to:" followed by the **full
+  file path**.
+- Buttons: **Open folder** (opens Explorer with the file selected),
+  **Copy path**, **Report on GitHub** (opens the new-issue page in the
+  browser), **Close**.
+- A short line: "Please attach this file to a new issue so we can fix it."
+
+**If the dialog can't be shown** (e.g. the crash broke the UI thread):
+the file is still written. On the next start, CouchLink shows the same
+dialog for any report it hasn't shown yet ("CouchLink crashed last
+time...").
+
+**Manual access:** a **Crash reports** link in ⚙ Settings opens the
+folder at any time, so users can find older reports.
+
+**Never crash while reporting:** if writing the report fails (disk full,
+permissions), the app falls back to `%TEMP%\CouchLink\CrashReports\`,
+and if that fails too it still shows the dialog with the error text.
 
 ## 8. Install & Packaging
 
