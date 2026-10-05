@@ -59,7 +59,8 @@ public partial class MainWindow : Window
     private void UpdateStatus()
     {
         if (_host is not null)
-            StatusText.Text = $"Hosting. Virtual pads: {_host.PadCount}";
+            StatusText.Text = $"Hosting. Virtual pads: {_host.PadCount}" +
+                (_host.LastError is { } err ? $"\nPad error: {err}" : "");
         else if (_client is not null)
         {
             var s = _client.LastSent;

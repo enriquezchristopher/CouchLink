@@ -47,6 +47,39 @@ public class UdpInputTests
     }
 
     [Fact]
+    public async Task Handler_exception_does_not_stop_the_receive_loop()
+    {
+        using var receiver = new InputReceiver(port: 0);
+        var received = Channel.CreateUnbounded<InputPacket>();
+        var errors = Channel.CreateUnbounded<Exception>();
+        using var cts = new CancellationTokenSource();
+        int calls = 0;
+        var loop = receiver.RunAsync(
+            p =>
+            {
+                if (Interlocked.Increment(ref calls) == 1)
+                    throw new InvalidOperationException("pad plug-in failed");
+                received.Writer.TryWrite(p);
+            },
+            cts.Token,
+            e => errors.Writer.TryWrite(e));
+
+        using var sender = new InputSender(new IPEndPoint(IPAddress.Loopback, receiver.LocalPort), slot: 2);
+        sender.Send(PadState.Neutral);
+        using var wait = new CancellationTokenSource(Timeout);
+        var error = await errors.Reader.ReadAsync(wait.Token);
+        sender.Send(PadState.Neutral with { Buttons = PadButtons.Cross });
+
+        var second = await received.Reader.ReadAsync(wait.Token);
+        Assert.IsType<InvalidOperationException>(error);
+        Assert.Equal(PadButtons.Cross, second.State.Buttons);
+        Assert.False(loop.IsCompleted);
+
+        cts.Cancel();
+        await loop.WaitAsync(Timeout);
+    }
+
+    [Fact]
     public void Each_sender_gets_its_own_epoch()
     {
         var host = new IPEndPoint(IPAddress.Loopback, 9);
