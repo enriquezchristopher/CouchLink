@@ -36,10 +36,10 @@ Goals:
 - **Customers start hosting themselves**; friends pick the host from a LAN
   list; the **host approves** each join.
 - Key layout: **default + editable** per player; edits are **not
-  persisted** across reboots (diskless clients reset; that is fine).
+  persisted**; they last until CouchLink closes (that is fine).
 - Mouse movement drives the **right stick**; mouse buttons are bindable.
-- Hardware: wired **gigabit** switch, **Windows 10** on all PCs, all PCs
-  boot the **diskless image** (CouchLink + driver installed once).
+- Hardware: wired **gigabit** switch, **Windows 10** on all PCs; every PC
+  that may host or join has CouchLink and the ViGEmBus driver installed.
 - Language: **C#**.
 
 ### Explicitly out of scope
@@ -59,8 +59,8 @@ Goals:
   cards must also work.
 - **Clients:** cafe PCs, Windows 10, keyboard + mouse, any GPU.
 - **Network:** wired gigabit switch.
-- **Deployment:** all PCs boot the diskless image; CouchLink, its FFmpeg
-  DLLs, firewall rules, and the ViGEmBus driver live in that image.
+- **Deployment:** CouchLink (with its FFmpeg DLLs), its firewall rules,
+  and the ViGEmBus driver are installed on each PC.
 - **Game setting:** 2K runs in **borderless windowed** mode (reliable
   capture and the approval popup can show over it).
 
@@ -237,7 +237,7 @@ driver not installed".
 ### 6.7 Controls editor
 ⚙ Controls lists every DS4 control with its key: click a control, press a
 key to rebind. **Reset to default** and the mouse sensitivity slider.
-Edits are kept locally and lost on reboot (diskless), by design.
+Edits are kept in memory only and reset when CouchLink closes, by design.
 
 ## 7. Error Handling & Diagnostics
 
@@ -252,15 +252,14 @@ Edits are kept locally and lost on reboot (diskless), by design.
 | Host lost | Client "Reconnecting..." 10 s, then back to list |
 
 **Diagnostics:** F2 overlay on the client: fps, bitrate, packet loss,
-FEC repairs, estimated latency. Log file in `%TEMP%` (wiped on reboot;
-acceptable).
+FEC repairs, estimated latency. Log file in `%TEMP%`.
 
 ## 8. Install & Packaging
 
 - Self-contained .NET 10 publish folder (no runtime install), FFmpeg DLLs
   bundled.
-- Installed once into the diskless image with: ViGEmBus driver, Windows
-  Firewall rules for the ports in section 3.
+- Installed on each PC together with: ViGEmBus driver, Windows Firewall
+  rules for the ports in section 3.
 - FFmpeg build: must include `h264_amf`, `h264_nvenc`, and `libx264`
   (GPL build; fine for in-house use, revisit before any redistribution).
 
