@@ -29,6 +29,7 @@ public sealed class ScreenVideoSource : IEncodedVideoSource
     private TimeSpan? _lastSent;
     private bool _keyframeOwed;
     private TimeSpan _retryAt;
+    private TimeSpan? _imageAt; // when the oldest unsent screen change was captured
 
     public ScreenVideoSource(
         IScreenCapture capture,
@@ -93,6 +94,8 @@ public sealed class ScreenVideoSource : IEncodedVideoSource
                 Paused = false;
                 _keyframeOwed = true;
             }
+            if (status == CaptureStatus.NewFrame)
+                _imageAt ??= Now;
             if (Now < due)
                 return false; // LastFrame holds the newest image; the slot sends whatever is newest then
         }
@@ -110,7 +113,9 @@ public sealed class ScreenVideoSource : IEncodedVideoSource
             return false;
         if (encoded.Keyframe)
             _keyframeOwed = false;
-        frame = encoded with { Paused = Paused };
+        var imageAt = _imageAt is { } at && at <= slot ? at : slot; // a repeat is as old as its slot
+        frame = encoded with { Paused = Paused, CaptureToEncoded = Now - imageAt };
+        _imageAt = null;
         // Stay on the ideal schedule, so neither encoding time nor late waits slow the rate;
         // start a new one only when a whole interval behind, rather than burst to catch up.
         _lastSent = slot - due < _interval ? due : slot;

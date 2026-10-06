@@ -27,7 +27,9 @@ internal sealed class HostInputService : IDisposable
         _pads = new PadManager(factory, TimeProvider.System);
         _receiver = receiver;
         _video = HostVideo.Start(settings, OnVideoError);
-        _receiveLoop = _receiver.RunAsync(OnInput, _cts.Token, OnError, (_, _) => _video.RequestKeyframe());
+        _receiveLoop = _receiver.RunAsync(OnInput, _cts.Token, OnError,
+            onKeyframeRequest: (_, _) => _video.RequestKeyframe(),
+            onTimingPing: _video.ReplyToTimingPing);
         _staleTimer = new Timer(_ => ReleaseStale(), null, PadManager.CheckInterval, PadManager.CheckInterval);
     }
 

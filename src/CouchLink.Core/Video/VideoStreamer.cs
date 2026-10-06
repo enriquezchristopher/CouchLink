@@ -1,5 +1,6 @@
 using System.Net;
 using CouchLink.Core.Net;
+using CouchLink.Core.Protocol;
 
 namespace CouchLink.Core.Video;
 
@@ -29,6 +30,8 @@ public sealed class VideoStreamer : IDisposable
     private uint _frameNumber;
     private long _framesSent, _keyframesSent, _bytesSent;
     private int _clients;
+    private readonly int _videoPort;
+    private long _hostDelayTicks; // smoothed; read from other threads
 
     public VideoStreamer(
         IEncodedVideoSource source,
@@ -43,6 +46,7 @@ public sealed class VideoStreamer : IDisposable
         _time = time;
         _start = time.GetTimestamp();
         _onError = onError;
+        _videoPort = videoPort;
         // Random per stream, so clients can tell a restarted stream from late packets.
         _packetizer = new FramePacketizer((ushort)Random.Shared.Next(1, ushort.MaxValue + 1), parityPercent);
         _targets = new StreamTargets(videoPort);
@@ -56,7 +60,18 @@ public sealed class VideoStreamer : IDisposable
         Interlocked.Read(ref _bytesSent),
         Volatile.Read(ref _clients));
 
+    /// <summary>Smoothed time from a frame's screen capture to its first packet going out.</summary>
+    public TimeSpan HostDelay => TimeSpan.FromTicks(Interlocked.Read(ref _hostDelayTicks));
+
     private TimeSpan Now => _time.GetElapsedTime(_start);
+
+    /// <summary>Answers a client's timing ping on its video port. Any thread.</summary>
+    public void ReplyToTimingPing(TimingPing ping, IPAddress from)
+    {
+        var reply = new byte[TimingReply.Size];
+        new TimingReply(ping.ClientTicks, HostDelay).WriteTo(reply);
+        _sender.Send([reply], [new IPEndPoint(from, _videoPort)]);
+    }
 
     /// <summary>A client's input packet arrived; it gets video, and a keyframe if it is new.</summary>
     public void ClientSeen(byte slot, IPAddress address)
@@ -95,6 +110,7 @@ public sealed class VideoStreamer : IDisposable
             force = _keyframes.ShouldForce(Now);
         if (!_source.TryGetFrame(force, PollTimeout, out var frame))
             return;
+        var got = Now;
 
         IReadOnlyList<IPEndPoint> targets;
         lock (_gate)
@@ -108,6 +124,9 @@ public sealed class VideoStreamer : IDisposable
             return; // nobody to send to; frame numbers stay consecutive for the next client
 
         var packets = _packetizer.Packetize(_frameNumber++, frame.Data.Span, frame.Keyframe, frame.Paused);
+        var delay = frame.CaptureToEncoded + (Now - got); // capture age + packetizing, up to the first send
+        long old = Interlocked.Read(ref _hostDelayTicks);
+        Interlocked.Exchange(ref _hostDelayTicks, old == 0 ? delay.Ticks : old + (delay.Ticks - old) / 8);
         _sender.Send(packets, targets);
         Interlocked.Increment(ref _framesSent);
         Interlocked.Add(ref _bytesSent, frame.Data.Length);

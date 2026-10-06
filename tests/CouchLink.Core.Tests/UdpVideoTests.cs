@@ -83,4 +83,25 @@ public class UdpVideoTests
         cts.Cancel();
         await loop.WaitAsync(Timeout);
     }
+
+    [Fact]
+    public async Task Timing_pings_reach_the_host_with_the_sender_address()
+    {
+        using var receiver = new InputReceiver(port: 0);
+        var pings = Channel.CreateUnbounded<(TimingPing Ping, IPAddress From)>();
+        using var cts = new CancellationTokenSource();
+        var loop = receiver.RunAsync((_, _) => { }, cts.Token,
+            onTimingPing: (p, from) => pings.Writer.TryWrite((p, from)));
+
+        using var sender = new InputSender(new IPEndPoint(IPAddress.Loopback, receiver.LocalPort), slot: 4);
+        sender.SendTimingPing(clientTicks: 77);
+
+        using var wait = new CancellationTokenSource(Timeout);
+        var ping = await pings.Reader.ReadAsync(wait.Token);
+        Assert.Equal(new TimingPing(4, 77), ping.Ping);
+        Assert.Equal(IPAddress.Loopback, ping.From);
+
+        cts.Cancel();
+        await loop.WaitAsync(Timeout);
+    }
 }

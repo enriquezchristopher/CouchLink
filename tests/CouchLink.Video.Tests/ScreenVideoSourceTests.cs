@@ -286,4 +286,33 @@ public class ScreenVideoSourceTests
         Assert.True(_opened[0].Disposed);
         Assert.True(_capture.Disposed);
     }
+
+    [Fact]
+    public void A_frame_says_how_long_ago_its_image_was_captured()
+    {
+        _capture.Script.Enqueue(CaptureStatus.NewFrame);
+        using var source = Source();
+        Next(source); // frame 1 at t=0
+        _opened[0].OnEncode = () => _time.Advance(TimeSpan.FromMilliseconds(4));
+
+        _time.Advance(TimeSpan.FromMilliseconds(6));
+        _capture.Script.Enqueue(CaptureStatus.NewFrame); // new image at t=6, held until the slot
+        var frame = Next(source);
+
+        // captured at 6 ms; slot at 16.67 ms; encoding ends 4 ms later
+        Assert.Equal(Interval60 + TimeSpan.FromMilliseconds(4 - 6), frame.CaptureToEncoded);
+    }
+
+    [Fact]
+    public void A_repeated_image_counts_from_its_slot()
+    {
+        _capture.Script.Enqueue(CaptureStatus.NewFrame);
+        using var source = Source();
+        Next(source);
+        _opened[0].OnEncode = () => _time.Advance(TimeSpan.FromMilliseconds(3));
+
+        var repeat = Next(source); // still screen: the slot re-sends the last image
+
+        Assert.Equal(TimeSpan.FromMilliseconds(3), repeat.CaptureToEncoded);
+    }
 }
