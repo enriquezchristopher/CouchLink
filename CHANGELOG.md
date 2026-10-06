@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.1](https://github.com/enriquezchristopher/CouchLink/compare/v1.1.0...v1.1.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* **app:** lock slot and IP boxes after Join ([a8a34bb](https://github.com/enriquezchristopher/CouchLink/commit/a8a34bb1678309886000a8f70687c050333e5fca)), closes [#13](https://github.com/enriquezchristopher/CouchLink/issues/13)
+* **pads:** stop removed pads from crashing the host ([3843bb8](https://github.com/enriquezchristopher/CouchLink/commit/3843bb87a22867e5c80ed22ed1023f6206dec33a)), closes [#12](https://github.com/enriquezchristopher/CouchLink/issues/12)
+* v1.1 reliability fixes ([#9](https://github.com/enriquezchristopher/CouchLink/issues/9)-[#13](https://github.com/enriquezchristopher/CouchLink/issues/13)) ([c88975a](https://github.com/enriquezchristopher/CouchLink/commit/c88975a84ba1635a73e144985287fa2701c3d300))
+
 ## [1.1.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.0.0...v1.1.0) (2026-10-05)
 
 
