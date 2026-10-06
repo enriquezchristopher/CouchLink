@@ -4,11 +4,15 @@ using CouchLink.Video;
 
 // VideoTest: checks host capture and encoding on this PC's GPU without a client.
 //   VideoTest capture [seconds]   counts screen changes and lost captures
-if (args.Length == 0 || args[0] is not ("capture" or "encode"))
+if (args.Length == 0 || args[0] is not ("capture" or "encode" or "play"))
 {
     Console.WriteLine("Usage: VideoTest capture [seconds] | VideoTest encode [seconds] [--resolution=1080p] [--fps=60] [--encoder=h264_amf] [--out=videotest.h264]");
+    Console.WriteLine("       VideoTest play <file.h264> [more files] [--software] [--windowed] [--fps=60]");
     return 2;
 }
+
+if (args[0] == "play")
+    return Play(args);
 
 int seconds = args.Length > 1 && int.TryParse(args[1], out var s) ? s : 5;
 return args[0] == "capture" ? Capture(seconds) : Encode(seconds, args);
@@ -34,6 +38,51 @@ static int Capture(int seconds)
     bool ok = changed > 0 && lost == 0;
     Console.WriteLine(ok ? "PASS: capture works" : "FAIL: no screen changes captured, or capture was lost");
     return ok ? 0 : 1;
+}
+
+
+static int Play(string[] args)
+{
+    var files = args.Skip(1).Where(a => !a.StartsWith("--", StringComparison.Ordinal)).ToList();
+    if (files.Count == 0 || !FfmpegLibrary.TryLoad(out var error) && Fail(error))
+        return 2;
+    int fps = int.Parse(args.FirstOrDefault(a => a.StartsWith("--fps=", StringComparison.Ordinal))?[6..] ?? "60");
+    var options = new PlayerOptions(Windowed: args.Contains("--windowed"), PreferHardware: !args.Contains("--software"));
+
+    int decodeFailures = 0;
+    bool closed = false;
+    using var player = new VideoPlayer(options, () => default, () => decodeFailures++, () => closed = true, Console.WriteLine);
+    Console.WriteLine($"Decoder: {player.DecoderName}" + (player.HardwareDecodeError is { } e ? $" (hardware unavailable: {e})" : ""));
+
+    long total = 0;
+    var interval = TimeSpan.FromTicks(TimeSpan.TicksPerSecond / fps);
+    var clock = Stopwatch.StartNew();
+    uint number = 0;
+    foreach (var file in files)
+    {
+        var frames = H264Frames.Split(File.ReadAllBytes(file));
+        Console.WriteLine($"{file}: {frames.Count} frames");
+        for (int i = 0; i < frames.Count && !closed; i++, number++, total++)
+        {
+            player.Enqueue(new AssembledFrame(number, i == 0, frames[i]));
+            var due = interval * (total + 1);
+            while (clock.Elapsed < due)
+                Thread.Sleep(1);
+        }
+    }
+    Thread.Sleep(500); // let the last frames show
+    Console.WriteLine($"Shown {player.FramesShown} of {total} frames with {player.DecoderName}, " +
+        $"client delay {player.ClientDelay.TotalMilliseconds:0.0} ms, {decodeFailures} decode failures");
+
+    bool ok = player.FramesShown >= total * 0.9 && decodeFailures == 0;
+    Console.WriteLine(ok ? "PASS" : "FAIL: frames were dropped or failed to decode");
+    return ok ? 0 : 1;
+
+    static bool Fail(string? message)
+    {
+        Console.WriteLine($"FAIL: {message}");
+        return true;
+    }
 }
 
 static int Encode(int seconds, string[] args)
