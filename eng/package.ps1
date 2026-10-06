@@ -2,8 +2,9 @@
 .SYNOPSIS
     Builds the release package: CouchLink-v<version>-win-x64.zip
 .DESCRIPTION
-    Publishes the app and PadTest as self-contained win-x64 builds (no .NET
-    install needed on the target PC) and zips them with the license files.
+    Publishes the app, PadTest and VideoTest as self-contained win-x64 builds
+    (no .NET install needed on the target PC), with FFmpeg 9 in ffmpeg\, and
+    zips them with the license files.
     The version comes from eng/version.props.
 .EXAMPLE
     ./eng/package.ps1 -OutDir artifacts
@@ -18,6 +19,10 @@ $name = "CouchLink-v$version-win-x64"
 $out = Join-Path $root $OutDir
 $stage = Join-Path $out $name
 
+if (-not (Test-Path (Join-Path $root 'third_party/ffmpeg/bin/avcodec-63.dll'))) {
+    throw 'FFmpeg is missing: run ./eng/get-ffmpeg.ps1 first (host video needs it).'
+}
+
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 New-Item -ItemType Directory -Force $stage | Out-Null
 
@@ -29,6 +34,7 @@ function Publish([string]$project, [string]$destination) {
 
 Publish 'src/CouchLink.App' $stage
 Publish 'src/CouchLink.PadTest' (Join-Path $stage 'PadTest')
+Publish 'src/CouchLink.VideoTest' (Join-Path $stage 'VideoTest')
 
 foreach ($file in 'LICENSE', 'README.md', 'THIRD-PARTY-NOTICES.md') {
     Copy-Item (Join-Path $root $file) $stage

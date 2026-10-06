@@ -162,9 +162,22 @@ one shared stream.
 
   No hardware encoder (e.g. GT 710 / GT 1030) -> **software fallback**
   (x264 `ultrafast` + `zerolatency`) and a host lobby warning: "No
-  hardware encoder - may lag with heavy games."
-- **Format:** H.264, default **1080p, up to 60 fps**, ~10 Mbps; 720p
-  option. No B-frames.
+  hardware encoder - may lag with heavy games." If the vendor's hardware
+  encoder fails to open (e.g. a driver problem), the host falls back to
+  x264 with the same warning.
+- **Format:** H.264, no B-frames. The host picks, before hosting:
+  - **Resolution:** Native, **1080p** (default), 900p, 720p or 540p. The
+    stream's height is at most the preset; the width follows the host
+    screen's aspect ratio; never scaled up.
+  - **Frame rate:** **60** (default), 75, 90, 120, 144, 165 or 240 fps,
+    offering only rates up to the host display's refresh rate.
+  - **Bitrate** follows automatically: ~10 Mbps at 1080p60, scaled by
+    pixels and frame rate, 2-30 Mbps.
+- **Still screen:** the last image is re-encoded at the frame rate (tiny
+  delta frames), so clients always receive newer frames and notice a loss.
+- **Capture lost** (UAC prompt, mode change, exclusive fullscreen): the
+  last image keeps going out marked *paused*; a keyframe follows when
+  capture is back.
 - **Keyframes only on demand:** on a client join and on unrecoverable
   loss. No periodic keyframes (they cause latency spikes).
 - **Encode once, send to all:** the same packets go to every client.
@@ -308,8 +321,9 @@ and if that fails too it still shows the dialog with the error text.
 
 ## 8. Install & Packaging
 
-- Self-contained .NET 10 publish folder (no runtime install), FFmpeg DLLs
-  bundled.
+- Self-contained .NET 10 publish folder (no runtime install), FFmpeg 9
+  DLLs (avcodec, avutil, swscale, swresample) bundled in `ffmpeg\` with
+  FFmpeg's license.
 - Installed on each PC together with: ViGEmBus driver, Windows Firewall
   rules for the ports in section 3.
 - FFmpeg build: must include `h264_amf`, `h264_nvenc`, and `libx264`

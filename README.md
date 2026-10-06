@@ -58,6 +58,7 @@ and attach the file. Reports contain no PC names, user names, or IP addresses.
 Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```powershell
+./eng/get-ffmpeg.ps1       # once: FFmpeg 9 for host video, into third_party/ffmpeg
 dotnet build
 dotnet test
 ./eng/package.ps1          # builds artifacts/CouchLink-v<version>-win-x64.zip
