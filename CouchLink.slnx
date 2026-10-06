@@ -5,6 +5,7 @@
     <Project Path="src/CouchLink.Pads/CouchLink.Pads.csproj" />
     <Project Path="src/CouchLink.PadTest/CouchLink.PadTest.csproj" />
     <Project Path="src/CouchLink.Video/CouchLink.Video.csproj" />
+    <Project Path="src/CouchLink.VideoTest/CouchLink.VideoTest.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/CouchLink.Core.Tests/CouchLink.Core.Tests.csproj" />
