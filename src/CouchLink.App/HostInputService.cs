@@ -1,15 +1,22 @@
+using System.Net;
 using CouchLink.Core.Net;
 using CouchLink.Core.Pads;
+using CouchLink.Core.Protocol;
+using CouchLink.Core.Video;
 using CouchLink.Pads;
 
 namespace CouchLink.App;
 
-/// <summary>Host side: receives input on UDP 47803 and drives one virtual DS4 per slot.</summary>
+/// <summary>
+/// Host side: receives input on UDP 47803 and drives one virtual DS4 per slot, and streams
+/// video to every client it hears from. Until Plan 4 the video is a test pattern.
+/// </summary>
 internal sealed class HostInputService : IDisposable
 {
     private readonly ViGEmPadFactory _factory;
     private readonly PadManager _pads;
     private readonly InputReceiver _receiver;
+    private readonly VideoStreamer _video;
     private readonly CancellationTokenSource _cts = new();
     private readonly Task _receiveLoop;
     private readonly Timer _staleTimer;
@@ -19,14 +26,24 @@ internal sealed class HostInputService : IDisposable
         _factory = factory;
         _pads = new PadManager(factory, TimeProvider.System);
         _receiver = receiver;
-        _receiveLoop = _receiver.RunAsync((p, _) => _pads.Handle(p), _cts.Token, OnError);
+        _video = new VideoStreamer(
+            new TestPatternSource(TestPatternSource.SixtyFps), new VideoSender(), Ports.Video, TimeProvider.System, OnVideoError);
+        _receiveLoop = _receiver.RunAsync(OnInput, _cts.Token, OnError, (_, _) => _video.RequestKeyframe());
         _staleTimer = new Timer(_ => ReleaseStale(), null, PadManager.CheckInterval, PadManager.CheckInterval);
     }
 
     public int PadCount => _pads.Count;
 
-    /// <summary>Most recent pad error, shown to the host instead of failing silently.</summary>
+    public VideoSendStats VideoStats => _video.Stats;
+
+    /// <summary>Most recent pad or video error, shown to the host instead of failing silently.</summary>
     public string? LastError { get; private set; }
+
+    private void OnInput(InputPacket packet, IPAddress from)
+    {
+        if (_pads.Handle(packet))
+            _video.ClientSeen(packet.Slot, from);
+    }
 
     private void ReleaseStale()
     {
@@ -44,6 +61,12 @@ internal sealed class HostInputService : IDisposable
     {
         LastError = $"{e.GetType().Name}: {e.Message}";
         AppServices.Log.Write($"Pad error: {e}");
+    }
+
+    private void OnVideoError(Exception e)
+    {
+        LastError = $"Video: {e.GetType().Name}: {e.Message}";
+        AppServices.Log.Write($"Video error: {e}");
     }
 
     public static bool TryStart(out HostInputService? service, out string? error)
@@ -66,6 +89,7 @@ internal sealed class HostInputService : IDisposable
         _cts.Cancel();
         _staleTimer.Dispose();
         _receiveLoop.Wait(TimeSpan.FromSeconds(2));
+        _video.Dispose();
         _receiver.Dispose();
         _pads.Dispose();
         _factory.Dispose();

@@ -1,7 +1,7 @@
 <Window x:Class="CouchLink.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="CouchLink (dev)" Width="460" Height="380">
+        Title="CouchLink (dev)" Width="460" Height="460">
     <StackPanel Margin="16">
         <Button x:Name="HostButton" Content="Host (create pads)" Height="40" Click="OnHost"/>
         <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
