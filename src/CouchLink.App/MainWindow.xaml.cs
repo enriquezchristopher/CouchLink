@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private RawInputSource? _rawInput;
     private InputMapper? _mapper;
     private ClientInputLoop? _client;
+    private ClientVideoService? _video;
     private string _clientStatus = "";
 
     public MainWindow()
@@ -50,14 +51,21 @@ public partial class MainWindow : Window
             return;
         }
 
+        var slot = (int)SlotBox.SelectedItem;
+        var inputSender = new InputSender(new IPEndPoint(ip, Ports.Input), (byte)slot);
+        if (!ClientVideoService.TryStart(inputSender, out _video, out var videoError))
+        {
+            inputSender.Dispose();
+            MessageBox.Show(this, videoError, "CouchLink");
+            return;
+        }
+
         _mapper = new InputMapper(KeyLayout.CreateDefault(), new MouseStick());
         _rawInput = new RawInputSource((HwndSource)PresentationSource.FromVisual(this));
         _rawInput.KeyDown += _mapper.KeyDown;
         _rawInput.KeyUp += _mapper.KeyUp;
         _rawInput.MouseMove += _mapper.MouseMove;
 
-        var slot = (int)SlotBox.SelectedItem;
-        var inputSender = new InputSender(new IPEndPoint(ip, Ports.Input), (byte)slot);
         _client = new ClientInputLoop(_mapper, inputSender);
         // Raw Input keys still reach focused controls; lock them so play can't change what's shown.
         HostButton.IsEnabled = JoinButton.IsEnabled = HostIpBox.IsEnabled = SlotBox.IsEnabled = false;
@@ -82,20 +90,27 @@ public partial class MainWindow : Window
     private void UpdateStatus()
     {
         if (_host is not null)
+        {
+            var v = _host.VideoStats;
             StatusText.Text = $"Hosting. Virtual pads: {_host.PadCount}" +
-                (_host.LastError is { } err ? $"\nPad error: {err}" : "");
+                $"\nVideo (test pattern): {v.Clients} client(s), {v.FramesSent} frames, " +
+                $"{v.KeyframesSent} keyframes, {v.BytesSent / 1_000_000.0:0.0} MB" +
+                (_host.LastError is { } err ? $"\nLast error: {err}" : "");
+        }
         else if (_client is not null)
         {
             var s = _client.LastSent;
             StatusText.Text =
                 $"{_clientStatus}\n" +
-                $"Buttons: {s.Buttons}\nL: {s.LX},{s.LY}  R: {s.RX},{s.RY}  L2/R2: {s.L2}/{s.R2}";
+                $"Buttons: {s.Buttons}\nL: {s.LX},{s.LY}  R: {s.RX},{s.RY}  L2/R2: {s.L2}/{s.R2}\n" +
+                _video?.Describe();
         }
     }
 
     protected override void OnClosed(EventArgs e)
     {
         _statusTimer.Stop();
+        _video?.Dispose();
         _client?.Dispose();
         _rawInput?.Dispose();
         _host?.Dispose();

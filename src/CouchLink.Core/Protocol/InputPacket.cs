@@ -7,18 +7,13 @@ namespace CouchLink.Core.Protocol;
 public readonly record struct InputPacket(byte Slot, uint Epoch, uint Sequence, PadState State)
 {
     public const int Size = 24;
-    private const ushort Magic = 0x4C43; // "CL"
-    private const byte Version = 1;
-    private const byte TypeInput = 1;
 
     public void WriteTo(Span<byte> destination)
     {
         if (destination.Length < Size)
             throw new ArgumentException($"Need {Size} bytes.", nameof(destination));
 
-        BinaryPrimitives.WriteUInt16LittleEndian(destination, Magic);
-        destination[2] = Version;
-        destination[3] = TypeInput;
+        Wire.WriteHeader(destination, Wire.TypeInput);
         destination[4] = Slot;
         destination[5] = 0;
         BinaryPrimitives.WriteUInt32LittleEndian(destination[6..], Epoch);
@@ -36,10 +31,7 @@ public readonly record struct InputPacket(byte Slot, uint Epoch, uint Sequence, 
     public static bool TryParse(ReadOnlySpan<byte> source, out InputPacket packet)
     {
         packet = default;
-        if (source.Length != Size
-            || BinaryPrimitives.ReadUInt16LittleEndian(source) != Magic
-            || source[2] != Version
-            || source[3] != TypeInput)
+        if (source.Length != Size || !Wire.HasHeader(source, Wire.TypeInput))
             return false;
 
         var buttons = (PadButtons)BinaryPrimitives.ReadUInt32LittleEndian(source[14..]) & PadButtons.Known;

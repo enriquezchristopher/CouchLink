@@ -10,12 +10,14 @@ public sealed class InputSender : IDisposable
 {
     private readonly UdpClient _udp = new();
     private readonly byte[] _buffer = new byte[InputPacket.Size];
+    private readonly byte[] _keyframeRequest = new byte[KeyframeRequest.Size];
     private readonly byte _slot;
     private uint _sequence;
 
     public InputSender(IPEndPoint host, byte slot)
     {
         _slot = slot;
+        new KeyframeRequest(slot).WriteTo(_keyframeRequest);
         Epoch = unchecked((uint)Random.Shared.NextInt64());
         _udp.Connect(host);
     }
@@ -33,6 +35,19 @@ public sealed class InputSender : IDisposable
         catch (SocketException)
         {
             // Host not reachable right now; the next send (<= 8 ms) carries the full state anyway.
+        }
+    }
+
+    /// <summary>Asks the host for a keyframe. Safe to call from any thread (the bytes never change).</summary>
+    public void SendKeyframeRequest()
+    {
+        try
+        {
+            _udp.Send(_keyframeRequest, _keyframeRequest.Length);
+        }
+        catch (SocketException)
+        {
+            // Host not reachable right now; the client repeats the request until a keyframe arrives.
         }
     }
 
