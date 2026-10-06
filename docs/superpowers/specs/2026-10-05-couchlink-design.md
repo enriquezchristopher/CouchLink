@@ -95,8 +95,8 @@ controller state (UDP). Session control: TCP both ways.
 |---|---|
 | UDP 47800 | Discovery broadcast |
 | TCP 47801 | Session control |
-| UDP 47802 | Video + audio |
-| UDP 47803 | Input |
+| UDP 47802 | Video + audio; host -> client timing replies |
+| UDP 47803 | Input; client -> host keyframe requests and timing pings (until the v1.4 session channel) |
 
 ## 4. Session & UI
 
@@ -200,6 +200,12 @@ one shared stream.
 - FFmpeg **D3D11VA** hardware decode; software decode fallback.
 - Decoded frame stays on the GPU and is presented directly (D3D11 flip
   model, Vortice.Windows), **no vsync wait**.
+- The picture keeps its shape: it is scaled to fit the client's screen and centred, with black bars.
+  Streams tagged BT.709 are shown as BT.709; anything else as BT.601 (the host's x264 path).
+- A decode error (or hardware decode not starting) switches to software decoding and waits for the
+  next keyframe; if the client falls more than 6 frames behind it skips to the newest keyframe.
+- Before the first picture the window says "Waiting for the host's picture..."; while the host's
+  capture is lost it shows the last picture with "Host screen paused".
 - Video and audio each play as soon as they arrive; no A/V sync logic.
 - **No encryption** (own LAN).
 
@@ -267,8 +273,11 @@ Edits are kept in memory only and reset when CouchLink closes, by design.
 | Client silent 5 s | Host unplugs its pad (section 4.4) |
 | Host lost | Client "Reconnecting..." 10 s, then back to list |
 
-**Diagnostics:** F2 overlay on the client: fps, bitrate, packet loss,
-FEC repairs, estimated latency. Log file in
+**Diagnostics:** F2 overlay on the client: fps, bitrate, packet loss, FEC repairs, estimated latency.
+The estimate is the host's capture-to-send time (sent in its timing replies) + half the measured
+round trip (a timing ping every second) + the client's receive-to-present time. It leaves out the
+GPU work still queued at Present and the display's own scan-out, so the real glass-to-glass time
+is a few ms more. Log file in
 `%LOCALAPPDATA%\CouchLink\Logs\couchlink.log` (rolling, last 5 files).
 
 ### 7.1 Crash reports
