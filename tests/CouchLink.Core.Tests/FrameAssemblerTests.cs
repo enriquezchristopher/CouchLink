@@ -191,4 +191,16 @@ public class FrameAssemblerTests
         Assert.Empty(lost);
         Assert.Equal(0, a.PendingFrames);
     }
+
+    [Fact]
+    public void Paused_frames_arrive_marked_and_packets_must_agree()
+    {
+        var frame = new byte[5_000];
+        var packets = new FramePacketizer(1).Packetize(1, frame, keyframe: false, paused: true);
+        var a = new FrameAssembler();
+
+        Feed(a, packets.Take(1));
+        Assert.Empty(Feed(a, [Rewrite(packets[1], h => h with { Paused = false })])); // disagrees: ignored
+        Assert.True(Assert.Single(Feed(a, packets.Skip(1))).Paused);
+    }
 }

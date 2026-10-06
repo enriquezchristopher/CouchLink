@@ -1,9 +1,15 @@
 <Window x:Class="CouchLink.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="CouchLink (dev)" Width="460" Height="460">
+        Title="CouchLink (dev)" Width="460" Height="540">
     <StackPanel Margin="16">
-        <Button x:Name="HostButton" Content="Host (create pads)" Height="40" Click="OnHost"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Stream" VerticalAlignment="Center"/>
+            <ComboBox x:Name="ResolutionBox" Width="90" Margin="8,0"/>
+            <ComboBox x:Name="FrameRateBox" Width="80" Margin="0,0,8,0"/>
+            <TextBlock Text="(set before hosting)" VerticalAlignment="Center" Foreground="Gray"/>
+        </StackPanel>
+        <Button x:Name="HostButton" Content="Host (create pads, share screen)" Height="40" Click="OnHost"/>
         <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
             <TextBlock Text="Host IP" VerticalAlignment="Center"/>
             <TextBox x:Name="HostIpBox" Width="140" Margin="8,0" Text="127.0.0.1"/>

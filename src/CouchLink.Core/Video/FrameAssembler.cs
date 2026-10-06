@@ -4,7 +4,7 @@ using CouchLink.Core.Protocol;
 namespace CouchLink.Core.Video;
 
 /// <summary>One complete encoded frame, ready for the decoder.</summary>
-public sealed record AssembledFrame(uint Number, bool Keyframe, byte[] Data);
+public sealed record AssembledFrame(uint Number, bool Keyframe, byte[] Data, bool Paused = false);
 
 /// <summary>
 /// Receive counters for the F2 overlay. Loss is measured on data shards: parity shards that
@@ -57,6 +57,7 @@ public sealed class FrameAssembler
     {
         public uint Number { get; } = first.Frame;
         public bool Keyframe { get; } = first.Keyframe;
+        public bool Paused { get; } = first.Paused;
         public uint Length { get; } = first.FrameLength;
         public Block?[] Blocks { get; } = new Block?[first.BlockCount];
         public int BlocksDone { get; set; }
@@ -102,7 +103,7 @@ public sealed class FrameAssembler
             frame = new PendingFrame(h, now);
             _pending[h.Frame] = frame;
         }
-        else if (h.Keyframe != frame.Keyframe || h.FrameLength != frame.Length || h.BlockCount != frame.Blocks.Length)
+        else if (h.Keyframe != frame.Keyframe || h.Paused != frame.Paused || h.FrameLength != frame.Length || h.BlockCount != frame.Blocks.Length)
         {
             return null; // disagrees with the frame's first packet
         }
@@ -185,7 +186,7 @@ public sealed class FrameAssembler
         Account(frame);
         _completed++;
         _lastFinished = frame.Number;
-        return new AssembledFrame(frame.Number, frame.Keyframe, data);
+        return new AssembledFrame(frame.Number, frame.Keyframe, data, frame.Paused);
     }
 
     private void GiveUp(PendingFrame frame)

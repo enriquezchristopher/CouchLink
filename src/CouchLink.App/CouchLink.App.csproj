@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CouchLink.Core\CouchLink.Core.csproj" />
     <ProjectReference Include="..\CouchLink.Pads\CouchLink.Pads.csproj" />
+    <ProjectReference Include="..\CouchLink.Video\CouchLink.Video.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

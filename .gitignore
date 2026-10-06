@@ -5,3 +5,4 @@ obj/
 TestResults/
 .superpowers/
 artifacts/
+third_party/

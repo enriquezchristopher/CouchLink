@@ -149,4 +149,12 @@ public class FramePacketizerTests
                 Assert.All(new FramePacketizer(1, percent).Packetize(0, new byte[length], false),
                     p => Assert.True(VideoShardPacket.TryParse(p, out _), $"{length} bytes at {percent}%"));
     }
+
+    [Fact]
+    public void Paused_frames_are_marked_in_every_packet()
+    {
+        var headers = Headers(new FramePacketizer(1).Packetize(3, RandomFrame(5_000), keyframe: false, paused: true));
+        Assert.All(headers, h => Assert.True(h.Paused));
+        Assert.All(Headers(new FramePacketizer(1).Packetize(4, RandomFrame(5_000), false)), h => Assert.False(h.Paused));
+    }
 }

@@ -36,6 +36,11 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Get FFmpeg
+        if: steps.code.outputs.present == 'true'
+        shell: pwsh
+        run: ./eng/get-ffmpeg.ps1
+
       - name: Restore
         if: steps.code.outputs.present == 'true'
         run: dotnet restore

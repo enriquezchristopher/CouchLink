@@ -1,4 +1,5 @@
 using System.IO;
+using CouchLink.Core;
 using CouchLink.Core.Diagnostics;
 
 namespace CouchLink.App;
@@ -15,4 +16,7 @@ internal static class AppServices
 
     /// <summary>Describes what the app is doing, for crash reports (e.g. "Host (virtual pads: 3)").</summary>
     public static Func<string> DescribeMode { get; set; } = () => "Idle";
+
+    /// <summary>Command-line developer switches, read at startup.</summary>
+    public static DevOptions Options { get; set; } = new(false, null);
 }

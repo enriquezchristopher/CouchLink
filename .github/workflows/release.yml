@@ -35,6 +35,10 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Get FFmpeg
+        shell: pwsh
+        run: ./eng/get-ffmpeg.ps1
+
       - name: Test
         run: dotnet test -c Release
 

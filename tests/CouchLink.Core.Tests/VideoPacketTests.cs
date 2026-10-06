@@ -129,4 +129,15 @@ public class VideoPacketTests
         Assert.False(KeyframeRequest.TryParse(bytes, out _));
         Assert.False(KeyframeRequest.TryParse(bytes.AsSpan(0, KeyframeRequest.Size), out _)); // right size, wrong type
     }
+
+    [Fact]
+    public void Paused_flag_round_trips_separately_from_keyframe()
+    {
+        foreach (var (keyframe, paused) in new[] { (false, true), (true, true), (true, false) })
+        {
+            var header = Sample with { Keyframe = keyframe, Paused = paused };
+            Assert.True(VideoShardPacket.TryParse(Packet(header), out var parsed));
+            Assert.Equal(header, parsed);
+        }
+    }
 }
