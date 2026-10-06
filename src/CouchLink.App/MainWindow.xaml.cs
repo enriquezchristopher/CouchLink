@@ -37,7 +37,19 @@ public partial class MainWindow : Window
         FrameRateBox.SelectedIndex = 0; // 60
         _statusTimer.Tick += (_, _) => UpdateStatus();
         _statusTimer.Start();
-        Deactivated += (_, _) => _mapper?.ReleaseAll(); // never leave keys stuck
+        Deactivated += (_, _) =>
+        {
+            if (!InputAllowed())
+                _mapper?.ReleaseAll(); // never leave keys stuck
+        };
+    }
+
+    /// <summary>True while this window or the player window is in front: input belongs to the game.</summary>
+    private bool InputAllowed()
+    {
+        var foreground = NativeMethods.GetForegroundWindow();
+        return foreground == new WindowInteropHelper(this).Handle
+            || (_video is not null && foreground == _video.PlayerWindow);
     }
 
     private void OnHost(object sender, RoutedEventArgs e)
@@ -65,7 +77,9 @@ public partial class MainWindow : Window
 
         var slot = (int)SlotBox.SelectedItem;
         var inputSender = new InputSender(new IPEndPoint(ip, Ports.Input), (byte)slot);
-        if (!ClientVideoService.TryStart(inputSender, AppServices.Options.SaveVideoPath, out _video, out var videoError))
+        var playerOptions = new PlayerOptions(new WindowInteropHelper(this).Handle, AppServices.Options.WindowedPlayer);
+        if (!ClientVideoService.TryStart(inputSender, playerOptions, AppServices.Options.SaveVideoPath,
+                () => Dispatcher.InvokeAsync(LeaveSession), out _video, out var videoError))
         {
             inputSender.Dispose();
             MessageBox.Show(this, videoError, "CouchLink");
@@ -73,7 +87,8 @@ public partial class MainWindow : Window
         }
 
         _mapper = new InputMapper(KeyLayout.CreateDefault(), new MouseStick());
-        _rawInput = new RawInputSource((HwndSource)PresentationSource.FromVisual(this));
+        _rawInput = new RawInputSource((HwndSource)PresentationSource.FromVisual(this), InputAllowed);
+        _rawInput.InputSuspended += _mapper.ReleaseAll;
         _rawInput.KeyDown += _mapper.KeyDown;
         _rawInput.KeyUp += _mapper.KeyUp;
         _rawInput.MouseMove += _mapper.MouseMove;
@@ -85,6 +100,26 @@ public partial class MainWindow : Window
         _clientStatus = $"Sending to {ip} as P{slot}";
         AppServices.DescribeMode = () => $"Client (slot P{slot})";
         AppServices.Log.Write($"Joined as P{slot}");
+    }
+
+    /// <summary>Back to the start: the player closed (Ctrl+Alt+Q) or failed.</summary>
+    private void LeaveSession()
+    {
+        if (_client is null)
+            return;
+        _video?.Dispose();
+        _video = null;
+        _client.Dispose(); // sends a neutral pad state and closes the input sender
+        _client = null;
+        _rawInput?.Dispose();
+        _rawInput = null;
+        _mapper = null;
+        HostButton.IsEnabled = JoinButton.IsEnabled = HostIpBox.IsEnabled = SlotBox.IsEnabled = true;
+        ResolutionBox.IsEnabled = FrameRateBox.IsEnabled = true;
+        AppServices.DescribeMode = () => "Idle";
+        StatusText.Text = "Left the session.";
+        AppServices.Log.Write("Left the session");
+        Activate();
     }
 
     private void OnOpenCrashReports(object sender, RoutedEventArgs e)

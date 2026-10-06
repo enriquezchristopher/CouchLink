@@ -7,23 +7,31 @@ namespace CouchLink.App.Input;
 
 /// <summary>
 /// Reads keyboard and relative mouse input for one window via Win32 Raw Input.
-/// Only delivers input while that window is in the foreground.
+/// Registered as an input sink, so it also reads input while the player window is in front;
+/// <c>inputAllowed</c> decides whether a CouchLink window is in front at all.
 /// </summary>
 internal sealed class RawInputSource : IDisposable
 {
     private readonly HwndSource _source;
+    private readonly Func<bool> _inputAllowed;
+    private bool _suspended;
+
+    /// <summary>Raised once when input arrives while no CouchLink window is in front; release every key.</summary>
+    public event Action? InputSuspended;
 
     public event Action<ushort>? KeyDown;
     public event Action<ushort>? KeyUp;
     public event Action<int, int>? MouseMove;
 
-    public RawInputSource(HwndSource source)
+    public RawInputSource(HwndSource source, Func<bool> inputAllowed)
     {
         _source = source;
+        _inputAllowed = inputAllowed;
         RAWINPUTDEVICE[] devices =
         [
-            new() { UsagePage = 0x01, Usage = 0x06, Flags = 0, Target = source.Handle }, // keyboard
-            new() { UsagePage = 0x01, Usage = 0x02, Flags = 0, Target = source.Handle }, // mouse
+            // Input sink: the main window gets input while the player window is in front too.
+            new() { UsagePage = 0x01, Usage = 0x06, Flags = RIDEV_INPUTSINK, Target = source.Handle }, // keyboard
+            new() { UsagePage = 0x01, Usage = 0x02, Flags = RIDEV_INPUTSINK, Target = source.Handle }, // mouse
         ];
         if (!RegisterRawInputDevices(devices, (uint)devices.Length, (uint)Marshal.SizeOf<RAWINPUTDEVICE>()))
             throw new InvalidOperationException($"RegisterRawInputDevices failed: {Marshal.GetLastWin32Error()}");
@@ -34,6 +42,16 @@ internal sealed class RawInputSource : IDisposable
     {
         if (msg != WM_INPUT)
             return IntPtr.Zero;
+        if (!_inputAllowed())
+        {
+            if (!_suspended)
+            {
+                _suspended = true;
+                InputSuspended?.Invoke();
+            }
+            return IntPtr.Zero; // another app is in front: its keys are not ours
+        }
+        _suspended = false;
 
         uint headerSize = (uint)sizeof(RAWINPUTHEADER);
         uint size = 0;

@@ -5,6 +5,7 @@ namespace CouchLink.App.Input;
 internal static partial class NativeMethods
 {
     public const int WM_INPUT = 0x00FF;
+    public const uint RIDEV_INPUTSINK = 0x00000100;
     public const uint RID_INPUT = 0x10000003;
     public const uint RIM_TYPEMOUSE = 0;
     public const uint RIM_TYPEKEYBOARD = 1;
@@ -66,6 +67,9 @@ internal static partial class NativeMethods
 
     [LibraryImport("user32.dll")]
     public static partial short GetAsyncKeyState(int virtualKey);
+
+    [LibraryImport("user32.dll")]
+    public static partial IntPtr GetForegroundWindow();
 
     [LibraryImport("winmm.dll")]
     public static partial uint timeBeginPeriod(uint milliseconds);
