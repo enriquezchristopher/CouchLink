@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.2.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.1.1...v1.2.0) (2026-10-06)
+
+
+### Features
+
+* **app:** stream a test pattern from host to clients ([640a21c](https://github.com/enriquezchristopher/CouchLink/commit/640a21c0c47b5ffdd828077c87968e3f6456702d)), closes [#16](https://github.com/enriquezchristopher/CouchLink/issues/16)
+* **core:** drop undecodable frames and request keyframes after loss ([8c4e377](https://github.com/enriquezchristopher/CouchLink/commit/8c4e377936c257e522279d0ae096fe735f205714)), closes [#16](https://github.com/enriquezchristopher/CouchLink/issues/16)
+* **core:** encoded frame source interface and test pattern ([56d58a9](https://github.com/enriquezchristopher/CouchLink/commit/56d58a9eed99ec964ed252c454081abf2acc6efe)), closes [#16](https://github.com/enriquezchristopher/CouchLink/issues/16)
+* **core:** host keyframe pacing and stream targets ([ef3830e](https://github.com/enriquezchristopher/CouchLink/commit/ef3830ed057665e81c8ec1a59b5126dc4ec87811)), closes [#16](https://github.com/enriquezchristopher/CouchLink/issues/16)
+* **core:** host video streamer and client video pipeline ([bb272a1](https://github.com/enriquezchristopher/CouchLink/commit/bb272a13d84aeef714c198d71e94f94de83f70cd)), closes [#16](https://github.com/enriquezchristopher/CouchLink/issues/16)
+* **core:** reassemble and repair frames from shard packets ([1d98348](https://github.com/enriquezchristopher/CouchLink/commit/1d9834822b36432d30faa2533878b2693b54dbce)), closes [#16](https://github.com/enriquezchristopher/CouchLink/issues/16)
+* **core:** Reed-Solomon erasure code over GF(256) ([8677410](https://github.com/enriquezchristopher/CouchLink/commit/8677410776f7687124648db5d6e0b7d932012876)), closes [#16](https://github.com/enriquezchristopher/CouchLink/issues/16)
+* **core:** split encoded frames into FEC-protected shard packets ([99e6457](https://github.com/enriquezchristopher/CouchLink/commit/99e6457fe501511b7eaaad5aa9a9b7c077f2cb2e)), closes [#16](https://github.com/enriquezchristopher/CouchLink/issues/16)
+* **core:** UDP transport for video and keyframe requests ([15c8803](https://github.com/enriquezchristopher/CouchLink/commit/15c8803fa47c4f644a347509d845009aef99beca)), closes [#16](https://github.com/enriquezchristopher/CouchLink/issues/16)
+* **core:** video shard and keyframe request packets ([bc1dad5](https://github.com/enriquezchristopher/CouchLink/commit/bc1dad5537237f5545c11ca6889531f384fa4546)), closes [#16](https://github.com/enriquezchristopher/CouchLink/issues/16)
+* video stream protocol with FEC and keyframe requests ([#16](https://github.com/enriquezchristopher/CouchLink/issues/16)) ([ef41139](https://github.com/enriquezchristopher/CouchLink/commit/ef41139979894a0e2a4f3184f57a66e9bf9e6b74))
+
+
+### Bug Fixes
+
+* **core:** accept only shard headers the packetizer can produce ([f975d61](https://github.com/enriquezchristopher/CouchLink/commit/f975d6105c4a463c4852e7127382f51bdb1d8e2b)), closes [#16](https://github.com/enriquezchristopher/CouchLink/issues/16)
+
 ## [1.1.1](https://github.com/enriquezchristopher/CouchLink/compare/v1.1.0...v1.1.1) (2026-10-06)
 
 
