@@ -22,6 +22,25 @@ public class FfmpegLibraryTests
     }
 
     [Fact]
+    public void A_missing_FFmpeg_DLL_gives_a_clear_message()
+    {
+        var partial = Directory.CreateTempSubdirectory("couchlink-partial-ffmpeg").FullName;
+        try
+        {
+            File.Copy(Path.Combine(FfmpegLibrary.DefaultDirectory, FfmpegLibrary.AvcodecDll),
+                Path.Combine(partial, FfmpegLibrary.AvcodecDll));
+
+            Assert.False(FfmpegLibrary.TryLoad(out var error, partial));
+            Assert.Contains("avutil-61.dll", error);
+            Assert.Contains("get-ffmpeg.ps1", error);
+        }
+        finally
+        {
+            Directory.Delete(partial, recursive: true);
+        }
+    }
+
+    [Fact]
     public void FFmpeg_9_loads_from_the_app_folder_and_has_the_encoders()
     {
         Assert.True(FfmpegLibrary.TryLoad(out var error), error);

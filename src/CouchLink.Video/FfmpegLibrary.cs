@@ -15,6 +15,9 @@ public static unsafe class FfmpegLibrary
     public const string AvcodecDll = "avcodec-63.dll";
     public const int AvcodecMajor = 63;
 
+    /// <summary>The FFmpeg DLLs the app ships and loads (avcodec needs the other three).</summary>
+    public static readonly IReadOnlyList<string> RequiredDlls = [AvcodecDll, "avutil-61.dll", "swscale-10.dll", "swresample-7.dll"];
+
     private static readonly Lock Gate = new();
     private static bool _loaded;
 
@@ -31,6 +34,12 @@ public static unsafe class FfmpegLibrary
                 error = $"FFmpeg 9 was not found in {directory}. Run eng/get-ffmpeg.ps1 and build again.";
                 return false;
             }
+            var missing = RequiredDlls.Where(dll => !File.Exists(Path.Combine(directory, dll))).ToList();
+            if (missing.Count > 0)
+            {
+                error = $"FFmpeg in {directory} is missing {string.Join(", ", missing)}. Run eng/get-ffmpeg.ps1 and build again.";
+                return false;
+            }
             if (_loaded)
                 return true; // FFmpeg can only be loaded once per process
             try
@@ -44,7 +53,8 @@ public static unsafe class FfmpegLibrary
                     return false;
                 }
             }
-            catch (Exception e) when (e is DllNotFoundException or EntryPointNotFoundException or BadImageFormatException)
+            // AutoGen reports a library it can't load as NotSupportedException on the first call
+            catch (Exception e) when (e is DllNotFoundException or EntryPointNotFoundException or BadImageFormatException or NotSupportedException)
             {
                 error = $"FFmpeg in {directory} could not be loaded: {e.Message}";
                 return false;
