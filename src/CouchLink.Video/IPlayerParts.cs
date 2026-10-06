@@ -3,9 +3,10 @@ using Vortice.DXGI;
 namespace CouchLink.Video;
 
 /// <summary>
-/// A decoded picture. <see cref="Frame"/> is the decoder's <c>AVFrame*</c>, valid until that decoder's
-/// next Decode or Dispose. <see cref="OnGpu"/>: a D3D11 texture (data[0]) and array slice (data[1]);
-/// otherwise YUV 4:2:0 planes in memory.
+/// A decoded picture. <see cref="Frame"/> is the decoder's <c>AVFrame*</c>, valid until that decoder
+/// returns a newer picture or is disposed (a decode that fails or returns nothing keeps it).
+/// <see cref="OnGpu"/>: a D3D11 texture (data[0]) and array slice (data[1]); otherwise YUV 4:2:0
+/// planes in memory.
 /// </summary>
 public readonly record struct DecodedPicture(int Width, int Height, nint Frame, bool OnGpu, ColorSpaceType Color);
 

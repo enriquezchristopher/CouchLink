@@ -84,8 +84,8 @@ public sealed unsafe class FramePresenter : IFramePresenter
     {
         if ((width, height) == _window || width <= 0 || height <= 0)
             return;
-        _window = (width, height);
         _swapChain.ResizeBuffers(2, (uint)width, (uint)height, Format.Unknown, SwapFlags).CheckError();
+        _window = (width, height); // only once the buffers really are that size
         ResetProcessor(); // output size changed
     }
 

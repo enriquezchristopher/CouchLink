@@ -15,6 +15,9 @@ public sealed class PlayerCore : IDisposable
     public const int MaxBacklog = 6;
     public static readonly TimeSpan RedrawInterval = TimeSpan.FromMilliseconds(250);
 
+    /// <summary>No frame for this long: the host has gone quiet (stopped, gone, or a wrong address).</summary>
+    public static readonly TimeSpan QuietAfter = TimeSpan.FromSeconds(2);
+
     private readonly Func<bool, IFrameDecoder> _openDecoder;
     private readonly IFramePresenter _presenter;
     private readonly Func<VideoClientStats> _stats;
@@ -30,6 +33,7 @@ public sealed class PlayerCore : IDisposable
     private DecodedPicture? _last;
     private StatsSample? _sample;
     private TimeSpan? _lastPresent;
+    private TimeSpan? _lastArrival;
     private string? _lastStatus, _lastStatsText;
     private long _clientDelayTicks;
 
@@ -70,6 +74,8 @@ public sealed class PlayerCore : IDisposable
             batch = [.. _queue];
             _queue.Clear();
         }
+        if (batch.Count > 0)
+            _lastArrival = batch[^1].ReceivedAt;
 
         if (batch.Count > MaxBacklog)
         {
@@ -91,8 +97,17 @@ public sealed class PlayerCore : IDisposable
         {
             try
             {
+                bool wasHardware = _decoder.IsHardware;
                 if (_decoder.Decode(frame.Data, out var picture))
                     newest = (picture, frame, receivedAt);
+                if (wasHardware && !_decoder.IsHardware)
+                {
+                    // FFmpeg gave up on the GPU by itself, with a decoder set up for the GPU
+                    // (one thread); a proper software decoder is much faster.
+                    SwitchToSoftware("FFmpeg could not decode this stream on the GPU");
+                    newest = null;
+                    break;
+                }
             }
             catch (FfmpegException e)
             {
@@ -102,7 +117,8 @@ public sealed class PlayerCore : IDisposable
             }
         }
 
-        string? status = OverlayText.Status(FramesShown > 0 || newest is not null, _stats().HostPaused);
+        var sinceLastFrame = _lastArrival is { } arrived ? Now - arrived : TimeSpan.Zero;
+        string? status = OverlayText.Status(FramesShown > 0 || newest is not null, _stats().HostPaused, sinceLastFrame, QuietAfter);
         if (newest is { } n)
         {
             _last = n.Picture;
@@ -131,15 +147,20 @@ public sealed class PlayerCore : IDisposable
     {
         if (_decoder.IsHardware)
         {
-            _log?.Invoke($"Hardware video decoding failed ({e.Message}); switching to software decoding");
-            _decoder.Dispose();
-            _last = null; // its picture belonged to the old decoder
-            _decoder = _openDecoder(false);
+            SwitchToSoftware($"Hardware video decoding failed ({e.Message})");
+            return;
         }
-        else
-        {
-            _log?.Invoke($"Video decoding failed ({e.Message}); waiting for a keyframe");
-        }
+        _log?.Invoke($"Video decoding failed ({e.Message}); waiting for a keyframe");
+        _decodeFailed();
+    }
+
+    /// <summary>Replaces the decoder with a software one, which starts at the next keyframe.</summary>
+    private void SwitchToSoftware(string reason)
+    {
+        _log?.Invoke($"{reason}; switching to software decoding");
+        _decoder.Dispose();
+        _last = null; // its picture belonged to the old decoder
+        _decoder = _openDecoder(false);
         _decodeFailed();
     }
 

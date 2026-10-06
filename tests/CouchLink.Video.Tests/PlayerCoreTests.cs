@@ -119,7 +119,7 @@ public class PlayerCoreTests
         core.Run();
         var shown = Assert.Single(_presenter.Shown);
         Assert.Null(shown.Picture);
-        Assert.Equal(OverlayText.Waiting, shown.Status);
+        Assert.Equal($"{OverlayText.Waiting}\n{OverlayText.LeaveHint}", shown.Status);
     }
 
     [Fact]
@@ -182,5 +182,35 @@ public class PlayerCoreTests
         core.Run();
 
         Assert.Equal(TimeSpan.FromMilliseconds(5), core.ClientDelay);
+    }
+
+    [Fact]
+    public void FFmpeg_falling_back_to_software_by_itself_switches_to_the_software_decoder()
+    {
+        using var core = Core();
+        _decoders[0].LosesHardwareOn = n => n == 2; // e.g. a profile the GPU can't decode
+        core.Enqueue(F(1, keyframe: true));
+        core.Enqueue(F(2));
+
+        core.Run();
+
+        Assert.Equal(2, _decoders.Count);
+        Assert.True(_decoders[0].Disposed);
+        Assert.False(_decoders[1].IsHardware);
+        Assert.Equal(1, _decodeFailed); // the new decoder starts at a keyframe
+    }
+
+    [Fact]
+    public void Says_so_when_the_host_goes_quiet()
+    {
+        using var core = Core();
+        core.Enqueue(F(1, keyframe: true));
+        core.Run();
+
+        _time.Advance(PlayerCore.QuietAfter);
+        core.Run();
+
+        Assert.Equal($"{OverlayText.NoPicture}\n{OverlayText.LeaveHint}", _presenter.Shown[^1].Status);
+        Assert.Equal(1u, ShownFrame(_presenter.Shown[^1])); // over the last picture
     }
 }

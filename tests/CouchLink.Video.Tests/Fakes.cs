@@ -55,7 +55,8 @@ internal sealed class FakeEncoder(string name, VideoSize size) : IFrameEncoder
 internal sealed class FakeDecoder(bool hardware) : IFrameDecoder
 {
     public string Name => IsHardware ? "D3D11VA" : "software";
-    public bool IsHardware { get; } = hardware;
+    public bool IsHardware { get; private set; } = hardware;
+    public Func<uint, bool> LosesHardwareOn { get; set; } = _ => false;
     public List<uint> Decoded { get; } = [];
     public Func<uint, bool> FailOn { get; set; } = _ => false;
     public bool Disposed { get; private set; }
@@ -65,6 +66,8 @@ internal sealed class FakeDecoder(bool hardware) : IFrameDecoder
         uint number = BitConverter.ToUInt32(data);
         if (FailOn(number))
             throw new FfmpegException($"bad frame {number}");
+        if (LosesHardwareOn(number))
+            IsHardware = false; // like FFmpeg giving up on the GPU by itself
         Decoded.Add(number);
         picture = new DecodedPicture(1920, 1080, (nint)number, IsHardware, Vortice.DXGI.ColorSpaceType.YcbcrStudioG22LeftP709);
         return true;

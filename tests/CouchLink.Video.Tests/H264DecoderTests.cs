@@ -72,4 +72,19 @@ public class H264DecoderTests
         Assert.True(decoder.Decode(stream[0], out var picture)); // the keyframe
         Assert.Equal(160, picture.Width);
     }
+
+    [Fact]
+    public unsafe void A_decode_without_a_new_picture_keeps_the_last_one()
+    {
+        var stream = TestStreams.X264(160, 120, frames: 1);
+        using var decoder = H264Decoder.OpenSoftware();
+        Assert.True(decoder.Decode(stream[0], out var picture));
+        var garbage = new byte[500];
+        new Random(3).NextBytes(garbage);
+
+        try { decoder.Decode(garbage, out _); } catch (FfmpegException) { }
+
+        // The player redraws the last picture until a new one comes; it must still be there.
+        Assert.Equal(160, ((FFmpeg.AutoGen.AVFrame*)picture.Frame)->width);
+    }
 }

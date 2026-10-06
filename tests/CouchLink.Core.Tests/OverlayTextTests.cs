@@ -27,12 +27,14 @@ public class OverlayTextTests
     }
 
     [Theory]
-    [InlineData(false, false, OverlayText.Waiting)]
-    [InlineData(false, true, OverlayText.Waiting)]
-    [InlineData(true, true, OverlayText.Paused)]
-    [InlineData(true, false, null)]
-    public void Status_says_why_there_is_no_live_picture(bool shown, bool paused, string? expected)
+    [InlineData(false, false, 0, "Waiting for the host's picture...\nCtrl+Alt+Q to leave")]
+    [InlineData(false, true, 5, "Waiting for the host's picture...\nCtrl+Alt+Q to leave")]
+    [InlineData(true, true, 0, OverlayText.Paused)]
+    [InlineData(true, false, 0, null)]
+    [InlineData(true, false, 2, "No picture from the host\nCtrl+Alt+Q to leave")]
+    [InlineData(true, true, 2, "No picture from the host\nCtrl+Alt+Q to leave")]
+    public void Status_says_why_there_is_no_live_picture(bool shown, bool paused, int secondsQuiet, string? expected)
     {
-        Assert.Equal(expected, OverlayText.Status(shown, paused));
+        Assert.Equal(expected, OverlayText.Status(shown, paused, TimeSpan.FromSeconds(secondsQuiet), TimeSpan.FromSeconds(2)));
     }
 }

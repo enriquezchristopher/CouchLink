@@ -205,7 +205,12 @@ one shared stream.
 - A decode error (or hardware decode not starting) switches to software decoding and waits for the
   next keyframe; if the client falls more than 6 frames behind it skips to the newest keyframe.
 - Before the first picture the window says "Waiting for the host's picture..."; while the host's
-  capture is lost it shows the last picture with "Host screen paused".
+  capture is lost it shows the last picture with "Host screen paused"; after 2 s with no frames at
+  all it says "No picture from the host". The waiting and no-picture messages add "Ctrl+Alt+Q to
+  leave", since the fullscreen window has no visible controls.
+- The client needs a GPU with D3D11 video support (any GPU from the last decade; not the Microsoft
+  Basic Display Adapter). If the GPU is reset mid-session (driver update or crash), the player
+  closes and the player rejoins; recovering in place is not planned.
 - Video and audio each play as soon as they arrive; no A/V sync logic.
 - **No encryption** (own LAN).
 

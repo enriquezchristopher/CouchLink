@@ -12,7 +12,8 @@ public sealed unsafe class H264Decoder : IFrameDecoder
 {
     private AVCodecContext* _ctx;
     private AVBufferRef* _hwDevice;
-    private AVFrame* _frame;
+    private AVFrame* _frame; // the current picture: stays valid until a new one replaces it
+    private AVFrame* _next;  // decoded into first, so a failed or empty decode leaves _frame alone
     private AVPacket* _packet;
 
     private H264Decoder(D3D11Device? device)
@@ -44,6 +45,7 @@ public sealed unsafe class H264Decoder : IFrameDecoder
             }
             FfmpegLibrary.Check(ffmpeg.avcodec_open2(_ctx, codec, null), "Opening the H.264 decoder");
             _frame = ffmpeg.av_frame_alloc();
+            _next = ffmpeg.av_frame_alloc();
             _packet = ffmpeg.av_packet_alloc();
         }
         catch
@@ -81,7 +83,6 @@ public sealed unsafe class H264Decoder : IFrameDecoder
     public bool Decode(byte[] data, out DecodedPicture picture)
     {
         picture = default;
-        ffmpeg.av_frame_unref(_frame); // the previous picture is no longer needed
         fixed (byte* bytes = data)
         {
             _packet->data = bytes;
@@ -91,10 +92,12 @@ public sealed unsafe class H264Decoder : IFrameDecoder
             _packet->size = 0;
             FfmpegLibrary.Check(sent, "Decoding a frame");
         }
-        int result = ffmpeg.avcodec_receive_frame(_ctx, _frame);
+        int result = ffmpeg.avcodec_receive_frame(_ctx, _next);
         if (result == ffmpeg.AVERROR(ffmpeg.EAGAIN))
             return false;
         FfmpegLibrary.Check(result, "Decoding a frame");
+        ffmpeg.av_frame_unref(_frame); // only now is the previous picture replaced
+        ffmpeg.av_frame_move_ref(_frame, _next);
 
         bool onGpu = _frame->format == (int)AVPixelFormat.AV_PIX_FMT_D3D11;
         if (IsHardware && !onGpu)
@@ -108,6 +111,7 @@ public sealed unsafe class H264Decoder : IFrameDecoder
     {
         if (_packet != null) { var p = _packet; ffmpeg.av_packet_free(&p); _packet = null; }
         if (_frame != null) { var f = _frame; ffmpeg.av_frame_free(&f); _frame = null; }
+        if (_next != null) { var n = _next; ffmpeg.av_frame_free(&n); _next = null; }
         if (_ctx != null) { var c = _ctx; ffmpeg.avcodec_free_context(&c); _ctx = null; }
         if (_hwDevice != null) { var d = _hwDevice; ffmpeg.av_buffer_unref(&d); _hwDevice = null; }
     }

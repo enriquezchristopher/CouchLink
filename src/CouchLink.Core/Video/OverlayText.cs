@@ -5,6 +5,8 @@ public static class OverlayText
 {
     public const string Waiting = "Waiting for the host's picture...";
     public const string Paused = "Host screen paused";
+    public const string NoPicture = "No picture from the host";
+    public const string LeaveHint = "Ctrl+Alt+Q to leave";
 
     public static string Stats(StatsSample? sample, string decoder)
     {
@@ -18,9 +20,15 @@ public static class OverlayText
                latency;
     }
 
-    /// <summary>A centred message when there is no live picture, or null.</summary>
-    public static string? Status(bool anyFrameShown, bool hostPaused) =>
-        !anyFrameShown ? Waiting : hostPaused ? Paused : null;
+    /// <summary>
+    /// A centred message when there is no live picture, or null. When nothing is coming (yet), it
+    /// also says how to leave: the fullscreen player has no visible controls.
+    /// </summary>
+    public static string? Status(bool anyFrameShown, bool hostPaused, TimeSpan sinceLastFrame, TimeSpan quietAfter) =>
+        !anyFrameShown ? $"{Waiting}\n{LeaveHint}"
+        : sinceLastFrame >= quietAfter ? $"{NoPicture}\n{LeaveHint}"
+        : hostPaused ? Paused
+        : null;
 
     private static string Ms(TimeSpan t) => Math.Round(t.TotalMilliseconds, MidpointRounding.AwayFromZero).ToString("0");
 }

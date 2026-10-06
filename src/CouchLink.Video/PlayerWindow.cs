@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 
 namespace CouchLink.Video;
@@ -23,6 +24,7 @@ public sealed unsafe partial class PlayerWindow : IDisposable
     private static readonly Dictionary<nint, PlayerWindow> Windows = [];
     private static bool _registered;
     private bool _destroyed;
+    private ExceptionDispatchInfo? _error;
 
     public PlayerWindow(nint nearWindow, bool windowed)
     {
@@ -62,13 +64,22 @@ public sealed unsafe partial class PlayerWindow : IDisposable
     public event Action? StatsToggled;
     public event Action<int, int>? Resized;
 
-    /// <summary>Handles every waiting message. False once the window is gone.</summary>
+    /// <summary>
+    /// Handles every waiting message. False once the window is gone. Rethrows an exception from an
+    /// event handler (Resized, StatsToggled, CloseRequested), including one from a message sent to the
+    /// window directly rather than through this loop.
+    /// </summary>
     public bool PumpMessages()
     {
         while (PeekMessageW(out var message, 0, 0, 0, PM_REMOVE))
         {
             TranslateMessage(in message);
             DispatchMessageW(in message);
+        }
+        if (_error is { } error)
+        {
+            _error = null;
+            error.Throw();
         }
         return !_destroyed;
     }
@@ -127,7 +138,18 @@ public sealed unsafe partial class PlayerWindow : IDisposable
         PlayerWindow? window;
         lock (Windows)
             Windows.TryGetValue(hwnd, out window);
-        return window?.OnMessage(message, wParam, lParam) ?? DefWindowProcW(hwnd, message, wParam, lParam);
+        if (window is null)
+            return DefWindowProcW(hwnd, message, wParam, lParam);
+        try
+        {
+            return window.OnMessage(message, wParam, lParam) ?? DefWindowProcW(hwnd, message, wParam, lParam);
+        }
+        catch (Exception e)
+        {
+            // Never let it unwind through Windows' own frames; PumpMessages rethrows it on the player loop.
+            window._error ??= ExceptionDispatchInfo.Capture(e);
+            return DefWindowProcW(hwnd, message, wParam, lParam);
+        }
     }
 
     private static void RegisterClassOnce()
