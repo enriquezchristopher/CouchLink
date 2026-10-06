@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.3.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.2.0...v1.3.0) (2026-10-06)
+
+
+### Features
+
+* **app:** joining opens the host's screen fullscreen; Ctrl+Alt+Q leaves ([24dcd37](https://github.com/enriquezchristopher/CouchLink/commit/24dcd3765f5276f9ea8b1a63fa2edd4c476bccd6)), closes [#17](https://github.com/enriquezchristopher/CouchLink/issues/17)
+* clients see the host's screen, with an F2 stats overlay (Plan 5) ([630668e](https://github.com/enriquezchristopher/CouchLink/commit/630668e3efa3995969b32f01a750062164ddd13c))
+* **core:** client measures round trip and resyncs after a decode error ([e4b20f9](https://github.com/enriquezchristopher/CouchLink/commit/e4b20f93edde43b1e22b1bcfc4e3e708d67ef75b))
+* **core:** host measures capture-to-send delay and answers timing pings ([a830eb7](https://github.com/enriquezchristopher/CouchLink/commit/a830eb7b4a866a9c599b89c131d56da3b9382b8f)), closes [#18](https://github.com/enriquezchristopher/CouchLink/issues/18)
+* **core:** letterbox, per-second stats and overlay text for the player ([2a1d3f9](https://github.com/enriquezchristopher/CouchLink/commit/2a1d3f96922c45d28db164f03d872afaf00579d8)), closes [#18](https://github.com/enriquezchristopher/CouchLink/issues/18)
+* **core:** timing ping and reply packets ([5f3a82b](https://github.com/enriquezchristopher/CouchLink/commit/5f3a82bf04e95c18c4d52b964891e9f02afa0e39)), closes [#18](https://github.com/enriquezchristopher/CouchLink/issues/18)
+* **video:** fullscreen player window with D3D11 presentation and overlay ([d3d1e89](https://github.com/enriquezchristopher/CouchLink/commit/d3d1e897ad7ccf2698b802f3e47e84ff1c58dafc))
+* **video:** H.264 decoder with D3D11VA and software fallback ([7761dcc](https://github.com/enriquezchristopher/CouchLink/commit/7761dccf8c3e1c1fddbc1cd7f2794572bc436edc)), closes [#17](https://github.com/enriquezchristopher/CouchLink/issues/17)
+* **video:** player logic with software fallback, resync and status text ([cb39d2d](https://github.com/enriquezchristopher/CouchLink/commit/cb39d2dac55f2fb014d6e5e2c909e69fac7ed230))
+
+
+### Bug Fixes
+
+* **video:** keep the last picture, say when the host is quiet, contain window errors ([49832e0](https://github.com/enriquezchristopher/CouchLink/commit/49832e0fd8038987f05be5cc8f289e10a4449317))
+
 ## [1.2.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.1.1...v1.2.0) (2026-10-06)
 
 
