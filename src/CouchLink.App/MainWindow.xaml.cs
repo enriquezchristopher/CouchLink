@@ -2,11 +2,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using CouchLink.App.Input;
 using CouchLink.Core.Input;
 using CouchLink.Core.Net;
+using CouchLink.Core.Video;
+using CouchLink.Video;
 
 namespace CouchLink.App;
 
@@ -26,6 +29,12 @@ public partial class MainWindow : Window
         for (int slot = 2; slot <= 10; slot++)
             SlotBox.Items.Add(slot);
         SlotBox.SelectedIndex = 0;
+        foreach (var resolution in StreamSettings.Resolutions)
+            ResolutionBox.Items.Add(new ComboBoxItem { Content = StreamSettings.Label(resolution), Tag = resolution });
+        ResolutionBox.SelectedIndex = StreamSettings.Resolutions.ToList().IndexOf(StreamSettings.Default.Resolution);
+        foreach (int rate in StreamSettings.FrameRatesFor(DisplayInfo.PrimaryRefreshRate()))
+            FrameRateBox.Items.Add(new ComboBoxItem { Content = $"{rate} fps", Tag = rate });
+        FrameRateBox.SelectedIndex = 0; // 60
         _statusTimer.Tick += (_, _) => UpdateStatus();
         _statusTimer.Start();
         Deactivated += (_, _) => _mapper?.ReleaseAll(); // never leave keys stuck
@@ -33,12 +42,15 @@ public partial class MainWindow : Window
 
     private void OnHost(object sender, RoutedEventArgs e)
     {
-        if (!HostInputService.TryStart(out _host, out var error))
+        var settings = new StreamSettings(
+            (StreamResolution)((ComboBoxItem)ResolutionBox.SelectedItem).Tag,
+            (int)((ComboBoxItem)FrameRateBox.SelectedItem).Tag);
+        if (!HostInputService.TryStart(settings, out _host, out var error))
         {
             MessageBox.Show(this, error, "CouchLink");
             return;
         }
-        HostButton.IsEnabled = JoinButton.IsEnabled = false;
+        HostButton.IsEnabled = JoinButton.IsEnabled = ResolutionBox.IsEnabled = FrameRateBox.IsEnabled = false;
         AppServices.DescribeMode = () => $"Host (virtual pads: {_host?.PadCount ?? 0})";
         AppServices.Log.Write("Hosting started");
     }
@@ -53,7 +65,7 @@ public partial class MainWindow : Window
 
         var slot = (int)SlotBox.SelectedItem;
         var inputSender = new InputSender(new IPEndPoint(ip, Ports.Input), (byte)slot);
-        if (!ClientVideoService.TryStart(inputSender, out _video, out var videoError))
+        if (!ClientVideoService.TryStart(inputSender, AppServices.Options.SaveVideoPath, out _video, out var videoError))
         {
             inputSender.Dispose();
             MessageBox.Show(this, videoError, "CouchLink");
@@ -69,6 +81,7 @@ public partial class MainWindow : Window
         _client = new ClientInputLoop(_mapper, inputSender);
         // Raw Input keys still reach focused controls; lock them so play can't change what's shown.
         HostButton.IsEnabled = JoinButton.IsEnabled = HostIpBox.IsEnabled = SlotBox.IsEnabled = false;
+        ResolutionBox.IsEnabled = FrameRateBox.IsEnabled = false; // a client doesn't stream
         _clientStatus = $"Sending to {ip} as P{slot}";
         AppServices.DescribeMode = () => $"Client (slot P{slot})";
         AppServices.Log.Write($"Joined as P{slot}");
@@ -91,10 +104,7 @@ public partial class MainWindow : Window
     {
         if (_host is not null)
         {
-            var v = _host.VideoStats;
-            StatusText.Text = $"Hosting. Virtual pads: {_host.PadCount}" +
-                $"\nVideo (test pattern): {v.Clients} client(s), {v.FramesSent} frames, " +
-                $"{v.KeyframesSent} keyframes, {v.BytesSent / 1_000_000.0:0.0} MB" +
+            StatusText.Text = $"Hosting. Virtual pads: {_host.PadCount}\n{_host.DescribeVideo()}" +
                 (_host.LastError is { } err ? $"\nLast error: {err}" : "");
         }
         else if (_client is not null)

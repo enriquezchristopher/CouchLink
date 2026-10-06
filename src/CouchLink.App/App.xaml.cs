@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Threading;
 using CouchLink.App.Diagnostics;
+using CouchLink.Core;
 
 namespace CouchLink.App;
 
@@ -11,6 +12,7 @@ public partial class App : Application
         CrashHandler.Install(this); // first, so even startup crashes are reported
         base.OnStartup(e);
         AppServices.Log.Write($"CouchLink started (args: {string.Join(' ', e.Args)})");
+        AppServices.Options = DevOptions.Parse(e.Args);
 
         var crashTest = e.Args.FirstOrDefault(a => a.StartsWith("--crash-test=", StringComparison.Ordinal))?["--crash-test=".Length..];
         if (crashTest == "startup")

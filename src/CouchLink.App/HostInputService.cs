@@ -9,32 +9,31 @@ namespace CouchLink.App;
 
 /// <summary>
 /// Host side: receives input on UDP 47803 and drives one virtual DS4 per slot, and streams
-/// video to every client it hears from. Until Plan 4 the video is a test pattern.
+/// video to every client it hears from: the host screen (Plan 4) or, with --test-pattern, a test pattern.
 /// </summary>
 internal sealed class HostInputService : IDisposable
 {
     private readonly ViGEmPadFactory _factory;
     private readonly PadManager _pads;
     private readonly InputReceiver _receiver;
-    private readonly VideoStreamer _video;
+    private readonly HostVideo _video;
     private readonly CancellationTokenSource _cts = new();
     private readonly Task _receiveLoop;
     private readonly Timer _staleTimer;
 
-    private HostInputService(InputReceiver receiver, ViGEmPadFactory factory)
+    private HostInputService(InputReceiver receiver, ViGEmPadFactory factory, StreamSettings settings)
     {
         _factory = factory;
         _pads = new PadManager(factory, TimeProvider.System);
         _receiver = receiver;
-        _video = new VideoStreamer(
-            new TestPatternSource(TestPatternSource.SixtyFps), new VideoSender(), Ports.Video, TimeProvider.System, OnVideoError);
+        _video = HostVideo.Start(settings, OnVideoError);
         _receiveLoop = _receiver.RunAsync(OnInput, _cts.Token, OnError, (_, _) => _video.RequestKeyframe());
         _staleTimer = new Timer(_ => ReleaseStale(), null, PadManager.CheckInterval, PadManager.CheckInterval);
     }
 
     public int PadCount => _pads.Count;
 
-    public VideoSendStats VideoStats => _video.Stats;
+    public string DescribeVideo() => _video.Describe();
 
     /// <summary>Most recent pad or video error, shown to the host instead of failing silently.</summary>
     public string? LastError { get; private set; }
@@ -69,7 +68,7 @@ internal sealed class HostInputService : IDisposable
         AppServices.Log.Write($"Video error: {e}");
     }
 
-    public static bool TryStart(out HostInputService? service, out string? error)
+    public static bool TryStart(StreamSettings settings, out HostInputService? service, out string? error)
     {
         service = null;
         // Port first: it's the step most likely to fail, and nothing needs cleaning up yet.
@@ -80,7 +79,7 @@ internal sealed class HostInputService : IDisposable
             receiver!.Dispose();
             return false;
         }
-        service = new HostInputService(receiver!, factory!);
+        service = new HostInputService(receiver!, factory!, settings);
         return true;
     }
 
