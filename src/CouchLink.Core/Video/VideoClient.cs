@@ -1,4 +1,5 @@
 using CouchLink.Core.Net;
+using CouchLink.Core.Protocol;
 
 namespace CouchLink.Core.Video;
 
@@ -8,18 +9,23 @@ public readonly record struct VideoClientStats(
     long FramesSkipped,
     long KeyframeRequests,
     bool WaitingForKeyframe,
-    bool HostPaused);
+    bool HostPaused,
+    TimeSpan? RoundTrip = null,
+    TimeSpan HostDelay = default);
 
 /// <summary>
 /// Client side: receives shard datagrams, assembles and repairs frames, and passes decodable
 /// frames to <c>onFrame</c> on the receive thread. Whenever the decode gate waits for a
 /// keyframe it asks the host through <c>requestKeyframe</c>, at once and then every
 /// <see cref="DecodeGate.RequestInterval"/>. A timer gives up stalled frames every
-/// <see cref="TickInterval"/>. Takes ownership of the receiver.
+/// <see cref="TickInterval"/>. With <c>sendTimingPing</c> it pings the host every
+/// <see cref="PingInterval"/> and keeps the round trip and the host's delay from the replies.
+/// Takes ownership of the receiver.
 /// </summary>
 public sealed class VideoClient : IDisposable
 {
     public static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(50);
+    public static readonly TimeSpan PingInterval = TimeSpan.FromSeconds(1);
 
     private readonly VideoReceiver _receiver;
     private readonly Action _requestKeyframe;
@@ -35,14 +41,20 @@ public sealed class VideoClient : IDisposable
     private readonly ITimer _timer;
     private long _delivered;
     private bool _hostPaused;
+    private readonly Action<long>? _sendTimingPing;
+    private TimeSpan? _lastPing;
+    private TimeSpan? _roundTrip;
+    private TimeSpan _hostDelay;
 
     public VideoClient(
         VideoReceiver receiver,
         Action requestKeyframe,
         Action<AssembledFrame> onFrame,
         TimeProvider time,
-        Action<Exception>? onError = null)
+        Action<Exception>? onError = null,
+        Action<long>? sendTimingPing = null)
     {
+        _sendTimingPing = sendTimingPing;
         _receiver = receiver;
         _requestKeyframe = requestKeyframe;
         _onFrame = onFrame;
@@ -65,7 +77,9 @@ public sealed class VideoClient : IDisposable
                     _gate.FramesSkipped,
                     _gate.KeyframeRequests,
                     _gate.WaitingForKeyframe,
-                    _hostPaused);
+                    _hostPaused,
+                    _roundTrip,
+                    _hostDelay);
         }
     }
 
@@ -73,6 +87,17 @@ public sealed class VideoClient : IDisposable
 
     private void OnDatagram(byte[] datagram)
     {
+        if (TimingReply.TryParse(datagram, out var reply))
+        {
+            var rtt = Now - TimeSpan.FromTicks(reply.ClientTicks);
+            lock (_lock)
+            {
+                _roundTrip = _roundTrip is { } old ? old + (rtt - old) / 4 : rtt;
+                _hostDelay = reply.HostDelay;
+            }
+            return;
+        }
+
         AssembledFrame? frame;
         lock (_lock)
         {
@@ -97,11 +122,34 @@ public sealed class VideoClient : IDisposable
             lock (_lock)
                 _assembler.AbandonStale(Now);
             RequestKeyframeIfNeeded();
+            SendPingIfDue();
         }
         catch (Exception e)
         {
             _onError?.Invoke(e); // an exception on a timer thread would kill the process
         }
+    }
+
+    private void SendPingIfDue()
+    {
+        if (_sendTimingPing is null)
+            return;
+        var now = Now;
+        lock (_lock)
+        {
+            if (_lastPing is { } last && now - last < PingInterval)
+                return;
+            _lastPing = now;
+        }
+        _sendTimingPing(now.Ticks);
+    }
+
+    /// <summary>The decoder failed; skip to the next keyframe and ask for it now. Any thread.</summary>
+    public void DecodeFailed()
+    {
+        lock (_lock)
+            _gate.DecodeFailed();
+        RequestKeyframeIfNeeded();
     }
 
     private void RequestKeyframeIfNeeded()

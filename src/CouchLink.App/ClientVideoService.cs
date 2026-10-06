@@ -19,7 +19,7 @@ internal sealed class ClientVideoService : IDisposable
         _save = savePath is null ? null : File.Create(savePath);
         _client = new VideoClient(
             receiver, sender.SendKeyframeRequest, OnFrame, TimeProvider.System,
-            e => AppServices.Log.Write($"Video error: {e}"));
+            e => AppServices.Log.Write($"Video error: {e}"), sender.SendTimingPing);
     }
 
     public static bool TryStart(InputSender sender, string? savePath, out ClientVideoService? service, out string? error)

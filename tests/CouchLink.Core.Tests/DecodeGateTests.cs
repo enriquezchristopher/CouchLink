@@ -76,4 +76,19 @@ public class DecodeGateTests
         Assert.True(gate.Accept(F(uint.MaxValue, keyframe: true)));
         Assert.True(gate.Accept(F(0)));
     }
+
+    [Fact]
+    public void A_decode_failure_waits_for_the_next_keyframe_and_asks_for_it()
+    {
+        var gate = new DecodeGate();
+        Assert.True(gate.Accept(F(1, keyframe: true)));
+        Assert.False(gate.ShouldRequestKeyframe(Ms(0)));
+
+        gate.DecodeFailed();
+
+        Assert.True(gate.WaitingForKeyframe);
+        Assert.False(gate.Accept(F(2)));
+        Assert.True(gate.ShouldRequestKeyframe(Ms(10)));
+        Assert.True(gate.Accept(F(3, keyframe: true)));
+    }
 }

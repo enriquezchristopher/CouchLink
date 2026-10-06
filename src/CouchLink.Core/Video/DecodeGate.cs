@@ -48,6 +48,9 @@ public sealed class DecodeGate
         WaitingForKeyframe = true;
     }
 
+    /// <summary>The decoder failed on a frame; nothing after it decodes until a keyframe.</summary>
+    public void DecodeFailed() => WaitingForKeyframe = true;
+
     /// <summary>True when a keyframe request should be sent now.</summary>
     public bool ShouldRequestKeyframe(TimeSpan now)
     {
