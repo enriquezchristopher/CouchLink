@@ -31,7 +31,7 @@ public sealed class FramePacketizer
     public static int ParityShardsFor(int dataShards, int parityPercent) =>
         VideoShardPacket.ParityShardsFor(dataShards, parityPercent);
 
-    public List<byte[]> Packetize(uint frameNumber, ReadOnlySpan<byte> frame, bool keyframe)
+    public List<byte[]> Packetize(uint frameNumber, ReadOnlySpan<byte> frame, bool keyframe, bool paused = false)
     {
         if (frame.IsEmpty)
             throw new ArgumentException("Frame is empty.", nameof(frame));
@@ -54,7 +54,7 @@ public sealed class FramePacketizer
                 var packet = new byte[VideoShardPacket.Size];
                 VideoShardPacket.WriteHeader(packet, new VideoShardHeader(
                     StreamId, frameNumber, keyframe, (uint)frame.Length,
-                    (byte)block, (byte)blockCount, (byte)s, (byte)k, (byte)m));
+                    (byte)block, (byte)blockCount, (byte)s, (byte)k, (byte)m, paused));
                 shards[s] = packet.AsMemory(VideoShardPacket.HeaderSize, VideoShardPacket.PayloadSize);
                 if (s < k)
                 {

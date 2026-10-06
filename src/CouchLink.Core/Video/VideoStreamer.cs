@@ -107,7 +107,7 @@ public sealed class VideoStreamer : IDisposable
         if (targets.Count == 0)
             return; // nobody to send to; frame numbers stay consecutive for the next client
 
-        var packets = _packetizer.Packetize(_frameNumber++, frame.Data.Span, frame.Keyframe);
+        var packets = _packetizer.Packetize(_frameNumber++, frame.Data.Span, frame.Keyframe, frame.Paused);
         _sender.Send(packets, targets);
         Interlocked.Increment(ref _framesSent);
         Interlocked.Add(ref _bytesSent, frame.Data.Length);

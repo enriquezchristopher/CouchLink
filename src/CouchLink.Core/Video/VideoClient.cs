@@ -7,7 +7,8 @@ public readonly record struct VideoClientStats(
     long FramesDelivered,
     long FramesSkipped,
     long KeyframeRequests,
-    bool WaitingForKeyframe);
+    bool WaitingForKeyframe,
+    bool HostPaused);
 
 /// <summary>
 /// Client side: receives shard datagrams, assembles and repairs frames, and passes decodable
@@ -33,6 +34,7 @@ public sealed class VideoClient : IDisposable
     private readonly Task _loop;
     private readonly ITimer _timer;
     private long _delivered;
+    private bool _hostPaused;
 
     public VideoClient(
         VideoReceiver receiver,
@@ -62,7 +64,8 @@ public sealed class VideoClient : IDisposable
                     Interlocked.Read(ref _delivered),
                     _gate.FramesSkipped,
                     _gate.KeyframeRequests,
-                    _gate.WaitingForKeyframe);
+                    _gate.WaitingForKeyframe,
+                    _hostPaused);
         }
     }
 
@@ -74,6 +77,8 @@ public sealed class VideoClient : IDisposable
         lock (_lock)
         {
             frame = _assembler.Add(datagram, Now);
+            if (frame is not null)
+                _hostPaused = frame.Paused; // before the gate, so a skipped frame still counts
             if (frame is not null && !_gate.Accept(frame))
                 frame = null;
         }

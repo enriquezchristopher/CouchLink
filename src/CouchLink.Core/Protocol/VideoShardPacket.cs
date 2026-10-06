@@ -18,7 +18,8 @@ public readonly record struct VideoShardHeader(
     byte BlockCount,
     byte Shard,
     byte DataShards,
-    byte ParityShards)
+    byte ParityShards,
+    bool Paused = false)
 {
     public int TotalShards => DataShards + ParityShards;
 }
@@ -41,6 +42,7 @@ public static class VideoShardPacket
     public const int MaxParityPercent = 20;
 
     private const byte FlagKeyframe = 1;
+    private const byte FlagPaused = 2;
 
     /// <summary>Data shards needed for a frame of this many bytes.</summary>
     public static int DataShardsFor(uint frameLength) => (int)((frameLength + PayloadSize - 1) / PayloadSize);
@@ -60,7 +62,7 @@ public static class VideoShardPacket
             throw new ArgumentException($"Need {HeaderSize} bytes.", nameof(packet));
 
         Wire.WriteHeader(packet, Wire.TypeVideoShard);
-        packet[4] = header.Keyframe ? FlagKeyframe : (byte)0;
+        packet[4] = (byte)((header.Keyframe ? FlagKeyframe : 0) | (header.Paused ? FlagPaused : 0));
         packet[5] = header.Block;
         packet[6] = header.BlockCount;
         packet[7] = header.Shard;
@@ -87,7 +89,8 @@ public static class VideoShardPacket
             BlockCount: packet[6],
             Shard: packet[7],
             DataShards: packet[8],
-            ParityShards: packet[9]);
+            ParityShards: packet[9],
+            Paused: (packet[4] & FlagPaused) != 0);
 
         if (parsed.BlockCount == 0
             || parsed.Block >= parsed.BlockCount
