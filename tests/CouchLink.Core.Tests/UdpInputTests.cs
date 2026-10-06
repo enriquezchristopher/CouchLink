@@ -17,7 +17,7 @@ public class UdpInputTests
         using var receiver = new InputReceiver(port: 0);
         var received = Channel.CreateUnbounded<InputPacket>();
         using var cts = new CancellationTokenSource();
-        var loop = receiver.RunAsync(p => received.Writer.TryWrite(p), cts.Token);
+        var loop = receiver.RunAsync((p, _) => received.Writer.TryWrite(p), cts.Token);
 
         var host = new IPEndPoint(IPAddress.Loopback, receiver.LocalPort);
         using (var raw = new UdpClient())
@@ -55,7 +55,7 @@ public class UdpInputTests
         using var cts = new CancellationTokenSource();
         int calls = 0;
         var loop = receiver.RunAsync(
-            p =>
+            (p, _) =>
             {
                 if (Interlocked.Increment(ref calls) == 1)
                     throw new InvalidOperationException("pad plug-in failed");

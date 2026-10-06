@@ -19,7 +19,7 @@ internal sealed class HostInputService : IDisposable
         _factory = factory;
         _pads = new PadManager(factory, TimeProvider.System);
         _receiver = receiver;
-        _receiveLoop = _receiver.RunAsync(p => _pads.Handle(p), _cts.Token, OnError);
+        _receiveLoop = _receiver.RunAsync((p, _) => _pads.Handle(p), _cts.Token, OnError);
         _staleTimer = new Timer(_ => ReleaseStale(), null, PadManager.CheckInterval, PadManager.CheckInterval);
     }
 

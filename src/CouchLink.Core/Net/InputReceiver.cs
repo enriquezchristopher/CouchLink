@@ -33,40 +33,24 @@ public sealed class InputReceiver : IDisposable
     public int LocalPort => ((IPEndPoint)_udp.Client.LocalEndPoint!).Port;
 
     /// <summary>
-    /// Receives until cancelled. An exception from <paramref name="onPacket"/> (e.g. a
-    /// virtual pad failing to plug in) is reported to <paramref name="onError"/> and the
-    /// loop keeps going, so one bad packet never stops input for every player.
+    /// Receives until cancelled, passing each valid input packet and keyframe request on with
+    /// the sender's address. An exception from a callback (e.g. a virtual pad failing to plug
+    /// in) is reported to <paramref name="onError"/> and the loop keeps going, so one bad
+    /// packet never stops input for every player.
     /// </summary>
-    public async Task RunAsync(Action<InputPacket> onPacket, CancellationToken ct, Action<Exception>? onError = null)
-    {
-        while (!ct.IsCancellationRequested)
+    public Task RunAsync(
+        Action<InputPacket, IPAddress> onPacket,
+        CancellationToken ct,
+        Action<Exception>? onError = null,
+        Action<KeyframeRequest, IPAddress>? onKeyframeRequest = null) =>
+        UdpReceiveLoop.RunAsync(_udp, result =>
         {
-            UdpReceiveResult result;
-            try
-            {
-                result = await _udp.ReceiveAsync(ct);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-            catch (SocketException)
-            {
-                continue; // e.g. ICMP port-unreachable reset on Windows; keep listening
-            }
-
-            if (!InputPacket.TryParse(result.Buffer, out var packet))
-                continue;
-            try
-            {
-                onPacket(packet);
-            }
-            catch (Exception e)
-            {
-                onError?.Invoke(e);
-            }
-        }
-    }
+            var from = result.RemoteEndPoint.Address;
+            if (InputPacket.TryParse(result.Buffer, out var packet))
+                onPacket(packet, from);
+            else if (onKeyframeRequest is not null && KeyframeRequest.TryParse(result.Buffer, out var request))
+                onKeyframeRequest(request, from);
+        }, ct, onError);
 
     public void Dispose() => _udp.Dispose();
 }
