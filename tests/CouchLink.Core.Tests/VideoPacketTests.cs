@@ -1,0 +1,103 @@
+using CouchLink.Core.Input;
+using CouchLink.Core.Protocol;
+
+namespace CouchLink.Core.Tests;
+
+public class VideoPacketTests
+{
+    private static readonly VideoShardHeader Sample = new(
+        StreamId: 0xBEEF, Frame: 123_456, Keyframe: true, FrameLength: 150_000,
+        Block: 1, BlockCount: 2, Shard: 7, DataShards: 125, ParityShards: 25);
+
+    private static byte[] Packet(VideoShardHeader header)
+    {
+        var packet = new byte[VideoShardPacket.Size];
+        VideoShardPacket.WriteHeader(packet, header);
+        return packet;
+    }
+
+    [Fact]
+    public void Header_round_trips()
+    {
+        Assert.True(VideoShardPacket.TryParse(Packet(Sample), out var parsed));
+        Assert.Equal(Sample, parsed);
+        Assert.True(VideoShardPacket.TryParse(Packet(Sample with { Keyframe = false }), out parsed));
+        Assert.False(parsed.Keyframe);
+    }
+
+    [Fact]
+    public void Payload_follows_the_header()
+    {
+        var packet = Packet(Sample);
+        packet[VideoShardPacket.HeaderSize] = 0xAB;
+        packet[^1] = 0xCD;
+        var payload = VideoShardPacket.Payload(packet);
+        Assert.Equal(VideoShardPacket.PayloadSize, payload.Length);
+        Assert.Equal(0xAB, payload[0]);
+        Assert.Equal(0xCD, payload[^1]);
+    }
+
+    [Theory]
+    [InlineData(VideoShardPacket.Size - 1)]
+    [InlineData(VideoShardPacket.Size + 1)]
+    [InlineData(InputPacket.Size)]
+    public void Wrong_length_is_rejected(int length)
+    {
+        var packet = new byte[length];
+        Packet(Sample).AsSpan(0, Math.Min(length, VideoShardPacket.Size)).CopyTo(packet);
+        Assert.False(VideoShardPacket.TryParse(packet, out _));
+    }
+
+    [Fact]
+    public void Wrong_magic_version_or_type_is_rejected()
+    {
+        foreach (int offset in new[] { 0, 2, 3 })
+        {
+            var packet = Packet(Sample);
+            packet[offset] ^= 0xFF;
+            Assert.False(VideoShardPacket.TryParse(packet, out _), $"byte {offset} changed");
+        }
+    }
+
+    [Theory]
+    [InlineData("no blocks")]
+    [InlineData("block past the end")]
+    [InlineData("no data shards")]
+    [InlineData("shard past the end")]
+    [InlineData("empty frame")]
+    [InlineData("too many shards for Reed-Solomon")]
+    public void Impossible_headers_are_rejected(string problem)
+    {
+        var header = problem switch
+        {
+            "no blocks" => Sample with { Block = 0, BlockCount = 0 },
+            "block past the end" => Sample with { Block = 2 },
+            "no data shards" => Sample with { DataShards = 0 },
+            "shard past the end" => Sample with { Shard = 150 }, // 125 + 25 shards: 0..149
+            "empty frame" => Sample with { FrameLength = 0 },
+            "too many shards for Reed-Solomon" => Sample with { DataShards = 250, ParityShards = 10 },
+            _ => throw new ArgumentException(problem),
+        };
+        Assert.False(VideoShardPacket.TryParse(Packet(header), out _));
+    }
+
+    [Fact]
+    public void Keyframe_request_round_trips_and_is_no_other_packet()
+    {
+        var bytes = new byte[KeyframeRequest.Size];
+        new KeyframeRequest(Slot: 5).WriteTo(bytes);
+        Assert.True(KeyframeRequest.TryParse(bytes, out var request));
+        Assert.Equal((byte)5, request.Slot);
+        Assert.False(InputPacket.TryParse(bytes, out _));
+        Assert.False(VideoShardPacket.TryParse(bytes, out _));
+    }
+
+    [Fact]
+    public void Input_packet_is_not_a_keyframe_request()
+    {
+        var bytes = new byte[InputPacket.Size];
+        new InputPacket(2, 1, 1, PadState.Neutral).WriteTo(bytes);
+        Assert.False(KeyframeRequest.TryParse(bytes, out _));
+        Assert.False(KeyframeRequest.TryParse(bytes.AsSpan(0, KeyframeRequest.Size), out _)); // right size, wrong type
+    }
+}
