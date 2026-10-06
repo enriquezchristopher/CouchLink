@@ -40,6 +40,9 @@ public class StreamSettingsTests
     [InlineData(144, new[] { 60, 75, 90, 120, 144 })]
     [InlineData(240, new[] { 60, 75, 90, 120, 144, 165, 240 })]
     [InlineData(30, new[] { 60 })]   // 60 is always offered
+    [InlineData(143, new[] { 60, 75, 90, 120, 144 })] // Windows truncates 143.86 Hz
+    [InlineData(164, new[] { 60, 75, 90, 120, 144, 165 })]
+    [InlineData(239, new[] { 60, 75, 90, 120, 144, 165, 240 })]
     public void Only_rates_up_to_the_display_refresh_are_offered(int refresh, int[] expected)
     {
         Assert.Equal(expected, StreamSettings.FrameRatesFor(refresh));

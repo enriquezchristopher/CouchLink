@@ -11,6 +11,8 @@ public class ScreenVideoSourceTests
     private readonly FakeTimeProvider _time = new();
     private readonly FakeCapture _capture;
     private readonly List<FakeEncoder> _opened = [];
+    private readonly HashSet<string> _failing = [];
+    private int _openAttempts;
     private readonly DateTimeOffset _start;
 
     public ScreenVideoSourceTests()
@@ -25,7 +27,8 @@ public class ScreenVideoSourceTests
         new(_capture, [EncoderChoice.Amf, EncoderChoice.Software],
             (name, size) =>
             {
-                if (failing.Contains(name))
+                _openAttempts++;
+                if (failing.Contains(name) || _failing.Contains(name))
                     throw new InvalidOperationException($"{name} is not available");
                 var encoder = new FakeEncoder(name, size);
                 _opened.Add(encoder);
@@ -33,10 +36,15 @@ public class ScreenVideoSourceTests
             },
             settings ?? StreamSettings.Default, _time, t => _time.Advance(t));
 
+    /// <summary>Calls until a frame comes out, like the streamer does.</summary>
     private EncodedFrame Next(ScreenVideoSource source, bool force = false)
     {
-        Assert.True(source.TryGetFrame(force, Timeout, out var frame));
-        return frame;
+        for (int i = 0; i < 100; i++)
+        {
+            if (source.TryGetFrame(force, Timeout, out var frame))
+                return frame;
+        }
+        throw new Xunit.Sdk.XunitException("No frame after 100 calls");
     }
 
     [Fact]
@@ -53,16 +61,20 @@ public class ScreenVideoSourceTests
     }
 
     [Fact]
-    public void Changes_faster_than_the_frame_rate_wait_for_the_next_slot()
+    public void Changes_faster_than_the_frame_rate_send_the_newest_image_at_the_next_slot()
     {
         _capture.Script.Enqueue(CaptureStatus.NewFrame);
-        _capture.Script.Enqueue(CaptureStatus.NewFrame);
+        _capture.Script.Enqueue(CaptureStatus.NewFrame); // arrives early in the next slot
         using var source = Source();
-
-        Next(source);
         Next(source);
 
+        // The early image is kept, not sent: newer ones may still arrive before the slot.
+        Assert.False(source.TryGetFrame(false, Timeout, out _));
+        Assert.Equal(TimeSpan.Zero, Elapsed);
+
+        Next(source); // nothing newer: the slot sends the latest image
         Assert.Equal(Interval60, Elapsed);
+        Assert.Equal(2, _opened[0].ForcedKeyframes.Count);
     }
 
     [Fact]
@@ -92,6 +104,78 @@ public class ScreenVideoSourceTests
 
         // Frames start every interval; only the last one's 5 ms of encoding shows on top.
         Assert.Equal(2 * Interval60 + TimeSpan.FromMilliseconds(5), Elapsed);
+    }
+
+    [Fact]
+    public void Late_waits_do_not_slow_the_frame_rate()
+    {
+        _capture.Script.Enqueue(CaptureStatus.NewFrame);
+        _capture.Overshoot = TimeSpan.FromMilliseconds(0.5);
+        using var source = Source(new StreamSettings(StreamResolution.P1080, 240));
+        var interval = TimeSpan.FromTicks(TimeSpan.TicksPerSecond / 240);
+
+        for (int i = 0; i < 10; i++)
+            Next(source);
+
+        // Frames stay on the 240 fps schedule; only the last wait's lateness shows.
+        Assert.Equal(9 * interval + TimeSpan.FromMilliseconds(0.5), Elapsed);
+    }
+
+    [Fact]
+    public void A_frame_a_whole_interval_late_restarts_the_schedule()
+    {
+        _capture.Script.Enqueue(CaptureStatus.NewFrame);
+        using var source = Source();
+        Next(source);
+
+        _time.Advance(3 * Interval60); // e.g. the streamer was busy sending
+        Next(source);
+        Next(source);
+
+        Assert.Equal(4 * Interval60, Elapsed); // no burst of catch-up frames
+    }
+
+    [Fact]
+    public void A_failed_encoder_reopen_is_retried_until_one_opens()
+    {
+        _capture.Script.Enqueue(CaptureStatus.NewFrame);
+        using var source = Source(new StreamSettings(StreamResolution.P720, 60));
+        Next(source);
+
+        _capture.Width = 2560;
+        _failing.UnionWith([EncoderChoice.Amf, EncoderChoice.Software]);
+        Assert.False(source.TryGetFrame(false, Timeout, out _));
+        Assert.False(source.HasEncoder);
+        Assert.True(_opened[0].Disposed);
+
+        _failing.Clear();
+        _time.Advance(TimeSpan.FromSeconds(1));
+        var frame = Next(source);
+
+        Assert.True(source.HasEncoder);
+        Assert.Equal(new VideoSize(1706, 720), source.Size);
+        Assert.True(frame.Keyframe);
+    }
+
+    [Fact]
+    public void Encoder_retries_wait_instead_of_spinning()
+    {
+        _capture.Script.Enqueue(CaptureStatus.NewFrame);
+        using var source = Source();
+        Next(source);
+        _capture.Width = 2560;
+        _failing.UnionWith([EncoderChoice.Amf, EncoderChoice.Software]);
+        _openAttempts = 0;
+        int calls = 0;
+
+        var stop = Elapsed + TimeSpan.FromSeconds(2.5);
+        while (Elapsed < stop)
+        {
+            source.TryGetFrame(false, Timeout, out _);
+            Assert.True(++calls < 1000, "TryGetFrame returns without waiting");
+        }
+
+        Assert.Equal(3 * 2, _openAttempts); // at 0, 1 and 2 s, both encoders each time
     }
 
     [Fact]

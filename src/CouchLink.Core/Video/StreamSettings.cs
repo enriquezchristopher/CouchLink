@@ -40,9 +40,12 @@ public sealed record StreamSettings
     public StreamResolution Resolution { get; }
     public int FrameRate { get; }
 
-    /// <summary>Rates the host can pick: up to the display's refresh rate, and always 60.</summary>
+    /// <summary>
+    /// Rates the host can pick: up to the display's refresh rate, and always 60. Windows truncates
+    /// fractional rates (143.86 Hz reads 143), so a rate 1 Hz above the reported one still fits.
+    /// </summary>
     public static IReadOnlyList<int> FrameRatesFor(int refreshRate) =>
-        CommonFrameRates.Where(rate => rate == 60 || rate <= refreshRate).ToList();
+        CommonFrameRates.Where(rate => rate == 60 || rate <= refreshRate + 1).ToList();
 
     public static string Label(StreamResolution resolution) =>
         resolution == StreamResolution.Native ? "Native" : $"{(int)resolution}p";

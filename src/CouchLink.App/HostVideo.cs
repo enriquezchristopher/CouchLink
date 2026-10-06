@@ -77,7 +77,9 @@ internal sealed class HostVideo : IDisposable
             var s = streamer.Stats;
             text += $"\n  {s.Clients} client(s), {s.FramesSent} frames, {s.KeyframesSent} keyframes, {s.BytesSent / 1_000_000.0:0.0} MB";
         }
-        if (_screen is { IsHardware: false })
+        if (_screen is { HasEncoder: false })
+            text += $"\n  No video encoder after the screen changed; retrying ({string.Join(" ", _screen.SkippedEncoders)})";
+        else if (_screen is { IsHardware: false })
             text += $"\n  {EncoderChoice.SoftwareWarning}";
         if (_screen is { Paused: true })
             text += "\n  Host screen paused (capture lost)";

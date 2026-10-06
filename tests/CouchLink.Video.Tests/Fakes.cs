@@ -10,6 +10,7 @@ internal sealed class FakeCapture(FakeTimeProvider time) : IScreenCapture
     public List<TimeSpan> Waits { get; } = [];
     public int Width { get; set; } = 1920;
     public int Height { get; set; } = 1080;
+    public TimeSpan Overshoot { get; set; } // a real wait returns a little late
     public bool Disposed { get; private set; }
 
     public CaptureStatus TryCapture(TimeSpan timeout)
@@ -17,7 +18,7 @@ internal sealed class FakeCapture(FakeTimeProvider time) : IScreenCapture
         Waits.Add(timeout);
         var status = Script.Count > 0 ? Script.Dequeue() : CaptureStatus.NoChange;
         if (status == CaptureStatus.NoChange)
-            time.Advance(timeout);
+            time.Advance(timeout + Overshoot);
         return status;
     }
 
