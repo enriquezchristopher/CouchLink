@@ -58,10 +58,11 @@ internal sealed class RawInputSource : IDisposable
     {
         if (kb.VKey is 0 or 0xFF)
             return; // fake/overrun keys
+        var vk = VirtualKeys.FromRawKeyboard(kb.VKey, kb.MakeCode, kb.Flags);
         if ((kb.Flags & RI_KEY_BREAK) != 0)
-            KeyUp?.Invoke(kb.VKey);
+            KeyUp?.Invoke(vk);
         else
-            KeyDown?.Invoke(kb.VKey);
+            KeyDown?.Invoke(vk);
     }
 
     private void OnMouse(RAWMOUSE m)

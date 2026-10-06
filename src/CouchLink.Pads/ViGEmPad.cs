@@ -25,6 +25,8 @@ public sealed class ViGEmPad : IVirtualPad
         (PadButtons.Share, DualShock4Button.Share),
     ];
 
+    private static readonly List<IDualShock4Controller> Removed = [];
+
     private readonly IDualShock4Controller _pad;
 
     internal ViGEmPad(ViGEmClient client)
@@ -51,7 +53,17 @@ public sealed class ViGEmPad : IVirtualPad
         _pad.SubmitReport();
     }
 
-    public void Dispose() => _pad.Disconnect();
+    public void Dispose()
+    {
+        _pad.Disconnect();
+        // Never free the controller. Connect starts a native notification thread
+        // (vigemclient.dll) that nothing can stop; it stays blocked after unplug and
+        // reads the target struct if it ever wakes. Freeing the target (Dispose, or
+        // the finalizer once unreferenced) is a use-after-free that crashes the host.
+        // Rooting it costs about one idle thread and 2 handles per pad ever created.
+        lock (Removed)
+            Removed.Add(_pad);
+    }
 
     private static DualShock4DPadDirection ToViGEm(Dpad8 d) => d switch
     {

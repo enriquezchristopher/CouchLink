@@ -74,11 +74,42 @@ public class InputMapperTests
     public void Ctrl_and_Shift_are_full_L2_and_R2()
     {
         var m = NewMapper();
-        m.KeyDown(VirtualKeys.Control);
-        m.KeyDown(VirtualKeys.Shift);
+        m.KeyDown(VirtualKeys.LControl);
+        m.KeyDown(VirtualKeys.LShift);
         var s = m.Tick(0.001);
         Assert.Equal(PadButtons.L2 | PadButtons.R2, s.Buttons);
         Assert.Equal(((byte)255, (byte)255), (s.L2, s.R2));
+    }
+
+    [Fact]
+    public void Right_Ctrl_and_right_Shift_are_L2_and_R2_too()
+    {
+        var m = NewMapper();
+        m.KeyDown(VirtualKeys.RControl);
+        m.KeyDown(VirtualKeys.RShift);
+        Assert.Equal(PadButtons.L2 | PadButtons.R2, m.Tick(0.001).Buttons);
+    }
+
+    [Fact]
+    public void Releasing_one_of_two_held_Shift_keys_keeps_R2_pressed()
+    {
+        var m = NewMapper();
+        m.KeyDown(VirtualKeys.LShift);
+        m.KeyDown(VirtualKeys.RShift);
+        m.KeyUp(VirtualKeys.LShift);
+        Assert.Equal(PadButtons.R2, m.Tick(0.001).Buttons);
+        m.KeyUp(VirtualKeys.RShift);
+        Assert.Equal(PadButtons.None, m.Tick(0.001).Buttons);
+    }
+
+    [Fact]
+    public void Releasing_one_of_two_held_Ctrl_keys_keeps_L2_pressed()
+    {
+        var m = NewMapper();
+        m.KeyDown(VirtualKeys.RControl);
+        m.KeyDown(VirtualKeys.LControl);
+        m.KeyUp(VirtualKeys.RControl);
+        Assert.Equal(PadButtons.L2, m.Tick(0.001).Buttons);
     }
 
     [Fact]
@@ -115,7 +146,7 @@ public class InputMapperTests
     {
         // e.g. Ctrl+Alt+Del / Win+L: Ctrl's key-down arrived, its key-up never did
         var m = NewMapper();
-        m.KeyDown(VirtualKeys.Control);
+        m.KeyDown(VirtualKeys.LControl);
         m.KeyDown(W);
         m.SyncHeld(vk => vk == W); // only W is still physically down
         var s = m.Tick(0.001);
@@ -130,7 +161,7 @@ public class InputMapperTests
         var m = NewMapper();
         m.KeyDown(W);
         m.KeyDown(K);
-        m.KeyDown(VirtualKeys.Shift);
+        m.KeyDown(VirtualKeys.LShift);
         m.MouseMove(40, 40);
         m.ReleaseAll();
         Assert.Equal(PadState.Neutral, m.Tick(0.001));

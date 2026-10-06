@@ -2,6 +2,9 @@ using CouchLink.Core.Input;
 using CouchLink.Core.Pads;
 using CouchLink.Pads;
 
+if (args.Length > 0 && args[0].Equals("churn", StringComparison.OrdinalIgnoreCase))
+    return CouchLink.PadTest.ChurnMode.Run(int.TryParse(args.Skip(1).FirstOrDefault(), out var cycles) ? Math.Max(cycles, 1) : 100);
+
 bool check = args.Length > 0 && args[0].Equals("check", StringComparison.OrdinalIgnoreCase);
 var countArg = check ? args.Skip(1).FirstOrDefault() : args.FirstOrDefault();
 int count = int.TryParse(countArg, out var n) ? Math.Clamp(n, 1, 9) : 9;

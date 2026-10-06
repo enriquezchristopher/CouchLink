@@ -11,6 +11,25 @@ public sealed class InputReceiver : IDisposable
 
     public InputReceiver(int port) => _udp = new UdpClient(new IPEndPoint(IPAddress.Any, port));
 
+    /// <summary>Opens the port, or returns a message for the user if it can't be opened.</summary>
+    public static bool TryCreate(int port, out InputReceiver? receiver, out string? error)
+    {
+        try
+        {
+            receiver = new InputReceiver(port);
+            error = null;
+            return true;
+        }
+        catch (SocketException e)
+        {
+            receiver = null;
+            error = e.SocketErrorCode == SocketError.AddressAlreadyInUse
+                ? $"UDP port {port} is already in use. Is CouchLink already hosting on this PC?"
+                : $"Could not open UDP port {port}: {e.Message}";
+            return false;
+        }
+    }
+
     public int LocalPort => ((IPEndPoint)_udp.Client.LocalEndPoint!).Port;
 
     /// <summary>

@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private RawInputSource? _rawInput;
     private InputMapper? _mapper;
     private ClientInputLoop? _client;
+    private string _clientStatus = "";
 
     public MainWindow()
     {
@@ -55,10 +56,12 @@ public partial class MainWindow : Window
         _rawInput.KeyUp += _mapper.KeyUp;
         _rawInput.MouseMove += _mapper.MouseMove;
 
-        var inputSender = new InputSender(new IPEndPoint(ip, Ports.Input), (byte)(int)SlotBox.SelectedItem);
-        _client = new ClientInputLoop(_mapper, inputSender);
-        HostButton.IsEnabled = JoinButton.IsEnabled = false;
         var slot = (int)SlotBox.SelectedItem;
+        var inputSender = new InputSender(new IPEndPoint(ip, Ports.Input), (byte)slot);
+        _client = new ClientInputLoop(_mapper, inputSender);
+        // Raw Input keys still reach focused controls; lock them so play can't change what's shown.
+        HostButton.IsEnabled = JoinButton.IsEnabled = HostIpBox.IsEnabled = SlotBox.IsEnabled = false;
+        _clientStatus = $"Sending to {ip} as P{slot}";
         AppServices.DescribeMode = () => $"Client (slot P{slot})";
         AppServices.Log.Write($"Joined as P{slot}");
     }
@@ -85,7 +88,7 @@ public partial class MainWindow : Window
         {
             var s = _client.LastSent;
             StatusText.Text =
-                $"Sending to {HostIpBox.Text} as P{SlotBox.SelectedItem}\n" +
+                $"{_clientStatus}\n" +
                 $"Buttons: {s.Buttons}\nL: {s.LX},{s.LY}  R: {s.RX},{s.RY}  L2/R2: {s.L2}/{s.R2}";
         }
     }

@@ -95,6 +95,35 @@ public class PadManagerTests
     }
 
     [Fact]
+    public void Silent_pad_is_neutral_within_525ms_when_checked_every_CheckInterval()
+    {
+        // Checks run at 0, CheckInterval, 2*CheckInterval...; worst case is the last
+        // packet landing 1 ms after a check.
+        var sincePacket = TimeSpan.Zero;
+        void Step(TimeSpan by)
+        {
+            _time.Advance(by);
+            sincePacket += by;
+        }
+
+        Step(TimeSpan.FromMilliseconds(1));
+        _manager.Handle(Packet(2, 1));
+        sincePacket = TimeSpan.Zero;
+        var pad = _factory.Created[0];
+
+        Step(PadManager.CheckInterval - TimeSpan.FromMilliseconds(1));
+        _manager.ReleaseStale();
+        while (pad.Applied[^1] != PadState.Neutral)
+        {
+            Step(PadManager.CheckInterval);
+            _manager.ReleaseStale();
+            Assert.True(sincePacket < TimeSpan.FromSeconds(2), "pad was never released");
+        }
+
+        Assert.InRange(sincePacket, PadManager.StaleAfter, TimeSpan.FromMilliseconds(525));
+    }
+
+    [Fact]
     public void Active_pad_is_not_released()
     {
         _manager.Handle(Packet(2, 1));
