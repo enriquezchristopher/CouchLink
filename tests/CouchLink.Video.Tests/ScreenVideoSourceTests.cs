@@ -80,6 +80,21 @@ public class ScreenVideoSourceTests
     }
 
     [Fact]
+    public void Encoding_time_does_not_slow_the_frame_rate()
+    {
+        _capture.Script.Enqueue(CaptureStatus.NewFrame);
+        using var source = Source();
+        _opened[0].OnEncode = () => _time.Advance(TimeSpan.FromMilliseconds(5));
+
+        Next(source);
+        Next(source);
+        Next(source);
+
+        // Frames start every interval; only the last one's 5 ms of encoding shows on top.
+        Assert.Equal(2 * Interval60 + TimeSpan.FromMilliseconds(5), Elapsed);
+    }
+
+    [Fact]
     public void The_chosen_frame_rate_sets_the_frame_interval()
     {
         _capture.Script.Enqueue(CaptureStatus.NewFrame);

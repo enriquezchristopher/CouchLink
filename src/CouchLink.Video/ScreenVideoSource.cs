@@ -21,6 +21,7 @@ public sealed class ScreenVideoSource : IEncodedVideoSource
     private readonly long _start;
     private readonly TimeSpan _interval;
     private readonly List<string> _skipped = [];
+    private readonly TimerResolution? _timerResolution;
     private IFrameEncoder _encoder;
     private (int Width, int Height) _encodedFrom;
     private TimeSpan? _lastSent;
@@ -43,6 +44,8 @@ public sealed class ScreenVideoSource : IEncodedVideoSource
         _start = time.GetTimestamp();
         _interval = TimeSpan.FromTicks(TimeSpan.TicksPerSecond / settings.FrameRate);
         _encoder = OpenEncoder();
+        if (sleep is null)
+            _timerResolution = new TimerResolution(); // real sleeps need 1 ms precision to keep the frame rate
     }
 
     public string EncoderName => _encoder.Name;
@@ -94,12 +97,13 @@ public sealed class ScreenVideoSource : IEncodedVideoSource
             _keyframeOwed = true;
         }
 
+        var slot = Now; // the next frame is due one interval after this, however long encoding takes
         if (!_encoder.Encode(forceKeyframe || _keyframeOwed, out var encoded))
             return false;
         if (encoded.Keyframe)
             _keyframeOwed = false;
         frame = encoded with { Paused = Paused };
-        _lastSent = Now;
+        _lastSent = slot;
         return true;
     }
 
@@ -129,5 +133,6 @@ public sealed class ScreenVideoSource : IEncodedVideoSource
     {
         _encoder.Dispose();
         _capture.Dispose();
+        _timerResolution?.Dispose();
     }
 }

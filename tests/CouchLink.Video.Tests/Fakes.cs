@@ -34,11 +34,13 @@ internal sealed class FakeEncoder(string name, VideoSize size) : IFrameEncoder
     public VideoSize Size { get; } = size;
     public List<bool> ForcedKeyframes { get; } = [];
     public bool ProducePackets { get; set; } = true;
+    public Action? OnEncode { get; set; } // e.g. advance fake time to simulate encoding work
     public bool Disposed { get; private set; }
 
     public bool Encode(bool forceKeyframe, out EncodedFrame frame)
     {
         ForcedKeyframes.Add(forceKeyframe);
+        OnEncode?.Invoke();
         bool keyframe = forceKeyframe || _first;
         _first = false;
         frame = new EncodedFrame(new byte[] { 1, 2, 3 }, keyframe);
