@@ -30,7 +30,29 @@ public static class VideoShardPacket
     public const int PayloadSize = 1200;
     public const int Size = HeaderSize + PayloadSize;
 
+    /// <summary>Largest frame a client accepts (a 1080p keyframe is well under 1 MB); bounds memory for forged headers.</summary>
+    public const uint MaxFrameLength = 4 * 1024 * 1024;
+
+    /// <summary>At most this many data shards per FEC block.</summary>
+    public const int MaxDataShardsPerBlock = 200;
+
+    /// <summary>Parity per block is 10-20% of its data shards, rounded up.</summary>
+    public const int MinParityPercent = 10;
+    public const int MaxParityPercent = 20;
+
     private const byte FlagKeyframe = 1;
+
+    /// <summary>Data shards needed for a frame of this many bytes.</summary>
+    public static int DataShardsFor(uint frameLength) => (int)((frameLength + PayloadSize - 1) / PayloadSize);
+
+    /// <summary>FEC blocks for this many data shards: as few as possible.</summary>
+    public static int BlocksFor(int dataShards) => (dataShards + MaxDataShardsPerBlock - 1) / MaxDataShardsPerBlock;
+
+    /// <summary>Data shards in one block; block sizes differ by at most one, larger blocks first.</summary>
+    public static int DataShardsInBlock(int dataShards, int blockCount, int block) =>
+        dataShards / blockCount + (block < dataShards % blockCount ? 1 : 0);
+
+    public static int ParityShardsFor(int dataShards, int parityPercent) => (dataShards * parityPercent + 99) / 100;
 
     public static void WriteHeader(Span<byte> packet, in VideoShardHeader header)
     {
@@ -72,7 +94,17 @@ public static class VideoShardPacket
             || parsed.DataShards == 0
             || parsed.TotalShards > ReedSolomon.MaxTotalShards
             || parsed.Shard >= parsed.TotalShards
-            || parsed.FrameLength == 0)
+            || parsed.FrameLength == 0
+            || parsed.FrameLength > MaxFrameLength)
+            return false;
+
+        // Only shapes the packetizer can produce, so forged headers can't make a client hold
+        // more than a few real frames' worth of memory.
+        int dataShards = DataShardsFor(parsed.FrameLength);
+        if (parsed.BlockCount != BlocksFor(dataShards)
+            || parsed.DataShards != DataShardsInBlock(dataShards, parsed.BlockCount, parsed.Block)
+            || parsed.ParityShards < ParityShardsFor(parsed.DataShards, MinParityPercent)
+            || parsed.ParityShards > ParityShardsFor(parsed.DataShards, MaxParityPercent))
             return false;
 
         header = parsed;

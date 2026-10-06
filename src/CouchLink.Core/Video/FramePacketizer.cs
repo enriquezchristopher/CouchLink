@@ -11,9 +11,9 @@ namespace CouchLink.Core.Video;
 /// </summary>
 public sealed class FramePacketizer
 {
-    public const int MaxDataShardsPerBlock = 200;
-    public const int MinParityPercent = 10;
-    public const int MaxParityPercent = 20;
+    public const int MaxDataShardsPerBlock = VideoShardPacket.MaxDataShardsPerBlock;
+    public const int MinParityPercent = VideoShardPacket.MinParityPercent;
+    public const int MaxParityPercent = VideoShardPacket.MaxParityPercent;
     public const int DefaultParityPercent = 20;
 
     public FramePacketizer(ushort streamId, int parityPercent = DefaultParityPercent)
@@ -29,23 +29,24 @@ public sealed class FramePacketizer
     public int ParityPercent { get; }
 
     public static int ParityShardsFor(int dataShards, int parityPercent) =>
-        (dataShards * parityPercent + 99) / 100;
+        VideoShardPacket.ParityShardsFor(dataShards, parityPercent);
 
     public List<byte[]> Packetize(uint frameNumber, ReadOnlySpan<byte> frame, bool keyframe)
     {
         if (frame.IsEmpty)
             throw new ArgumentException("Frame is empty.", nameof(frame));
+        if (frame.Length > VideoShardPacket.MaxFrameLength)
+            throw new ArgumentException(
+                $"A {frame.Length}-byte frame is over the {VideoShardPacket.MaxFrameLength}-byte limit.", nameof(frame));
 
-        int totalData = (frame.Length + VideoShardPacket.PayloadSize - 1) / VideoShardPacket.PayloadSize;
-        int blockCount = (totalData + MaxDataShardsPerBlock - 1) / MaxDataShardsPerBlock;
-        if (blockCount > byte.MaxValue)
-            throw new ArgumentException($"A {frame.Length}-byte frame is too large to send.", nameof(frame));
+        int totalData = VideoShardPacket.DataShardsFor((uint)frame.Length);
+        int blockCount = VideoShardPacket.BlocksFor(totalData);
 
         var packets = new List<byte[]>();
         int firstShard = 0; // index of this block's first data shard within the frame
         for (int block = 0; block < blockCount; block++)
         {
-            int k = totalData / blockCount + (block < totalData % blockCount ? 1 : 0);
+            int k = VideoShardPacket.DataShardsInBlock(totalData, blockCount, block);
             int m = ParityShardsFor(k, ParityPercent);
             var shards = new Memory<byte>[k + m];
             for (int s = 0; s < k + m; s++)

@@ -5,9 +5,16 @@ namespace CouchLink.Core.Tests;
 
 public class VideoPacketTests
 {
+    // 300 000 bytes = 250 data shards = 2 blocks of 125, each with 25 parity (20%).
     private static readonly VideoShardHeader Sample = new(
-        StreamId: 0xBEEF, Frame: 123_456, Keyframe: true, FrameLength: 150_000,
+        StreamId: 0xBEEF, Frame: 123_456, Keyframe: true, FrameLength: 300_000,
         Block: 1, BlockCount: 2, Shard: 7, DataShards: 125, ParityShards: 25);
+
+    // The largest frame a client accepts: 3496 data shards = 18 blocks; block 1 has 195.
+    private static readonly VideoShardHeader Largest = Sample with
+    {
+        FrameLength = VideoShardPacket.MaxFrameLength, BlockCount = 18, DataShards = 195, ParityShards = 39,
+    };
 
     private static byte[] Packet(VideoShardHeader header)
     {
@@ -23,6 +30,13 @@ public class VideoPacketTests
         Assert.Equal(Sample, parsed);
         Assert.True(VideoShardPacket.TryParse(Packet(Sample with { Keyframe = false }), out parsed));
         Assert.False(parsed.Keyframe);
+    }
+
+    [Fact]
+    public void The_largest_allowed_frame_parses()
+    {
+        Assert.True(VideoShardPacket.TryParse(Packet(Largest), out var parsed));
+        Assert.Equal(Largest, parsed);
     }
 
     [Fact]
@@ -66,10 +80,25 @@ public class VideoPacketTests
     [InlineData("shard past the end")]
     [InlineData("empty frame")]
     [InlineData("too many shards for Reed-Solomon")]
+    [InlineData("a block of more than 200 data shards")]
+    [InlineData("block count that doesn't match the length")]
+    [InlineData("data shards that don't match the length")]
+    [InlineData("less than 10% parity")]
+    [InlineData("more than 20% parity")]
+    [InlineData("frame over the size limit")]
     public void Impossible_headers_are_rejected(string problem)
     {
         var header = problem switch
         {
+            "a block of more than 200 data shards" => Sample with
+            {
+                FrameLength = 201 * 1200, Block = 0, BlockCount = 1, DataShards = 201, ParityShards = 41,
+            },
+            "block count that doesn't match the length" => Sample with { BlockCount = 3 },
+            "data shards that don't match the length" => Sample with { DataShards = 124 },
+            "less than 10% parity" => Sample with { ParityShards = 12 },
+            "more than 20% parity" => Sample with { ParityShards = 26 },
+            "frame over the size limit" => Largest with { FrameLength = VideoShardPacket.MaxFrameLength + 1 },
             "no blocks" => Sample with { Block = 0, BlockCount = 0 },
             "block past the end" => Sample with { Block = 2 },
             "no data shards" => Sample with { DataShards = 0 },

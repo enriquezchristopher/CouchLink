@@ -157,14 +157,15 @@ public class FrameAssemblerTests
     }
 
     [Fact]
-    public void Frame_whose_length_does_not_fit_its_shards_is_dropped()
+    public void Packets_whose_length_does_not_fit_their_shards_are_ignored()
     {
         var (_, packets) = Make(1, 100); // 1 data shard can't hold 5000 bytes
         var lost = new List<uint>();
         var a = new FrameAssembler(lost.Add);
 
         Assert.Empty(Feed(a, packets.Select(p => Rewrite(p, h => h with { FrameLength = 5_000 }))));
-        Assert.Equal(new[] { 1u }, lost);
+        Assert.Empty(lost);              // rejected by the parser, so no frame was ever started
+        Assert.Equal(0, a.PendingFrames);
     }
 
     [Fact]

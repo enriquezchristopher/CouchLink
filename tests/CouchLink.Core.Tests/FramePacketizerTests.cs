@@ -133,4 +133,20 @@ public class FramePacketizerTests
     {
         Assert.Throws<ArgumentException>(() => new FramePacketizer(1).Packetize(0, Array.Empty<byte>(), false));
     }
+
+    [Fact]
+    public void Frame_over_the_size_limit_is_rejected()
+    {
+        var frame = new byte[VideoShardPacket.MaxFrameLength + 1];
+        Assert.Throws<ArgumentException>(() => new FramePacketizer(1).Packetize(0, frame, true));
+    }
+
+    [Fact]
+    public void Every_shape_the_packetizer_makes_parses_at_10_and_20_percent()
+    {
+        foreach (int percent in new[] { 10, 20 })
+            foreach (int length in new[] { 1, 1200, 1201, 239_999, 240_000, 240_001, 1_000_000, (int)VideoShardPacket.MaxFrameLength })
+                Assert.All(new FramePacketizer(1, percent).Packetize(0, new byte[length], false),
+                    p => Assert.True(VideoShardPacket.TryParse(p, out _), $"{length} bytes at {percent}%"));
+    }
 }
