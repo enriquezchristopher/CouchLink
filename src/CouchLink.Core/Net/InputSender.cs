@@ -11,6 +11,7 @@ public sealed class InputSender : IDisposable
     private readonly UdpClient _udp = new();
     private readonly byte[] _buffer = new byte[InputPacket.Size];
     private readonly byte[] _keyframeRequest = new byte[KeyframeRequest.Size];
+    private readonly byte[] _timingPing = new byte[TimingPing.Size];
     private readonly byte _slot;
     private uint _sequence;
 
@@ -48,6 +49,20 @@ public sealed class InputSender : IDisposable
         catch (SocketException)
         {
             // Host not reachable right now; the client repeats the request until a keyframe arrives.
+        }
+    }
+
+    /// <summary>Sends a timing ping stamped with the caller's clock. Call from one thread at a time.</summary>
+    public void SendTimingPing(long clientTicks)
+    {
+        new TimingPing(_slot, clientTicks).WriteTo(_timingPing);
+        try
+        {
+            _udp.Send(_timingPing, _timingPing.Length);
+        }
+        catch (SocketException)
+        {
+            // Host not reachable right now; the next ping, a second later, tries again.
         }
     }
 

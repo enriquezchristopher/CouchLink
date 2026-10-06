@@ -83,4 +83,60 @@ public class UdpVideoTests
         cts.Cancel();
         await loop.WaitAsync(Timeout);
     }
+
+    [Fact]
+    public async Task Timing_pings_reach_the_host_with_the_sender_address()
+    {
+        using var receiver = new InputReceiver(port: 0);
+        var pings = Channel.CreateUnbounded<(TimingPing Ping, IPAddress From)>();
+        using var cts = new CancellationTokenSource();
+        var loop = receiver.RunAsync((_, _) => { }, cts.Token,
+            onTimingPing: (p, from) => pings.Writer.TryWrite((p, from)));
+
+        using var sender = new InputSender(new IPEndPoint(IPAddress.Loopback, receiver.LocalPort), slot: 4);
+        sender.SendTimingPing(clientTicks: 77);
+
+        using var wait = new CancellationTokenSource(Timeout);
+        var ping = await pings.Reader.ReadAsync(wait.Token);
+        Assert.Equal(new TimingPing(4, 77), ping.Ping);
+        Assert.Equal(IPAddress.Loopback, ping.From);
+
+        cts.Cancel();
+        await loop.WaitAsync(Timeout);
+    }
+
+    /// <summary>Like a busy UI thread: work posted to it never runs.</summary>
+    private sealed class BlockedContext : SynchronizationContext
+    {
+        public override void Post(SendOrPostCallback d, object? state) { }
+        public override void Send(SendOrPostCallback d, object? state) { }
+    }
+
+    [Fact]
+    public async Task Datagrams_are_handled_off_the_starting_threads_context()
+    {
+        // The app starts the client on the WPF UI thread; packets must not wait for that thread.
+        using var receiver = new VideoReceiver(port: 0);
+        using var got = new ManualResetEventSlim();
+        using var cts = new CancellationTokenSource();
+        var previous = SynchronizationContext.Current;
+        Task loop;
+        try
+        {
+            SynchronizationContext.SetSynchronizationContext(new BlockedContext());
+            loop = receiver.RunAsync(_ => got.Set(), cts.Token);
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(previous);
+        }
+
+        using var udp = new UdpClient();
+        var packet = new byte[] { 1, 2, 3 };
+        udp.Send(packet, packet.Length, new IPEndPoint(IPAddress.Loopback, receiver.LocalPort));
+
+        Assert.True(got.Wait(Timeout), "the datagram was never handled");
+        cts.Cancel();
+        await loop.WaitAsync(Timeout); // stops promptly when cancelled
+    }
 }

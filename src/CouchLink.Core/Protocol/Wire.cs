@@ -11,6 +11,8 @@ public static class Wire
     public const byte TypeInput = 1;
     public const byte TypeVideoShard = 2;
     public const byte TypeKeyframeRequest = 3;
+    public const byte TypeTimingPing = 4;
+    public const byte TypeTimingReply = 5;
 
     public static void WriteHeader(Span<byte> destination, byte type)
     {

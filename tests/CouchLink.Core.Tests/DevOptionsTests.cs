@@ -21,4 +21,11 @@ public class DevOptionsTests
     {
         Assert.Null(DevOptions.Parse(["--save-video="]).SaveVideoPath);
     }
+
+    [Fact]
+    public void Windowed_player_is_a_dev_switch()
+    {
+        Assert.True(DevOptions.Parse(["--windowed-player"]).WindowedPlayer);
+        Assert.False(DevOptions.Parse([]).WindowedPlayer);
+    }
 }

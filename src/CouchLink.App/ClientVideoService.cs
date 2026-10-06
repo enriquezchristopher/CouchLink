@@ -1,51 +1,76 @@
 using System.IO;
 using CouchLink.Core.Net;
 using CouchLink.Core.Video;
+using CouchLink.Video;
 
 namespace CouchLink.App;
 
 /// <summary>
-/// Client side: receives the host's video on UDP 47802. Until Plan 5 adds a decoder it can
-/// save the H.264 it receives (--save-video=&lt;file&gt;) so the stream can be checked with
-/// ffprobe/ffplay. Dispose before the <see cref="InputSender"/> it sends keyframe requests through.
+/// Client side: receives the host's video on UDP 47802 and shows it in the player window (and,
+/// with --save-video=&lt;file&gt;, also saves the H.264). <c>leave</c> runs on the player thread when
+/// the player asks to leave (Ctrl+Alt+Q, Alt+F4). Dispose before the <see cref="InputSender"/> it
+/// sends keyframe requests and timing pings through.
 /// </summary>
 internal sealed class ClientVideoService : IDisposable
 {
     private readonly VideoClient _client;
+    private readonly VideoPlayer _player;
     private readonly FileStream? _save;
 
-    private ClientVideoService(VideoReceiver receiver, InputSender sender, string? savePath)
+    private ClientVideoService(VideoReceiver receiver, InputSender sender, PlayerOptions options, string? savePath, Action leave)
     {
+        VideoClient? client = null;
+        _player = new VideoPlayer(options, () => client?.Stats ?? default, () => client?.DecodeFailed(),
+            leave, message => AppServices.Log.Write(message));
         _save = savePath is null ? null : File.Create(savePath);
-        _client = new VideoClient(
+        client = new VideoClient(
             receiver, sender.SendKeyframeRequest, OnFrame, TimeProvider.System,
-            e => AppServices.Log.Write($"Video error: {e}"));
+            e => AppServices.Log.Write($"Video error: {e}"), sender.SendTimingPing);
+        _client = client;
     }
 
-    public static bool TryStart(InputSender sender, string? savePath, out ClientVideoService? service, out string? error)
+    public static bool TryStart(InputSender sender, PlayerOptions options, string? savePath, Action leave,
+        out ClientVideoService? service, out string? error)
     {
         service = null;
         if (!VideoReceiver.TryCreate(Ports.Video, out var receiver, out error))
             return false;
-        service = new ClientVideoService(receiver!, sender, savePath);
-        return true;
+        try
+        {
+            service = new ClientVideoService(receiver!, sender, options, savePath, leave);
+            return true;
+        }
+        catch (InvalidOperationException e)
+        {
+            receiver!.Dispose();
+            error = e.Message;
+            return false;
+        }
     }
 
-    private void OnFrame(AssembledFrame frame) => _save?.Write(frame.Data); // receive thread only
+    public nint PlayerWindow => _player.WindowHandle;
+
+    private void OnFrame(AssembledFrame frame) // receive thread only
+    {
+        _save?.Write(frame.Data);
+        _player.Enqueue(frame);
+    }
 
     public string Describe()
     {
         var s = _client.Stats;
-        return $"Video: {s.FramesDelivered} frames, {s.Receive.ShardsRecovered} repaired, " +
+        return $"Video: {_player.FramesShown} shown ({_player.DecoderName}), {s.Receive.ShardsRecovered} repaired, " +
                $"{s.Receive.FramesLost} lost, loss {s.Receive.LossPercent:0.0}%" +
                (s.WaitingForKeyframe ? ", waiting for keyframe" : "") +
                (s.HostPaused ? ", host screen paused" : "") +
+               (s.RoundTrip is { } rtt ? $", round trip {rtt.TotalMilliseconds:0.0} ms" : "") +
                (_save is null ? "" : $"\nSaving to {_save.Name}");
     }
 
     public void Dispose()
     {
-        _client.Dispose(); // stops the receive thread before the file closes
+        _client.Dispose(); // stops the receive thread before the player and the file close
+        _player.Dispose();
         _save?.Dispose();
     }
 }

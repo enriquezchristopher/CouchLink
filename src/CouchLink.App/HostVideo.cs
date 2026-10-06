@@ -1,5 +1,6 @@
 using System.Net;
 using CouchLink.Core.Net;
+using CouchLink.Core.Protocol;
 using CouchLink.Core.Video;
 using CouchLink.Video;
 
@@ -68,6 +69,8 @@ internal sealed class HostVideo : IDisposable
     public void ClientSeen(byte slot, IPAddress from) => _streamer?.ClientSeen(slot, from);
 
     public void RequestKeyframe() => _streamer?.RequestKeyframe();
+
+    public void ReplyToTimingPing(TimingPing ping, IPAddress from) => _streamer?.ReplyToTimingPing(ping, from);
 
     public string Describe()
     {

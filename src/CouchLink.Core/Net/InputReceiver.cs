@@ -33,7 +33,7 @@ public sealed class InputReceiver : IDisposable
     public int LocalPort => ((IPEndPoint)_udp.Client.LocalEndPoint!).Port;
 
     /// <summary>
-    /// Receives until cancelled, passing each valid input packet and keyframe request on with
+    /// Receives until cancelled, passing each valid input packet, keyframe request and timing ping on with
     /// the sender's address. An exception from a callback (e.g. a virtual pad failing to plug
     /// in) is reported to <paramref name="onError"/> and the loop keeps going, so one bad
     /// packet never stops input for every player.
@@ -42,7 +42,8 @@ public sealed class InputReceiver : IDisposable
         Action<InputPacket, IPAddress> onPacket,
         CancellationToken ct,
         Action<Exception>? onError = null,
-        Action<KeyframeRequest, IPAddress>? onKeyframeRequest = null) =>
+        Action<KeyframeRequest, IPAddress>? onKeyframeRequest = null,
+        Action<TimingPing, IPAddress>? onTimingPing = null) =>
         UdpReceiveLoop.RunAsync(_udp, result =>
         {
             var from = result.RemoteEndPoint.Address;
@@ -50,6 +51,8 @@ public sealed class InputReceiver : IDisposable
                 onPacket(packet, from);
             else if (onKeyframeRequest is not null && KeyframeRequest.TryParse(result.Buffer, out var request))
                 onKeyframeRequest(request, from);
+            else if (onTimingPing is not null && TimingPing.TryParse(result.Buffer, out var ping))
+                onTimingPing(ping, from);
         }, ct, onError);
 
     public void Dispose() => _udp.Dispose();

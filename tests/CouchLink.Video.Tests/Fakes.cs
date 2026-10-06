@@ -50,3 +50,35 @@ internal sealed class FakeEncoder(string name, VideoSize size) : IFrameEncoder
 
     public void Dispose() => Disposed = true;
 }
+
+/// <summary>"Decodes" a frame whose data is its frame number (4 bytes); picture.Frame is that number.</summary>
+internal sealed class FakeDecoder(bool hardware) : IFrameDecoder
+{
+    public string Name => IsHardware ? "D3D11VA" : "software";
+    public bool IsHardware { get; private set; } = hardware;
+    public Func<uint, bool> LosesHardwareOn { get; set; } = _ => false;
+    public List<uint> Decoded { get; } = [];
+    public Func<uint, bool> FailOn { get; set; } = _ => false;
+    public bool Disposed { get; private set; }
+
+    public bool Decode(byte[] data, out DecodedPicture picture)
+    {
+        uint number = BitConverter.ToUInt32(data);
+        if (FailOn(number))
+            throw new FfmpegException($"bad frame {number}");
+        if (LosesHardwareOn(number))
+            IsHardware = false; // like FFmpeg giving up on the GPU by itself
+        Decoded.Add(number);
+        picture = new DecodedPicture(1920, 1080, (nint)number, IsHardware, Vortice.DXGI.ColorSpaceType.YcbcrStudioG22LeftP709);
+        return true;
+    }
+
+    public void Dispose() => Disposed = true;
+}
+
+internal sealed class FakePresenter : IFramePresenter
+{
+    public List<(DecodedPicture? Picture, string? Status, string? Stats)> Shown { get; } = [];
+    public void Present(DecodedPicture? picture, string? status, string? stats) => Shown.Add((picture, status, stats));
+    public void Dispose() { }
+}

@@ -203,4 +203,17 @@ public class FrameAssemblerTests
         Assert.Empty(Feed(a, [Rewrite(packets[1], h => h with { Paused = false })])); // disagrees: ignored
         Assert.True(Assert.Single(Feed(a, packets.Skip(1))).Paused);
     }
+
+    [Fact]
+    public void A_frame_reports_how_long_its_packets_took_to_arrive()
+    {
+        var packets = new FramePacketizer(streamId: 9).Packetize(0, new byte[5000], keyframe: true);
+        var a = new FrameAssembler();
+        AssembledFrame? done = null;
+        for (int i = 0; i < packets.Count && done is null; i++)
+            done = a.Add(packets[i], TimeSpan.FromMilliseconds(10 + i)); // 1 ms apart
+
+        Assert.NotNull(done);
+        Assert.Equal(TimeSpan.FromMilliseconds(4), done.AssemblyTime); // 5 data shards: packets 0-4
+    }
 }

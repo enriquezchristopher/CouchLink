@@ -6,8 +6,9 @@ namespace CouchLink.Core.Net;
 internal static class UdpReceiveLoop
 {
     /// <summary>
-    /// Receives until cancelled. An exception from <paramref name="onDatagram"/> is reported to
-    /// <paramref name="onError"/> and the loop keeps going, so one bad datagram never stops the stream.
+    /// Receives until cancelled, on thread-pool threads whatever thread started it. An exception
+    /// from <paramref name="onDatagram"/> is reported to <paramref name="onError"/> and the loop
+    /// keeps going, so one bad datagram never stops the stream.
     /// </summary>
     public static async Task RunAsync(
         UdpClient udp, Action<UdpReceiveResult> onDatagram, CancellationToken ct, Action<Exception>? onError)
@@ -17,7 +18,7 @@ internal static class UdpReceiveLoop
             UdpReceiveResult result;
             try
             {
-                result = await udp.ReceiveAsync(ct);
+                result = await udp.ReceiveAsync(ct).ConfigureAwait(false); // never wait for the caller's (UI) thread
             }
             catch (OperationCanceledException)
             {
