@@ -195,6 +195,7 @@ one shared stream.
   plays is streamed (acceptable side effect).
 - **Opus, 48 kHz stereo, 5 ms frames** (Concentus, pure C#).
 - Client jitter buffer **~15 ms**.
+- Details (loss recovery, clock drift, errors): [audio design](2026-10-07-couchlink-audio-design.md).
 
 ### 5.4 Client playback
 - FFmpeg **D3D11VA** hardware decode; software decode fallback.
