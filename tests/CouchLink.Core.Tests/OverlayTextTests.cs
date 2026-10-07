@@ -1,3 +1,4 @@
+using CouchLink.Core.Audio;
 using CouchLink.Core.Video;
 
 namespace CouchLink.Core.Tests;
@@ -36,5 +37,29 @@ public class OverlayTextTests
     public void Status_says_why_there_is_no_live_picture(bool shown, bool paused, int secondsQuiet, string? expected)
     {
         Assert.Equal(expected, OverlayText.Status(shown, paused, TimeSpan.FromSeconds(secondsQuiet), TimeSpan.FromSeconds(2)));
+    }
+
+    [Fact]
+    public void The_audio_line_shows_buffer_repairs_and_the_output()
+    {
+        var s = new AudioClientStats(Packets: 1234, Repaired: 3, Concealed: 1, Late: 0, Discarded: 0, Underruns: 0,
+            DecodeErrors: 0, DriftCorrections: 12, BufferMs: 15, Playing: true);
+
+        Assert.Equal(
+            "Audio buffer 15 ms  repaired 3  concealed 1  late 0\n" +
+            "  1234 packets  drift 12  (Headphones, 2 ms)",
+            OverlayText.Audio(s, "Headphones, 2 ms"));
+        Assert.Equal("Audio: nothing from the host yet (muted: host is this PC)",
+            OverlayText.Audio(default, "muted: host is this PC"));
+    }
+
+    [Fact]
+    public void An_audio_line_goes_under_the_video_stats()
+    {
+        var sample = new StatsSample(60, 5, 0, 0, null, TimeSpan.Zero, null, TimeSpan.FromMilliseconds(3));
+
+        Assert.EndsWith("Latency measuring...\nAudio x", OverlayText.Stats(sample, "software", "Audio x"));
+        Assert.Equal("Collecting stats...\nAudio x", OverlayText.Stats(null, "software", "Audio x"));
+        Assert.Equal("Collecting stats...", OverlayText.Stats(null, "software"));
     }
 }
