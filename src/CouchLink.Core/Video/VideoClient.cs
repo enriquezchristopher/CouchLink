@@ -20,14 +20,15 @@ public readonly record struct VideoClientStats(
 /// <see cref="DecodeGate.RequestInterval"/>. A timer gives up stalled frames every
 /// <see cref="TickInterval"/>. With <c>sendTimingPing</c> it pings the host every
 /// <see cref="PingInterval"/> and keeps the round trip and the host's delay from the replies.
-/// Takes ownership of the receiver.
+/// Given a receiver, it runs the receive loop and takes ownership of it; otherwise a
+/// <see cref="StreamDispatcher"/> calls <see cref="Receive"/>.
 /// </summary>
 public sealed class VideoClient : IDisposable
 {
     public static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(50);
     public static readonly TimeSpan PingInterval = TimeSpan.FromSeconds(1);
 
-    private readonly VideoReceiver _receiver;
+    private readonly VideoReceiver? _receiver;
     private readonly Action _requestKeyframe;
     private readonly Action<AssembledFrame> _onFrame;
     private readonly Action<Exception>? _onError;
@@ -37,7 +38,7 @@ public sealed class VideoClient : IDisposable
     private readonly FrameAssembler _assembler;
     private readonly Lock _lock = new();
     private readonly CancellationTokenSource _cts = new();
-    private readonly Task _loop;
+    private readonly Task? _loop;
     private readonly ITimer _timer;
     private long _delivered;
     private bool _hostPaused;
@@ -46,8 +47,8 @@ public sealed class VideoClient : IDisposable
     private TimeSpan? _roundTrip;
     private TimeSpan _hostDelay;
 
+    /// <summary>Datagrams come in through <see cref="Receive"/>, from a <see cref="StreamDispatcher"/>.</summary>
     public VideoClient(
-        VideoReceiver receiver,
         Action requestKeyframe,
         Action<AssembledFrame> onFrame,
         TimeProvider time,
@@ -55,15 +56,27 @@ public sealed class VideoClient : IDisposable
         Action<long>? sendTimingPing = null)
     {
         _sendTimingPing = sendTimingPing;
-        _receiver = receiver;
         _requestKeyframe = requestKeyframe;
         _onFrame = onFrame;
         _onError = onError;
         _time = time;
         _start = time.GetTimestamp();
         _assembler = new FrameAssembler(_gate.FrameLost);
-        _loop = receiver.RunAsync(OnDatagram, _cts.Token, onError);
         _timer = time.CreateTimer(_ => Tick(), null, TickInterval, TickInterval);
+    }
+
+    /// <summary>Runs <paramref name="receiver"/>'s receive loop itself, and owns it.</summary>
+    public VideoClient(
+        VideoReceiver receiver,
+        Action requestKeyframe,
+        Action<AssembledFrame> onFrame,
+        TimeProvider time,
+        Action<Exception>? onError = null,
+        Action<long>? sendTimingPing = null)
+        : this(requestKeyframe, onFrame, time, onError, sendTimingPing)
+    {
+        _receiver = receiver;
+        _loop = receiver.RunAsync(Receive, _cts.Token, onError);
     }
 
     public VideoClientStats Stats
@@ -85,7 +98,8 @@ public sealed class VideoClient : IDisposable
 
     private TimeSpan Now => _time.GetElapsedTime(_start);
 
-    private void OnDatagram(byte[] datagram)
+    /// <summary>A video datagram: a shard or a timing reply. Call from one receive thread only.</summary>
+    public void Receive(byte[] datagram)
     {
         if (TimingReply.TryParse(datagram, out var reply))
         {
@@ -165,8 +179,8 @@ public sealed class VideoClient : IDisposable
     {
         _timer.Dispose();
         _cts.Cancel();
-        _loop.Wait(TimeSpan.FromSeconds(2));
-        _receiver.Dispose();
+        _loop?.Wait(TimeSpan.FromSeconds(2));
+        _receiver?.Dispose();
         _cts.Dispose();
     }
 }

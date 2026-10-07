@@ -24,6 +24,7 @@ public sealed class PlayerCore : IDisposable
     private readonly Action _decodeFailed;
     private readonly TimeProvider _time;
     private readonly Action<string>? _log;
+    private readonly Func<string?>? _audioLine;
     private readonly long _start;
     private readonly Lock _queueLock = new();
     private readonly List<(AssembledFrame Frame, TimeSpan ReceivedAt)> _queue = [];
@@ -38,7 +39,8 @@ public sealed class PlayerCore : IDisposable
     private long _clientDelayTicks;
 
     public PlayerCore(Func<bool, IFrameDecoder> openDecoder, IFramePresenter presenter,
-        Func<VideoClientStats> stats, Action decodeFailed, TimeProvider time, Action<string>? log = null)
+        Func<VideoClientStats> stats, Action decodeFailed, TimeProvider time, Action<string>? log = null,
+        Func<string?>? audioLine = null)
     {
         _openDecoder = openDecoder;
         _presenter = presenter;
@@ -46,6 +48,7 @@ public sealed class PlayerCore : IDisposable
         _decodeFailed = decodeFailed;
         _time = time;
         _log = log;
+        _audioLine = audioLine;
         _start = time.GetTimestamp();
         _decoder = openDecoder(true);
     }
@@ -125,7 +128,7 @@ public sealed class PlayerCore : IDisposable
             FramesShown++;
         }
         UpdateStats();
-        string? statsText = ShowStats ? OverlayText.Stats(_sample, DecoderName) : null;
+        string? statsText = ShowStats ? OverlayText.Stats(_sample, DecoderName, _audioLine?.Invoke()) : null;
 
         bool due = newest is not null
             || _lastPresent is null

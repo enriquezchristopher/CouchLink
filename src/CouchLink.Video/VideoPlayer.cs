@@ -24,9 +24,9 @@ public sealed class VideoPlayer : IDisposable
     private PlayerCore? _core;
 
     public VideoPlayer(PlayerOptions options, Func<VideoClientStats> stats, Action decodeFailed,
-        Action closeRequested, Action<string>? log = null)
+        Action closeRequested, Action<string>? log = null, Func<string?>? audioLine = null)
     {
-        _thread = new Thread(() => Run(options, stats, decodeFailed, closeRequested, log))
+        _thread = new Thread(() => Run(options, stats, decodeFailed, closeRequested, log, audioLine))
         {
             IsBackground = true,
             Name = "CouchLink player",
@@ -50,7 +50,7 @@ public sealed class VideoPlayer : IDisposable
     public void Enqueue(AssembledFrame frame) => _core!.Enqueue(frame);
 
     private void Run(PlayerOptions options, Func<VideoClientStats> stats, Action decodeFailed,
-        Action closeRequested, Action<string>? log)
+        Action closeRequested, Action<string>? log, Func<string?>? audioLine)
     {
         ID3D11Device? device = null;
         ID3D11DeviceContext? context = null;
@@ -73,7 +73,7 @@ public sealed class VideoPlayer : IDisposable
             var d = device;
             core = new PlayerCore(
                 hardware => hardware && options.PreferHardware ? OpenHardware(d, log) : H264Decoder.OpenSoftware(),
-                presenter, stats, decodeFailed, TimeProvider.System, log);
+                presenter, stats, decodeFailed, TimeProvider.System, log, audioLine);
             var c = core;
             var p = presenter;
             window.StatsToggled += () => c.ShowStats = !c.ShowStats;

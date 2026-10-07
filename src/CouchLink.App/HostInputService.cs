@@ -9,7 +9,7 @@ namespace CouchLink.App;
 
 /// <summary>
 /// Host side: receives input on UDP 47803 and drives one virtual DS4 per slot, and streams
-/// video to every client it hears from: the host screen (Plan 4) or, with --test-pattern, a test pattern.
+/// video (the host screen, or --test-pattern) and sound (loopback, or --test-tone) to every client it hears from.
 /// </summary>
 internal sealed class HostInputService : IDisposable
 {
@@ -17,6 +17,7 @@ internal sealed class HostInputService : IDisposable
     private readonly PadManager _pads;
     private readonly InputReceiver _receiver;
     private readonly HostVideo _video;
+    private readonly HostAudio _audio;
     private readonly CancellationTokenSource _cts = new();
     private readonly Task _receiveLoop;
     private readonly Timer _staleTimer;
@@ -27,6 +28,7 @@ internal sealed class HostInputService : IDisposable
         _pads = new PadManager(factory, TimeProvider.System);
         _receiver = receiver;
         _video = HostVideo.Start(settings, OnVideoError);
+        _audio = HostAudio.Start(OnAudioError);
         _receiveLoop = _receiver.RunAsync(OnInput, _cts.Token, OnError,
             onKeyframeRequest: (_, _) => _video.RequestKeyframe(),
             onTimingPing: _video.ReplyToTimingPing);
@@ -35,7 +37,7 @@ internal sealed class HostInputService : IDisposable
 
     public int PadCount => _pads.Count;
 
-    public string DescribeVideo() => _video.Describe();
+    public string DescribeStreams() => $"{_video.Describe()}\n{_audio.Describe()}";
 
     /// <summary>Most recent pad or video error, shown to the host instead of failing silently.</summary>
     public string? LastError { get; private set; }
@@ -43,7 +45,10 @@ internal sealed class HostInputService : IDisposable
     private void OnInput(InputPacket packet, IPAddress from)
     {
         if (_pads.Handle(packet))
+        {
             _video.ClientSeen(packet.Slot, from);
+            _audio.ClientSeen(packet.Slot, from);
+        }
     }
 
     private void ReleaseStale()
@@ -70,6 +75,12 @@ internal sealed class HostInputService : IDisposable
         AppServices.Log.Write($"Video error: {e}");
     }
 
+    private void OnAudioError(Exception e)
+    {
+        LastError = $"Audio: {e.GetType().Name}: {e.Message}";
+        AppServices.Log.Write($"Audio error: {e}");
+    }
+
     public static bool TryStart(StreamSettings settings, out HostInputService? service, out string? error)
     {
         service = null;
@@ -91,6 +102,7 @@ internal sealed class HostInputService : IDisposable
         _staleTimer.Dispose();
         _receiveLoop.Wait(TimeSpan.FromSeconds(2));
         _video.Dispose();
+        _audio.Dispose();
         _receiver.Dispose();
         _pads.Dispose();
         _factory.Dispose();

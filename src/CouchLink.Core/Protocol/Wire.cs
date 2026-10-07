@@ -13,6 +13,7 @@ public static class Wire
     public const byte TypeKeyframeRequest = 3;
     public const byte TypeTimingPing = 4;
     public const byte TypeTimingReply = 5;
+    public const byte TypeAudio = 6;
 
     public static void WriteHeader(Span<byte> destination, byte type)
     {
@@ -26,4 +27,14 @@ public static class Wire
         && BinaryPrimitives.ReadUInt16LittleEndian(source) == Magic
         && source[2] == Version
         && source[3] == type;
+
+    /// <summary>The packet type of a CouchLink datagram, or false if it has no valid header.</summary>
+    public static bool TryGetType(ReadOnlySpan<byte> source, out byte type)
+    {
+        type = 0;
+        if (source.Length < 4 || BinaryPrimitives.ReadUInt16LittleEndian(source) != Magic || source[2] != Version)
+            return false;
+        type = source[3];
+        return true;
+    }
 }

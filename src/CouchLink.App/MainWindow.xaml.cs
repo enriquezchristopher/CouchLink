@@ -20,7 +20,7 @@ public partial class MainWindow : Window
     private RawInputSource? _rawInput;
     private InputMapper? _mapper;
     private ClientInputLoop? _client;
-    private ClientVideoService? _video;
+    private ClientStreams? _streams;
     private string _clientStatus = "";
 
     public MainWindow()
@@ -49,7 +49,7 @@ public partial class MainWindow : Window
     {
         var foreground = NativeMethods.GetForegroundWindow();
         return foreground == new WindowInteropHelper(this).Handle
-            || (_video is not null && foreground == _video.PlayerWindow);
+            || (_streams is not null && foreground == _streams.PlayerWindow);
     }
 
     private void OnHost(object sender, RoutedEventArgs e)
@@ -78,11 +78,11 @@ public partial class MainWindow : Window
         var slot = (int)SlotBox.SelectedItem;
         var inputSender = new InputSender(new IPEndPoint(ip, Ports.Input), (byte)slot);
         var playerOptions = new PlayerOptions(new WindowInteropHelper(this).Handle, AppServices.Options.WindowedPlayer);
-        if (!ClientVideoService.TryStart(inputSender, playerOptions, AppServices.Options.SaveVideoPath,
-                () => Dispatcher.InvokeAsync(LeaveSession), out _video, out var videoError))
+        if (!ClientStreams.TryStart(ip, inputSender, playerOptions, AppServices.Options.SaveVideoPath,
+                () => Dispatcher.InvokeAsync(LeaveSession), out _streams, out var streamError))
         {
             inputSender.Dispose();
-            MessageBox.Show(this, videoError, "CouchLink");
+            MessageBox.Show(this, streamError, "CouchLink");
             return;
         }
 
@@ -107,8 +107,8 @@ public partial class MainWindow : Window
     {
         if (_client is null)
             return;
-        _video?.Dispose();
-        _video = null;
+        _streams?.Dispose();
+        _streams = null;
         _client.Dispose(); // sends a neutral pad state and closes the input sender
         _client = null;
         _rawInput?.Dispose();
@@ -139,7 +139,7 @@ public partial class MainWindow : Window
     {
         if (_host is not null)
         {
-            StatusText.Text = $"Hosting. Virtual pads: {_host.PadCount}\n{_host.DescribeVideo()}" +
+            StatusText.Text = $"Hosting. Virtual pads: {_host.PadCount}\n{_host.DescribeStreams()}" +
                 (_host.LastError is { } err ? $"\nLast error: {err}" : "");
         }
         else if (_client is not null)
@@ -148,14 +148,14 @@ public partial class MainWindow : Window
             StatusText.Text =
                 $"{_clientStatus}\n" +
                 $"Buttons: {s.Buttons}\nL: {s.LX},{s.LY}  R: {s.RX},{s.RY}  L2/R2: {s.L2}/{s.R2}\n" +
-                _video?.Describe();
+                _streams?.Describe();
         }
     }
 
     protected override void OnClosed(EventArgs e)
     {
         _statusTimer.Stop();
-        _video?.Dispose();
+        _streams?.Dispose();
         _client?.Dispose();
         _rawInput?.Dispose();
         _host?.Dispose();

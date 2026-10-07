@@ -28,4 +28,17 @@ public class DevOptionsTests
         Assert.True(DevOptions.Parse(["--windowed-player"]).WindowedPlayer);
         Assert.False(DevOptions.Parse([]).WindowedPlayer);
     }
+
+    [Fact]
+    public void Test_tone_and_audio_loss_are_dev_switches()
+    {
+        var options = DevOptions.Parse(["--test-tone", "--audio-loss=5"]);
+
+        Assert.True(options.TestTone);
+        Assert.Equal(5, options.AudioLossPercent);
+        Assert.Equal(2.5, DevOptions.Parse(["--audio-loss=2.5"]).AudioLossPercent);
+        Assert.Equal(100, DevOptions.Parse(["--audio-loss=250"]).AudioLossPercent);
+        Assert.Equal(0, DevOptions.Parse(["--audio-loss=lots"]).AudioLossPercent);
+        Assert.False(DevOptions.Parse([]).TestTone);
+    }
 }

@@ -11,6 +11,7 @@ public class PlayerCoreTests
     private VideoClientStats _stats = default;
     private int _decodeFailed;
     private Func<uint, bool> _hardwareFailsOn = _ => false;
+    private string? _audio;
 
     private PlayerCore Core() => new(
         hardware =>
@@ -19,7 +20,7 @@ public class PlayerCoreTests
             _decoders.Add(d);
             return d;
         },
-        _presenter, () => _stats, () => _decodeFailed++, _time);
+        _presenter, () => _stats, () => _decodeFailed++, _time, audioLine: () => _audio);
 
     private static AssembledFrame F(uint number, bool keyframe = false, TimeSpan assembly = default) =>
         new(number, keyframe, BitConverter.GetBytes(number), AssemblyTime: assembly);
@@ -170,6 +171,19 @@ public class PlayerCoreTests
         core.ShowStats = false;
         core.Run();
         Assert.Null(_presenter.Shown[^1].Stats);
+    }
+
+    [Fact]
+    public void Stats_include_the_audio_line()
+    {
+        _audio = "Audio buffer 15 ms";
+        using var core = Core();
+        core.Enqueue(F(1, keyframe: true));
+        core.ShowStats = true;
+
+        core.Run();
+
+        Assert.Equal("Collecting stats...\nAudio buffer 15 ms", _presenter.Shown[^1].Stats);
     }
 
     [Fact]
