@@ -58,7 +58,18 @@ public class DriftControlTests
         drift.Reset();
 
         Assert.Null(drift.Baseline);
-        Assert.Equal(0, Feed(drift, 6));
-        Assert.Equal(6, drift.Baseline);
+        Assert.Equal(0, Feed(drift, 2));
+        Assert.Equal(2, drift.Baseline);
+    }
+
+    [Fact]
+    public void A_first_second_that_starts_too_full_is_brought_down_to_20_ms()
+    {
+        var drift = new DriftControl();
+
+        Feed(drift, 9); // a burst at startup (the device was slow to start) must not become the target
+
+        Assert.Equal(DriftControl.MaxBaselineFrames, drift.Baseline);
+        Assert.Equal(-1, Feed(drift, 9));
     }
 }

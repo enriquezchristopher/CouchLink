@@ -14,6 +14,12 @@ public sealed class DriftControl
     public const int WindowFrames = 200;
     public const double DeadBandFrames = 1;
 
+    /// <summary>
+    /// The target never goes above 20 ms: priming depth plus one frame. A first second that started
+    /// fuller (a burst while the device was still opening) is brought down instead of kept.
+    /// </summary>
+    public const double MaxBaselineFrames = JitterBuffer.PrimeFrames + 1;
+
     private long _sum;
     private int _count;
     private int _correction; // -1 drop, +1 repeat, 0 none
@@ -32,7 +38,7 @@ public sealed class DriftControl
             _sum = 0;
             _count = 0;
             if (Baseline is not { } baseline)
-                Baseline = average;
+                Baseline = Math.Min(average, MaxBaselineFrames);
             else if (average > baseline + DeadBandFrames)
                 _correction = -1;
             else if (average < baseline - DeadBandFrames)
