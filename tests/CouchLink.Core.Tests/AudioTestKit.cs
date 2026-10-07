@@ -97,3 +97,28 @@ internal sealed class AudioRecordingSender : IVideoPacketSender
 
     public void Dispose() { }
 }
+
+/// <summary>
+/// "Decodes" a frame into samples that all equal its first byte; conceals as -1; throws on a frame
+/// longer than one byte (the corrupt-frame stand-in).
+/// </summary>
+internal sealed class FakeAudioDecoder : IAudioDecoder
+{
+    public int Decoded;
+    public int Resets;
+
+    public int Decode(ReadOnlySpan<byte> frame, Span<short> pcm)
+    {
+        if (frame.Length > 1)
+            throw new InvalidDataException("corrupt frame");
+        Decoded++;
+        pcm.Fill(frame[0]);
+        return AudioFormat.FrameSamples;
+    }
+
+    public void Conceal(Span<short> pcm) => pcm.Fill(-1);
+
+    public void Reset() => Resets++;
+
+    public void Dispose() { }
+}
