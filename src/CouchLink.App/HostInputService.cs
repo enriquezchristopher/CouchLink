@@ -47,7 +47,10 @@ internal sealed class HostInputService : IDisposable
 
     private void OnInput(InputPacket packet, IPAddress from)
     {
-        if (!_pads.Handle(packet))
+        // Interim until the session channel (Plan 7 Task 10): the first packet for a slot plugs its pad.
+        if (!_pads.IsPlugged(packet.Slot) && !_pads.Plug(packet.Slot, from))
+            return;
+        if (!_pads.Handle(packet, from))
             return;
         lock (_targets)
         {
