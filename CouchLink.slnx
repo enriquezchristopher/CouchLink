@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/CouchLink.App/CouchLink.App.csproj" />
+    <Project Path="src/CouchLink.Audio/CouchLink.Audio.csproj" />
     <Project Path="src/CouchLink.Core/CouchLink.Core.csproj" />
     <Project Path="src/CouchLink.Pads/CouchLink.Pads.csproj" />
     <Project Path="src/CouchLink.PadTest/CouchLink.PadTest.csproj" />
@@ -8,6 +9,7 @@
     <Project Path="src/CouchLink.VideoTest/CouchLink.VideoTest.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/CouchLink.Audio.Tests/CouchLink.Audio.Tests.csproj" />
     <Project Path="tests/CouchLink.Core.Tests/CouchLink.Core.Tests.csproj" />
     <Project Path="tests/CouchLink.Video.Tests/CouchLink.Video.Tests.csproj" />
   </Folder>
