@@ -24,7 +24,7 @@ host over the LAN.
 - Low-latency UDP input; stuck-key and crashed-client protection
 - `PadTest check`: game-free test of 9 pads and all 32 DS4 actions
 
-## v1.1 — Crash reports & reliability
+## ✅ v1.1 — Crash reports & reliability (released in 1.1.0 and 1.1.1)
 
 When something breaks, users can tell us exactly what happened.
 
@@ -35,7 +35,7 @@ When something breaks, users can tell us exactly what happened.
 - [#12](https://github.com/enriquezchristopher/CouchLink/issues/12) Virtual pad's native handle is not disposed
 - [#13](https://github.com/enriquezchristopher/CouchLink/issues/13) Dev window: slot and IP boxes stay editable while playing
 
-## v1.2 — Video streaming
+## ✅ v1.2 — Video streaming (released in 1.2.0 and 1.3.0)
 
 Clients see the host's screen with ~20-35 ms latency.
 
@@ -45,9 +45,9 @@ Clients see the host's screen with ~20-35 ms latency.
 - [#17](https://github.com/enriquezchristopher/CouchLink/issues/17) Client hardware decode and low-latency display
 - [#18](https://github.com/enriquezchristopher/CouchLink/issues/18) F2 stats overlay
 
-## v1.3 — Audio
+## v1.3 — Audio (next)
 
-Clients hear the game.
+Clients hear the game. Likely to ship as 1.4.0.
 
 - [#19](https://github.com/enriquezchristopher/CouchLink/issues/19) Capture host audio and encode with Opus
 - [#20](https://github.com/enriquezchristopher/CouchLink/issues/20) Client playback with a ~15 ms jitter buffer
@@ -59,7 +59,7 @@ The real app replaces the temporary dev window.
 - [#21](https://github.com/enriquezchristopher/CouchLink/issues/21) LAN discovery and the join list
 - [#22](https://github.com/enriquezchristopher/CouchLink/issues/22) Join request, host approval popup and slot assignment
 - [#23](https://github.com/enriquezchristopher/CouchLink/issues/23) Heartbeat, timeouts, rejoin and kick
-- [#24](https://github.com/enriquezchristopher/CouchLink/issues/24) Playing screen: fullscreen, Ctrl+Alt+Q, F1 help, Win-key/Alt+Tab block, mouse lock
+- [#24](https://github.com/enriquezchristopher/CouchLink/issues/24) Playing screen: fullscreen, Ctrl+Alt+Q, F1 help, Win-key/Alt+Tab block, mouse lock (fullscreen and Ctrl+Alt+Q shipped in 1.3.0)
 - [#25](https://github.com/enriquezchristopher/CouchLink/issues/25) Controls editor
 - [#26](https://github.com/enriquezchristopher/CouchLink/issues/26) Single instance
 
