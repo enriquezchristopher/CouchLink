@@ -1,6 +1,6 @@
 # CouchLink Lobby & Sessions (v1.4 milestone, part 1: #21, #22, #23)
 
-Status: Approved in brainstorming; written spec awaiting review
+Status: Approved; small corrections from planning (deny reason 4, the host never binds 47800, by-address version mismatch)
 Date: 2026-10-07
 Author: Christopher Enriquez (@enriquezchristopher) (with Claude Code)
 
@@ -89,7 +89,7 @@ then the 4-byte `Wire` header, then the body.
 |---|---|---|---|
 | 8 | `JoinRequest` | client -> host | name length (1) + name |
 | 9 | `Accepted` | host -> client | slot (1, 2-10) |
-| 10 | `Denied` | host -> client | reason (1): 1 denied, 2 full, 3 timed out |
+| 10 | `Denied` | host -> client | reason (1): 1 denied, 2 full, 3 timed out, 4 the host's pad could not be created |
 | 11 | `Heartbeat` | both | empty |
 | 12 | `Leave` | client -> host | empty |
 | 13 | `Kicked` | host -> client | empty |
@@ -97,8 +97,9 @@ then the 4-byte `Wire` header, then the body.
 
 A frame with a bad length, wrong magic or version, or unknown type closes
 that connection (logged). A client checks the version from the announce
-before joining; joining by address with a mismatched host ends with "Host
-runs a different CouchLink version" when the host closes the connection.
+before joining (the join list greys out other versions). Joining such a
+host by address ends with "Lost the host." when the host closes the
+connection: the client cannot tell a version mismatch from a drop.
 
 UDP traffic is unchanged: input, keyframe requests and timing pings stay on
 47803, video and audio on 47802. Timing pings must stay on UDP so the round
@@ -148,7 +149,7 @@ States: **Connecting** -> **Waiting** (for approval) -> **Playing** ->
 
 - Connect failure: Ended "Couldn't reach PC-03."
 - `Denied`: Ended "Request denied." / "Host is full." / "The host didn't
-  answer."
+  answer." / "The host couldn't add a controller for you."
 - Cancel while waiting: closes the connection, back to the list.
 - `Accepted(slot)`: start video, audio and input for that slot. If video
   fails to start, send `Leave` and end with the error (audio failing never
@@ -218,7 +219,7 @@ States: **Connecting** -> **Waiting** (for approval) -> **Playing** ->
 
 | Situation | Behavior |
 |---|---|
-| TCP 47801 or UDP 47800 (or 47803) busy when hosting starts | Hosting refuses with a clear message; nothing is left half-started. |
+| TCP 47801 or UDP 47803 busy when hosting starts | Hosting refuses with a clear message; nothing is left half-started. The host only sends on UDP 47800 and never binds it, so a client on the same PC can still list hosts. |
 | UDP 47800 busy on a client | Join list: "Can't search for hosts (port 47800 in use)." Join by address still works. |
 | Can't connect to the host | "Couldn't reach PC-03." Back to the list. |
 | Video fails to start after Accepted | Client sends `Leave`, shows the error, back to the list. |
