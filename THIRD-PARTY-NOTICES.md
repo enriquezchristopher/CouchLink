@@ -14,6 +14,8 @@ license.
 | FFmpeg 9.0.2 (libavcodec, libavutil, libswscale, libswresample; BtbN GPL build, includes x264) | CouchLink.App, VideoTest (host video) | GPL-3.0-or-later; license text in `ffmpeg/LICENSE.txt` | https://ffmpeg.org, build: https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2026-09-30-13-08 |
 | FFmpeg.AutoGen | CouchLink.App, VideoTest | LGPL-3.0 | https://github.com/Ruslan-B/FFmpeg.AutoGen |
 | Vortice.Windows (Direct3D11, DXGI, Direct2D1) | CouchLink.App, VideoTest | MIT | https://github.com/amerkoleci/Vortice.Windows |
+| NAudio (NAudio.Wasapi, NAudio.Core) 3.1.0 | CouchLink.App (host capture, client playback) | MIT | https://github.com/naudio/NAudio |
+| Concentus 2.2.2 (managed Opus) | CouchLink.App (audio codec) | BSD-3-Clause (the Opus license) | https://github.com/lostromb/concentus |
 
 ## Required separately (not included)
 

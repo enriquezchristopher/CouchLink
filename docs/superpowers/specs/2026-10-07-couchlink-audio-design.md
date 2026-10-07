@@ -137,7 +137,10 @@ Host and client sound cards run at slightly different rates (about 0.01%,
 roughly 4 ms an hour). `DriftControl` averages the buffer depth over each
 second. The first second's average after playback starts is the baseline:
 it already includes how the device pulls audio (in 2-10 ms chunks), so it is
-the right target rather than a fixed 15 ms. When a later second averages
+the right target rather than a fixed 15 ms. The baseline is capped at 20 ms
+(priming depth plus one frame), so a first second that arrived extra full
+(a burst while the output device was still opening) is brought down rather
+than kept as permanent latency. When a later second averages
 more than 5 ms above the baseline, one sample per frame is dropped until the
 average is back at or below it; more than 5 ms below, one sample is
 repeated. That is a 0.4% speed change, not audible. Above 60 ms queued (for
@@ -237,3 +240,5 @@ Added to `DevOptions`:
 - Drift control targets the measured starting depth instead of a fixed
   15 ms, because the device's pull pattern changes the average.
 - The frame slicer is pure logic, so it lives and is tested in Core.
+- Drift target capped at 20 ms: playing through the real output device
+  showed a startup burst being learned as a 45 ms target and kept.

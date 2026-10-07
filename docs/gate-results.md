@@ -31,3 +31,16 @@ required. Known limitation: 2K14 uses only 1 of the virtual DS4 pads.
 | Focus loss releases held keys immediately | waived by owner (2026-10-05); covered by unit tests |
 | Closing client while holding a key -> pad centers within ~0.5 s | waived by owner (2026-10-05); covered by unit tests |
 | Two client PCs on different slots control separate players in 2K22 | waived by owner (2026-10-05) |
+
+## Audio (Plan 6)
+
+Date: <fill in>
+Host / client PCs and sound devices: <fill in>
+
+| Check | Result |
+|---|---|
+| One PC, host + client (`--windowed-player`), YouTube on the host: client says "muted: host is this PC", its packet count rises, no echo | pass (checked automatically 2026-10-07: ~200 packets/s, 0 late/concealed) |
+| Two PCs, host `--test-tone`, client `--audio-loss=5`: no audible gaps; F2 "repaired" rises | <pass/fail> |
+| Two PCs, 30 minutes of a game: F2 audio buffer stays within 5 ms of where it started; no dropouts | <pass/fail> |
+| Unplug / switch the client's headphones mid-session: audio back within about 1 s | <pass/fail> |
+| Sound feels in time with the picture (no visible lag between a hit and its sound) | <pass/fail> |
