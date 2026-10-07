@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.4.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.3.0...v1.4.0) (2026-10-07)
+
+
+### Features
+
+* **app:** host streams its sound and clients play it, muted when the host is the same PC ([7c88a79](https://github.com/enriquezchristopher/CouchLink/commit/7c88a79678b808e25737ddbc1fd247830735e9d7))
+* **audio:** CouchLink.Audio project with the Opus encoder and decoder ([f033de1](https://github.com/enriquezchristopher/CouchLink/commit/f033de10af4813d4c33e70b508d738866cd81b52))
+* **audio:** WASAPI loopback capture and low-latency default-device output ([3650e33](https://github.com/enriquezchristopher/CouchLink/commit/3650e33437981945d9634468db21bab39065ebe9))
+* clients hear the host's sound (Plan 6) ([2030e4d](https://github.com/enriquezchristopher/CouchLink/commit/2030e4d87a5af890789728e06191e566bc07c573))
+* **core:** audio drift control ([68e7eb3](https://github.com/enriquezchristopher/CouchLink/commit/68e7eb30d9d761074933e57694e50e2c5d60daeb))
+* **core:** audio jitter buffer with redundancy, concealment and priming ([1f00db9](https://github.com/enriquezchristopher/CouchLink/commit/1f00db9f8c05c0fc6b6148db752d53619149f275))
+* **core:** audio packet (wire type 6) and audio format constants ([a9958ac](https://github.com/enriquezchristopher/CouchLink/commit/a9958ac03c814f978972dfc3ed846027bbc043d5))
+* **core:** audio source interface, frame slicer and test tone ([1f03402](https://github.com/enriquezchristopher/CouchLink/commit/1f0340221e9174c15b0ec754efaafeaf4f74f840))
+* **core:** client audio with decode, concealment and drift correction ([c37c824](https://github.com/enriquezchristopher/CouchLink/commit/c37c824f7a0d6b3848b8468762e095806a8afb7d))
+* **core:** host audio streamer with redundancy and discontinuity handling ([d731cfb](https://github.com/enriquezchristopher/CouchLink/commit/d731cfbe66ede28097cc88e94e25858689d4917f))
+* **core:** share the client's video port with audio; same-PC check ([fe27ad1](https://github.com/enriquezchristopher/CouchLink/commit/fe27ad1cf59344d1696a9c625ba966a68b3d23dc))
+* **video:** audio line in the F2 overlay; --test-tone and --audio-loss switches ([6075fe2](https://github.com/enriquezchristopher/CouchLink/commit/6075fe2922be81aa8dbd06f13ffba734b9bb5c00))
+
+
+### Bug Fixes
+
+* **audio:** one reopen at a time, no exceptions on timer threads, audio never fails a join ([917468f](https://github.com/enriquezchristopher/CouchLink/commit/917468fe6961be752ac09d9b2f3c07f8c93ca641))
+* **core:** cap the drift target at 20 ms so a startup burst isn't kept as latency ([10b85a1](https://github.com/enriquezchristopher/CouchLink/commit/10b85a1890e70fa9bc4bedfa2f0248526ed17805))
+
 ## [1.3.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.2.0...v1.3.0) (2026-10-06)
 
 
