@@ -6,10 +6,11 @@ using CouchLink.Video;
 namespace CouchLink.App;
 
 /// <summary>
-/// Client side: receives the host's video on UDP 47802 and shows it in the player window (and,
-/// with --save-video=&lt;file&gt;, also saves the H.264). <c>leave</c> runs on the player thread when
-/// the player asks to leave (Ctrl+Alt+Q, Alt+F4). Dispose before the <see cref="InputSender"/> it
-/// sends keyframe requests and timing pings through.
+/// Client side: shows the host's video, from the datagrams <see cref="Receive"/> is given, in the
+/// player window (and, with --save-video=&lt;file&gt;, also saves the H.264). <c>leave</c> runs on the
+/// player thread when the player asks to leave (Ctrl+Alt+Q, Alt+F4). <c>audioLine</c> is the F2
+/// overlay's audio line. Dispose before the <see cref="InputSender"/> it sends keyframe requests
+/// and timing pings through.
 /// </summary>
 internal sealed class ClientVideoService : IDisposable
 {
@@ -17,38 +18,39 @@ internal sealed class ClientVideoService : IDisposable
     private readonly VideoPlayer _player;
     private readonly FileStream? _save;
 
-    private ClientVideoService(VideoReceiver receiver, InputSender sender, PlayerOptions options, string? savePath, Action leave)
+    private ClientVideoService(InputSender sender, PlayerOptions options, string? savePath, Action leave, Func<string?> audioLine)
     {
         VideoClient? client = null;
         _player = new VideoPlayer(options, () => client?.Stats ?? default, () => client?.DecodeFailed(),
-            leave, message => AppServices.Log.Write(message));
+            leave, message => AppServices.Log.Write(message), audioLine);
         _save = savePath is null ? null : File.Create(savePath);
         client = new VideoClient(
-            receiver, sender.SendKeyframeRequest, OnFrame, TimeProvider.System,
+            sender.SendKeyframeRequest, OnFrame, TimeProvider.System,
             e => AppServices.Log.Write($"Video error: {e}"), sender.SendTimingPing);
         _client = client;
     }
 
     public static bool TryStart(InputSender sender, PlayerOptions options, string? savePath, Action leave,
-        out ClientVideoService? service, out string? error)
+        Func<string?> audioLine, out ClientVideoService? service, out string? error)
     {
-        service = null;
-        if (!VideoReceiver.TryCreate(Ports.Video, out var receiver, out error))
-            return false;
         try
         {
-            service = new ClientVideoService(receiver!, sender, options, savePath, leave);
+            service = new ClientVideoService(sender, options, savePath, leave, audioLine);
+            error = null;
             return true;
         }
         catch (InvalidOperationException e)
         {
-            receiver!.Dispose();
+            service = null;
             error = e.Message;
             return false;
         }
     }
 
     public nint PlayerWindow => _player.WindowHandle;
+
+    /// <summary>A video datagram, from the receive thread.</summary>
+    public void Receive(byte[] datagram) => _client.Receive(datagram);
 
     private void OnFrame(AssembledFrame frame) // receive thread only
     {
