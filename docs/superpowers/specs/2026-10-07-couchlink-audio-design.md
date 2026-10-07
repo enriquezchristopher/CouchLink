@@ -113,8 +113,10 @@ headers.
    nothing while the PC is silent and marks the first buffer after with
    WASAPI's data-discontinuity flag.
 4. **Discontinuity:** the first frame after a capture (re)start, a buffer
-   flagged as a discontinuity, or (device loopback) a jump in the device
-   position. The streamer then sends that frame without a previous frame
+   flagged as a discontinuity, or a backlog dropped because the streamer
+   fell 200 ms behind. (The device position is not used: process loopback
+   reports 0, and device loopback's may count in the device's own sample
+   rate when Windows resamples.) The streamer then sends that frame without a previous frame
    and jumps the sequence by 16, so clients start over cleanly instead of
    treating the new audio as late.
 5. While no client is listening, nothing is encoded or sent.
@@ -232,7 +234,7 @@ Added to `DevOptions`:
   now mutes itself (decided with the project owner).
 - Process loopback delivers continuously, including silence; device
   loopback stops while silent. Discontinuities are now detected from
-  WASAPI's flag and device position, and the sequence jumps after one.
+  WASAPI's flag, and the sequence jumps after one.
 - Low-latency output measured at 2 ms on this PC (10 ms without it), so the
   budget is about 30 ms. NAudio cannot combine low-latency mode with
   automatic device routing, so `DefaultDevicePlayer` follows default-device
@@ -242,3 +244,7 @@ Added to `DevOptions`:
 - The frame slicer is pure logic, so it lives and is tested in Core.
 - Drift target capped at 20 ms: playing through the real output device
   showed a startup burst being learned as a 45 ms target and kept.
+- After the final review: all device (re)opens on host and client go
+  through one `ReopenLoop` (one attempt at a time, exceptions caught,
+  dispose waits), the client player never throws (no audio system is a
+  status), and device loopback no longer reads the device position.

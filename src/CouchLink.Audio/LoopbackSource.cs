@@ -10,9 +10,9 @@ namespace CouchLink.Audio;
 /// downmixes). On Windows 10 2004 and later it is process loopback, leaving out CouchLink's own
 /// process tree; it delivers 10 ms buffers continuously, zeros included. Otherwise it is loopback of
 /// the default output device, which delivers nothing while the PC is silent and flags the first
-/// buffer after. A frame after missing audio (WASAPI's discontinuity flag, a jump in the device
-/// position, a dropped backlog or a restart) is marked as a discontinuity. If capture stops it
-/// reopens every <see cref="RetryInterval"/>.
+/// buffer after. A frame after missing audio (WASAPI's discontinuity flag, a dropped backlog or a
+/// restart) is marked as a discontinuity. If capture stops it reopens on a <see cref="ReopenLoop"/>,
+/// retrying every <see cref="RetryInterval"/>.
 /// </summary>
 public sealed class LoopbackSource : IAudioSource
 {
@@ -30,15 +30,16 @@ public sealed class LoopbackSource : IAudioSource
     private readonly FrameSlicer _slicer;
     private readonly Action<string>? _log;
     private readonly Lock _lock = new();
+    private readonly ReopenLoop _reopen;
     private WasapiRecorder? _recorder;
-    private Timer? _retry;
-    private long _expectedPosition = -1;
     private bool _disposed;
 
     private LoopbackSource(Action<string>? log)
     {
         _log = log;
         _slicer = new FrameSlicer(Enqueue);
+        _reopen = new ReopenLoop(Restart, RetryInterval, TimeProvider.System,
+            e => _log?.Invoke($"Audio capture could not reopen ({e.Message}); retrying"));
     }
 
     public string Description { get; private set; } = "";
@@ -83,7 +84,6 @@ public sealed class LoopbackSource : IAudioSource
                 return;
             }
             _recorder = recorder;
-            _expectedPosition = -1;
             _slicer.Write([], discontinuity: true);
             Description = description;
         }
@@ -121,15 +121,12 @@ public sealed class LoopbackSource : IAudioSource
     {
         if (data.IsEmpty)
             return; // device loopback hands out empty buffers while the PC is silent
+        // Not the device position: process loopback reports 0, and device loopback's may count in the
+        // device's own rate when Windows resamples. Device loopback flags the first buffer after silence.
         lock (_lock)
-        {
-            // Process loopback reports position 0 throughout; device loopback's position jumps after silence.
-            bool jumped = devicePosition != 0 && _expectedPosition >= 0 && devicePosition != _expectedPosition;
-            _expectedPosition = devicePosition + data.Length / Format.BlockAlign;
             _slicer.Write(data,
-                discontinuity: jumped || flags.HasFlag(AudioClientBufferFlags.DataDiscontinuity),
+                discontinuity: flags.HasFlag(AudioClientBufferFlags.DataDiscontinuity),
                 silent: flags.HasFlag(AudioClientBufferFlags.Silent));
-        }
     }
 
     /// <summary>From the slicer, under <c>_lock</c>.</summary>
@@ -147,64 +144,52 @@ public sealed class LoopbackSource : IAudioSource
 
     private void OnStopped(object? sender, StoppedEventArgs e)
     {
-        lock (_lock)
-        {
-            if (_disposed || _retry is not null)
-                return;
-            _log?.Invoke($"Audio capture stopped{(e.Exception is { } ex ? $" ({ex.Message})" : "")}; reopening");
-            _retry = new Timer(_ => Reopen(), null, RetryInterval, Timeout.InfiniteTimeSpan);
-        }
+        _log?.Invoke($"Audio capture stopped{(e.Exception is { } ex ? $" ({ex.Message})" : "")}; reopening");
+        _reopen.Request(RetryInterval);
     }
 
-    private void Reopen()
+    /// <summary>One attempt, on the reopen loop; an exception there is logged and retried.</summary>
+    private bool Restart()
     {
         WasapiRecorder? old;
         lock (_lock)
         {
-            _retry?.Dispose();
-            _retry = null;
-            if (_disposed)
-                return;
             old = _recorder;
             _recorder = null;
         }
-        if (old is not null)
-        {
-            old.RecordingStopped -= OnStopped;
-            old.Dispose();
-        }
+        Close(old);
+        Start();
+        _log?.Invoke($"Audio capture reopened ({Description})");
+        return true;
+    }
 
+    private void Close(WasapiRecorder? recorder)
+    {
+        if (recorder is null)
+            return;
+        recorder.RecordingStopped -= OnStopped;
         try
         {
-            Start();
-            _log?.Invoke($"Audio capture reopened ({Description})");
+            recorder.StopRecording();
+            recorder.Dispose();
         }
         catch (Exception e)
         {
-            _log?.Invoke($"Audio capture could not reopen ({e.Message}); retrying");
-            lock (_lock)
-                if (!_disposed)
-                    _retry = new Timer(_ => Reopen(), null, RetryInterval, Timeout.InfiniteTimeSpan);
+            _log?.Invoke($"Audio capture: closing the old capture failed ({e.Message})"); // e.g. the device is gone
         }
     }
 
     public void Dispose()
     {
+        _reopen.Dispose(); // waits for a running reopen; none start after this
         WasapiRecorder? recorder;
         lock (_lock)
         {
             _disposed = true;
-            _retry?.Dispose();
-            _retry = null;
             recorder = _recorder;
             _recorder = null;
         }
-        if (recorder is not null)
-        {
-            recorder.RecordingStopped -= OnStopped;
-            recorder.StopRecording();
-            recorder.Dispose();
-        }
+        Close(recorder);
         _devices.Dispose();
         _frames.Dispose();
     }

@@ -13,7 +13,10 @@ public delegate int PcmReader(Span<short> output);
 /// buffer the driver allows (IAudioClient3 low latency, 2-3 ms; otherwise 10 ms). Low-latency mode
 /// can't use Windows' automatic stream routing, so this listens for default-device changes itself
 /// and reopens on the new device. With no device, or after the device stops (unplugged), it retries
-/// every <see cref="RetryInterval"/>. PCM is pulled from <c>read</c> on the device's thread.
+/// every <see cref="RetryInterval"/>. Every open runs on one <see cref="ReopenLoop"/>, so two
+/// changes in a row never leave two players pulling at once, and nothing it does can throw out of
+/// a timer thread. It never throws: without a working audio system it only reports why in
+/// <see cref="Status"/>. PCM is pulled from <c>read</c> on the device's thread.
 /// </summary>
 public sealed class DefaultDevicePlayer : IDisposable
 {
@@ -23,32 +26,49 @@ public sealed class DefaultDevicePlayer : IDisposable
 
     private readonly PullProvider _provider;
     private readonly Action<string>? _log;
-    private readonly MMDeviceEnumerator _devices = new();
-    private readonly MMDeviceNotificationClient _notifications;
-    private readonly Lock _lock = new();
-    private WasapiPlayer? _player;
-    private Timer? _retry;
-    private bool _disposed;
+    private readonly MMDeviceEnumerator? _devices;
+    private readonly MMDeviceNotificationClient? _notifications;
+    private readonly ReopenLoop? _reopen;
+    private WasapiPlayer? _player; // only the reopen loop's single attempt touches it, and Dispose after the loop stops
     private string _status = "starting";
 
     public DefaultDevicePlayer(PcmReader read, Action<string>? log = null)
+        : this(read, log, () => new MMDeviceEnumerator())
+    {
+    }
+
+    internal DefaultDevicePlayer(PcmReader read, Action<string>? log, Func<MMDeviceEnumerator> openDevices)
     {
         _provider = new PullProvider(read);
         _log = log;
-        _notifications = _devices.CreateNotificationClient(useSynchronizationContext: false);
-        _notifications.DefaultDeviceChanged += OnDefaultDeviceChanged;
-        Reopen();
+        MMDeviceEnumerator? devices = null;
+        try
+        {
+            devices = openDevices();
+            _notifications = devices.CreateNotificationClient(useSynchronizationContext: false);
+            _notifications.DefaultDeviceChanged += OnDefaultDeviceChanged;
+        }
+        catch (Exception e)
+        {
+            devices?.Dispose(); // e.g. the Windows Audio service is stopped
+            Status = $"unavailable: {e.Message}";
+            return;
+        }
+        _devices = devices;
+        _reopen = new ReopenLoop(TryOpen, RetryInterval, TimeProvider.System,
+            e => Status = $"unavailable: {e.Message}");
+        _reopen.Request(TimeSpan.Zero);
     }
 
     /// <summary>The device and its buffer, e.g. "Headphones, 2 ms (low latency)", or why nothing plays.</summary>
     public string Status
     {
-        get => _status;
+        get => Volatile.Read(ref _status);
         private set
         {
             if (value == _status)
                 return;
-            _status = value;
+            Volatile.Write(ref _status, value);
             _log?.Invoke($"Audio output: {value}"); // only changes, so a missing device doesn't log every second
         }
     }
@@ -56,81 +76,50 @@ public sealed class DefaultDevicePlayer : IDisposable
     private void OnDefaultDeviceChanged(object? sender, DefaultDeviceChangedEventArgs e)
     {
         if (e.Flow == DataFlow.Render && e.Role == Role.Multimedia)
-            ScheduleReopen(TimeSpan.Zero); // never reopen inside Windows' notification callback
+            _reopen?.Request(TimeSpan.Zero); // never reopen inside Windows' notification callback
     }
 
     private void OnStopped(object? sender, StoppedEventArgs e)
     {
         _log?.Invoke($"Audio output stopped{(e.Exception is { } ex ? $" ({ex.Message})" : "")}; reopening");
-        ScheduleReopen(RetryInterval);
+        _reopen?.Request(RetryInterval);
     }
 
-    private void ScheduleReopen(TimeSpan delay)
+    /// <summary>One attempt, on the reopen loop. Returns false (or throws) to try again later.</summary>
+    private bool TryOpen()
     {
-        lock (_lock)
+        CloseCurrent();
+        if (!_devices!.HasDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia))
         {
-            if (_disposed || _retry is not null)
-                return;
-            _retry = new Timer(_ => Reopen(), null, delay, Timeout.InfiniteTimeSpan);
-        }
-    }
-
-    private void Reopen()
-    {
-        WasapiPlayer? old;
-        lock (_lock)
-        {
-            _retry?.Dispose();
-            _retry = null;
-            if (_disposed)
-                return;
-            old = _player;
-            _player = null;
-        }
-        if (old is not null)
-        {
-            old.PlaybackStopped -= OnStopped;
-            old.Dispose();
+            Status = "no output device";
+            return false;
         }
 
-        try
-        {
-            var player = Open();
-            lock (_lock)
-            {
-                if (_disposed)
-                {
-                    player.PlaybackStopped -= OnStopped;
-                    player.Dispose();
-                    return;
-                }
-                _player = player;
-            }
-            Status = $"{player.DeviceFriendlyName}, {player.LatencyMilliseconds} ms{(player.LowLatencyActive ? " (low latency)" : "")}";
-        }
-        catch (Exception e)
-        {
-            Status = _devices.HasDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia)
-                ? $"unavailable: {e.Message}"
-                : "no output device";
-            ScheduleReopen(RetryInterval);
-        }
-    }
-
-    private WasapiPlayer Open()
-    {
         var device = _devices.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
         WasapiPlayer player;
         try
         {
-            player = Build(device, lowLatency: true);
+            player = Start(device, lowLatency: true);
         }
         catch (Exception e)
         {
             _log?.Invoke($"Audio output: low-latency mode failed ({e.Message}); using a 10 ms buffer");
-            player = Build(device, lowLatency: false);
+            player = Start(device, lowLatency: false);
         }
+        _player = player;
+        Status = $"{player.DeviceFriendlyName}, {player.LatencyMilliseconds} ms{(player.LowLatencyActive ? " (low latency)" : "")}";
+        return true;
+    }
 
+    private WasapiPlayer Start(MMDevice device, bool lowLatency)
+    {
+        var builder = new WasapiPlayerBuilder()
+            .WithDevice(device)
+            .WithSharedMode()
+            .WithEventSync()
+            .WithCategory(AudioStreamCategory.GameMedia);
+        builder = lowLatency ? builder.WithLowLatency(true) : builder.WithLatency(10);
+        var player = Task.Run(() => builder.BuildAsync()).GetAwaiter().GetResult(); // off the calling thread
         try
         {
             player.Init(_provider);
@@ -146,36 +135,32 @@ public sealed class DefaultDevicePlayer : IDisposable
         }
     }
 
-    private static WasapiPlayer Build(MMDevice device, bool lowLatency)
+    private void CloseCurrent()
     {
-        var builder = new WasapiPlayerBuilder()
-            .WithDevice(device)
-            .WithSharedMode()
-            .WithEventSync()
-            .WithCategory(AudioStreamCategory.GameMedia);
-        builder = lowLatency ? builder.WithLowLatency(true) : builder.WithLatency(10);
-        return Task.Run(() => builder.BuildAsync()).GetAwaiter().GetResult(); // off the calling (UI) thread
+        if (_player is not { } old)
+            return;
+        _player = null;
+        old.PlaybackStopped -= OnStopped;
+        try
+        {
+            old.Dispose();
+        }
+        catch (Exception e)
+        {
+            _log?.Invoke($"Audio output: closing the old device failed ({e.Message})"); // e.g. it was unplugged
+        }
     }
 
     public void Dispose()
     {
-        WasapiPlayer? player;
-        lock (_lock)
+        _reopen?.Dispose(); // waits for a running attempt; none start after this
+        if (_notifications is not null)
         {
-            _disposed = true;
-            _retry?.Dispose();
-            _retry = null;
-            player = _player;
-            _player = null;
+            _notifications.DefaultDeviceChanged -= OnDefaultDeviceChanged;
+            _notifications.Dispose();
         }
-        _notifications.DefaultDeviceChanged -= OnDefaultDeviceChanged;
-        _notifications.Dispose();
-        if (player is not null)
-        {
-            player.PlaybackStopped -= OnStopped;
-            player.Dispose();
-        }
-        _devices.Dispose();
+        CloseCurrent();
+        _devices?.Dispose();
     }
 
     /// <summary>NAudio's side of <see cref="PcmReader"/>: bytes asked for, 16-bit stereo given.</summary>
