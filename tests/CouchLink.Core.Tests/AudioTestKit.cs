@@ -1,3 +1,7 @@
+using System.Collections.Concurrent;
+using System.Net;
+using CouchLink.Core.Audio;
+using CouchLink.Core.Net;
 using CouchLink.Core.Protocol;
 
 namespace CouchLink.Core.Tests;
@@ -24,4 +28,72 @@ internal static class AudioTestKit
             await Task.Delay(10);
         }
     }
+}
+
+/// <summary>A source the test feeds: each frame is filled with one value.</summary>
+internal sealed class QueueSource : IAudioSource
+{
+    private readonly BlockingCollection<(short Value, bool Discontinuity)> _frames = new();
+    private int _taken;
+
+    public string Description => "queue";
+
+    public int Taken => Volatile.Read(ref _taken);
+
+    public void Add(short value, bool discontinuity = false) => _frames.Add((value, discontinuity));
+
+    public bool TryRead(Span<short> frame, TimeSpan timeout, out bool discontinuity)
+    {
+        discontinuity = false;
+        if (!_frames.TryTake(out var item, timeout))
+            return false;
+        frame.Fill(item.Value);
+        discontinuity = item.Discontinuity;
+        Interlocked.Increment(ref _taken);
+        return true;
+    }
+
+    public void Dispose() => _frames.Dispose();
+}
+
+/// <summary>"Encodes" a frame as two bytes: its first sample's low byte, then 0xEE. Throws on a frame of 99s.</summary>
+internal sealed class TinyEncoder : IAudioEncoder
+{
+    public int Encode(ReadOnlySpan<short> pcm, Span<byte> output)
+    {
+        if (pcm[0] == 99)
+            throw new InvalidOperationException("encoder broke");
+        output[0] = (byte)pcm[0];
+        output[1] = 0xEE;
+        return 2;
+    }
+
+    public void Dispose() { }
+}
+
+internal sealed class AudioRecordingSender : IVideoPacketSender
+{
+    private readonly List<(byte[] Packet, IPEndPoint Target)> _sent = [];
+
+    public int Count { get { lock (_sent) return _sent.Count; } }
+
+    public List<(AudioPacket Packet, IPEndPoint Target)> Parsed()
+    {
+        lock (_sent)
+            return _sent.Select(s =>
+            {
+                Assert.True(AudioPacket.TryParse(s.Packet, out var p));
+                return (p, s.Target);
+            }).ToList();
+    }
+
+    public void Send(IReadOnlyList<byte[]> packets, IReadOnlyList<IPEndPoint> targets)
+    {
+        lock (_sent)
+            foreach (var p in packets)
+                foreach (var t in targets)
+                    _sent.Add((p, t));
+    }
+
+    public void Dispose() { }
 }
