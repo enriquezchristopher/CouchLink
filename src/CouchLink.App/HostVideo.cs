@@ -66,7 +66,9 @@ internal sealed class HostVideo : IDisposable
         return new HostVideo(null, null, $"unavailable: {reason}");
     }
 
-    public void ClientSeen(byte slot, IPAddress from) => _streamer?.ClientSeen(slot, from);
+    public void AddTarget(byte slot, IPAddress address) => _streamer?.AddTarget(slot, address);
+
+    public void RemoveTarget(byte slot) => _streamer?.RemoveTarget(slot);
 
     public void RequestKeyframe() => _streamer?.RequestKeyframe();
 

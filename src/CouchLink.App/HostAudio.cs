@@ -7,7 +7,7 @@ namespace CouchLink.App;
 
 /// <summary>
 /// The host's sound: loopback capture (or, with --test-tone, a beep) encoded once and sent to every
-/// client video is sent to. If audio can't start, hosting still runs video and the pads, and
+/// client the session lets in. If audio can't start, hosting still runs video and the pads, and
 /// <see cref="Describe"/> says why.
 /// </summary>
 internal sealed class HostAudio : IDisposable
@@ -29,8 +29,7 @@ internal sealed class HostAudio : IDisposable
             source = AppServices.Options.TestTone
                 ? new TestToneSource()
                 : LoopbackSource.Open(message => AppServices.Log.Write(message));
-            var streamer = new AudioStreamer(source, new OpusAudioEncoder(), new VideoSender(), Ports.Video,
-                TimeProvider.System, onError);
+            var streamer = new AudioStreamer(source, new OpusAudioEncoder(), new VideoSender(), Ports.Video, onError);
             var summary = $"Opus {AudioFormat.BitRate / 1000} kbps from {source.Description}";
             AppServices.Log.Write($"Audio: {summary}");
             return new HostAudio(streamer, summary);
@@ -43,7 +42,9 @@ internal sealed class HostAudio : IDisposable
         }
     }
 
-    public void ClientSeen(byte slot, IPAddress from) => _streamer?.ClientSeen(slot, from);
+    public void AddTarget(byte slot, IPAddress address) => _streamer?.AddTarget(slot, address);
+
+    public void RemoveTarget(byte slot) => _streamer?.RemoveTarget(slot);
 
     public string Describe()
     {

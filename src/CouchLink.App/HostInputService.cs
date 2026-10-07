@@ -22,6 +22,9 @@ internal sealed class HostInputService : IDisposable
     private readonly Task _receiveLoop;
     private readonly Timer _staleTimer;
 
+    // Interim until the session channel (Plan 7 Task 10): a slot/address heard from once becomes a target.
+    private readonly HashSet<(byte Slot, IPAddress Address)> _targets = [];
+
     private HostInputService(InputReceiver receiver, ViGEmPadFactory factory, StreamSettings settings)
     {
         _factory = factory;
@@ -44,11 +47,15 @@ internal sealed class HostInputService : IDisposable
 
     private void OnInput(InputPacket packet, IPAddress from)
     {
-        if (_pads.Handle(packet))
+        if (!_pads.Handle(packet))
+            return;
+        lock (_targets)
         {
-            _video.ClientSeen(packet.Slot, from);
-            _audio.ClientSeen(packet.Slot, from);
+            if (!_targets.Add((packet.Slot, from)))
+                return;
         }
+        _video.AddTarget(packet.Slot, from);
+        _audio.AddTarget(packet.Slot, from);
     }
 
     private void ReleaseStale()
