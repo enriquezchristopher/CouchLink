@@ -36,6 +36,8 @@ internal sealed class HostService : IDisposable, IHostEffects
     private readonly CancellationTokenSource _cts = new();
     private readonly Task _receiveLoop;
     private readonly Timer _staleTimer;
+    private readonly IReadOnlyList<NicAddress> _links = HostLinks.Read();
+    private StreamSettings _settings;
     private HostVideo _video;
 
     private HostService(InputReceiver receiver, SessionServer server, ViGEmPadFactory factory, StreamSettings settings, IHostUi ui)
@@ -45,6 +47,7 @@ internal sealed class HostService : IDisposable, IHostEffects
         _pads = new PadManager(factory, TimeProvider.System);
         _receiver = receiver;
         _server = server;
+        _settings = settings;
         _video = HostVideo.Start(settings, OnVideoError);
         _audio = HostAudio.Start(OnAudioError);
         _receiveLoop = _receiver.RunAsync((packet, from) => _pads.Handle(packet, from), _cts.Token, OnError,
@@ -100,12 +103,29 @@ internal sealed class HostService : IDisposable, IHostEffects
     {
         lock (_media)
         {
+            _settings = settings;
             _video.Dispose();
             _video = HostVideo.Start(settings, OnVideoError);
             foreach (var (slot, address) in _targets)
                 _video.AddTarget(slot, address); // forces a keyframe
         }
-        AppServices.Log.Write($"Stream settings changed: {StreamSettings.Label(settings.Resolution)} at {settings.FrameRate} fps");
+        AppServices.Log.Write($"Stream settings changed: {StreamSettings.Label(settings.Resolution)} at {settings.FrameRate} fps, " +
+            $"{StreamQualities.Label(settings.Quality)} quality");
+    }
+
+    /// <summary>A warning when the stream needs more than the host's network link can carry; null when it fits.</summary>
+    public string? LinkWarning()
+    {
+        long? bitRate;
+        List<IPAddress> clients;
+        StreamQuality quality;
+        lock (_media)
+        {
+            bitRate = _video.BitRate;
+            clients = [.. _targets.Values];
+            quality = _settings.Quality;
+        }
+        return bitRate is { } rate ? LinkBudget.Check(StreamQualities.Label(quality), rate, clients, _links) : null;
     }
 
     public string DescribeStreams()

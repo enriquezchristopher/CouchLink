@@ -6,7 +6,7 @@ using CouchLink.Video;
 //   VideoTest capture [seconds]   counts screen changes and lost captures
 if (args.Length == 0 || args[0] is not ("capture" or "encode" or "play"))
 {
-    Console.WriteLine("Usage: VideoTest capture [seconds] | VideoTest encode [seconds] [--resolution=1080p] [--fps=60] [--encoder=h264_amf] [--out=videotest.h264] [--normal-priority]");
+    Console.WriteLine("Usage: VideoTest capture [seconds] | VideoTest encode [seconds] [--resolution=1080p] [--fps=60] [--quality=balanced] [--encoder=h264_amf] [--out=videotest.h264] [--normal-priority]");
     Console.WriteLine("       VideoTest play <file.h264> [more files] [--software] [--windowed] [--fps=60]");
     return 2;
 }
@@ -92,7 +92,9 @@ static int Encode(int seconds, string[] args)
 
     var resolution = StreamSettings.Resolutions.First(r =>
         string.Equals(StreamSettings.Label(r), Option("resolution", "1080p"), StringComparison.OrdinalIgnoreCase));
-    var settings = new StreamSettings(resolution, int.Parse(Option("fps", "60")));
+    var quality = StreamQualities.All.First(q =>
+        string.Equals(StreamQualities.Label(q), Option("quality", "Balanced"), StringComparison.OrdinalIgnoreCase));
+    var settings = new StreamSettings(resolution, int.Parse(Option("fps", "60")), quality);
     string outPath = Option("out", "videotest.h264");
 
     if (!FfmpegLibrary.TryLoad(out var error))
@@ -106,7 +108,7 @@ static int Encode(int seconds, string[] args)
         Console.WriteLine(GpuPriority.Raise(capture));
     IReadOnlyList<string> encoders = args.Any(a => a.StartsWith("--encoder=", StringComparison.Ordinal))
         ? [Option("encoder", EncoderChoice.Software)]
-        : EncoderChoice.Candidates(capture.VendorId);
+        : EncoderChoice.Candidates(capture.VendorId, settings.Quality);
     var encodeTimes = new List<double>();
     using var source = new ScreenVideoSource(capture, encoders,
         (name, size) => new TimedEncoder(new H264Encoder(capture, name, size, settings.FrameRate, settings.BitRateFor(size)), encodeTimes),
@@ -116,7 +118,8 @@ static int Encode(int seconds, string[] args)
     foreach (var skipped in source.SkippedEncoders)
         Console.WriteLine($"Skipped {skipped}");
     Console.WriteLine($"Encoder: {source.EncoderName} ({(source.IsHardware ? "hardware" : "software")}), " +
-        $"{source.Size.Width}x{source.Size.Height} at {settings.FrameRate} fps, {settings.BitRateFor(source.Size) / 1e6:0.0} Mbps target");
+        $"{source.Size.Width}x{source.Size.Height} at {settings.FrameRate} fps, {settings.BitRateFor(source.Size) / 1e6:0.0} Mbps target, " +
+        $"{StreamQualities.Label(settings.Quality)} quality");
 
     using var file = File.Create(outPath);
     int frames = 0, keyframes = 0, paused = 0;

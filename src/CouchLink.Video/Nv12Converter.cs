@@ -6,7 +6,8 @@ namespace CouchLink.Video;
 
 /// <summary>
 /// Converts the BGRA screen image to NV12 and scales it, on the GPU's video processor,
-/// straight into the textures of FFmpeg's frame pool (zero CPU copy). BT.709 limited range.
+/// straight into the textures of FFmpeg's frame pool (zero CPU copy). BT.709 limited range, with no
+/// driver auto-processing.
 /// </summary>
 internal sealed class Nv12Converter : IDisposable
 {
@@ -38,6 +39,8 @@ internal sealed class Nv12Converter : IDisposable
         {
             context1.VideoProcessorSetStreamColorSpace1(_processor, 0, ColorSpaceType.RgbFullG22NoneP709);
             context1.VideoProcessorSetOutputColorSpace1(_processor, ColorSpaceType.YcbcrStudioG22LeftP709);
+            // Like the client's presenter: no driver noise reduction or edge enhancement before encoding.
+            context1.VideoProcessorSetStreamAutoProcessingMode(_processor, 0, false);
         }
         _input = _videoDevice.CreateVideoProcessorInputView(source, _enumerator, new VideoProcessorInputViewDescription
         {

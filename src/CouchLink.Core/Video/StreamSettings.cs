@@ -11,14 +11,14 @@ public enum StreamResolution
 }
 
 /// <summary>
-/// What the host streams: a resolution preset and a frame rate, chosen before hosting.
-/// The bitrate follows from them: 10 Mbps at 1080p60, scaled by pixels and frame rate.
+/// What the host streams: a resolution preset, a frame rate and a quality, chosen in the host lobby.
+/// The bitrate follows from them: 10 Mbps at 1080p60, scaled by pixels, frame rate and quality.
 /// </summary>
 public sealed record StreamSettings
 {
     public const long BaseBitRate = 10_000_000;
     public const long MinBitRate = 2_000_000;
-    public const long MaxBitRate = 30_000_000;
+    public const long MaxBitRate = 100_000_000;
 
     public static IReadOnlyList<int> CommonFrameRates { get; } = [60, 75, 90, 120, 144, 165, 240];
 
@@ -27,18 +27,22 @@ public sealed record StreamSettings
 
     public static StreamSettings Default { get; } = new(StreamResolution.P1080, 60);
 
-    public StreamSettings(StreamResolution resolution, int frameRate)
+    public StreamSettings(StreamResolution resolution, int frameRate, StreamQuality quality = StreamQuality.Balanced)
     {
         if (!Resolutions.Contains(resolution))
             throw new ArgumentOutOfRangeException(nameof(resolution), $"Unknown resolution {resolution}.");
         if (!CommonFrameRates.Contains(frameRate))
             throw new ArgumentOutOfRangeException(nameof(frameRate), $"Frame rate must be one of {string.Join(", ", CommonFrameRates)}.");
+        if (!StreamQualities.All.Contains(quality))
+            throw new ArgumentOutOfRangeException(nameof(quality), $"Unknown quality {quality}.");
         Resolution = resolution;
         FrameRate = frameRate;
+        Quality = quality;
     }
 
     public StreamResolution Resolution { get; }
     public int FrameRate { get; }
+    public StreamQuality Quality { get; }
 
     /// <summary>
     /// Rates the host can pick: up to the display's refresh rate, and always 60. Windows truncates
@@ -57,7 +61,7 @@ public sealed record StreamSettings
     public long BitRateFor(VideoSize size)
     {
         double pixels = (double)size.Width * size.Height / (1920 * 1080);
-        long bitRate = (long)Math.Round(BaseBitRate * pixels * FrameRate / 60.0);
+        long bitRate = (long)Math.Round(BaseBitRate * pixels * FrameRate / 60.0 * StreamQualities.Factor(Quality));
         return Math.Clamp(bitRate, MinBitRate, MaxBitRate);
     }
 }

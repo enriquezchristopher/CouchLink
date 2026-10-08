@@ -10,7 +10,8 @@ using CouchLink.Video;
 namespace CouchLink.App.Views;
 
 /// <summary>
-/// "Hosting on PC-03": stream settings, Allow everyone, the players with Kick, Stop hosting, and a
+/// "Hosting on PC-03": stream settings (resolution, frame rate, quality) with a warning when the
+/// network link is too slow, Allow everyone, the players with Kick, Stop hosting, and a
 /// Details section with the dev stats. Owns the <see cref="HostService"/> and the approval popups.
 /// </summary>
 internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
@@ -29,6 +30,9 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
         foreach (int rate in StreamSettings.FrameRatesFor(DisplayInfo.PrimaryRefreshRate()))
             FrameRateBox.Items.Add(new ComboBoxItem { Content = $"{rate} fps", Tag = rate });
         FrameRateBox.SelectedIndex = 0; // 60
+        foreach (var quality in StreamQualities.All)
+            QualityBox.Items.Add(new ComboBoxItem { Content = StreamQualities.Label(quality), Tag = quality });
+        QualityBox.SelectedIndex = StreamQualities.All.ToList().IndexOf(StreamSettings.Default.Quality);
         _details.Tick += (_, _) => UpdateDetails();
     }
 
@@ -41,6 +45,7 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
             return false;
         ResolutionBox.SelectionChanged += (_, _) => _host?.ChangeSettings(CurrentSettings());
         FrameRateBox.SelectionChanged += (_, _) => _host?.ChangeSettings(CurrentSettings());
+        QualityBox.SelectionChanged += (_, _) => _host?.ChangeSettings(CurrentSettings());
         AllowEveryoneBox.Click += (_, _) =>
         {
             if (_host is not null)
@@ -61,7 +66,8 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
 
     private StreamSettings CurrentSettings() => new(
         (StreamResolution)((ComboBoxItem)ResolutionBox.SelectedItem).Tag,
-        (int)((ComboBoxItem)FrameRateBox.SelectedItem).Tag);
+        (int)((ComboBoxItem)FrameRateBox.SelectedItem).Tag,
+        (StreamQuality)((ComboBoxItem)QualityBox.SelectedItem).Tag);
 
     void IHostUi.PlayersChanged() => Dispatcher.InvokeAsync(RefreshPlayers);
 
@@ -122,6 +128,9 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
             return;
         DetailsText.Text = $"Virtual pads: {_host.PadCount}\n{_host.DescribeStreams()}" +
             (_host.LastError is { } error ? $"\nLast error: {error}" : "");
+        var warning = _host.LinkWarning();
+        BudgetWarning.Text = warning ?? "";
+        BudgetWarning.Visibility = warning is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
     public void Dispose()

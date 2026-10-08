@@ -24,7 +24,7 @@ public class ScreenVideoSourceTests
     private TimeSpan Elapsed => _time.GetUtcNow() - _start;
 
     private ScreenVideoSource Source(StreamSettings? settings = null, params string[] failing) =>
-        new(_capture, EncoderChoice.Candidates(EncoderChoice.AmdVendorId),
+        new(_capture, EncoderChoice.Candidates(EncoderChoice.AmdVendorId, (settings ?? StreamSettings.Default).Quality),
             (name, size) =>
             {
                 _openAttempts++;
@@ -45,6 +45,19 @@ public class ScreenVideoSourceTests
                 return frame;
         }
         throw new Xunit.Sdk.XunitException("No frame after 100 calls");
+    }
+
+    [Fact]
+    public void An_AMF_that_refuses_the_slower_setting_falls_back_to_fast_AMF()
+    {
+        _capture.Script.Enqueue(CaptureStatus.NewFrame);
+        using var source = Source(new StreamSettings(StreamResolution.P1080, 60, StreamQuality.High), EncoderChoice.AmfBalanced);
+
+        Next(source);
+
+        Assert.Equal(EncoderChoice.Amf, source.EncoderName);
+        Assert.True(source.IsHardware);
+        Assert.Contains(source.SkippedEncoders, s => s.StartsWith(EncoderChoice.AmfBalanced, StringComparison.Ordinal));
     }
 
     [Fact]

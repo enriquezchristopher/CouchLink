@@ -27,6 +27,7 @@ public class StreamSettingsTests
     public void Default_is_1080p_at_60()
     {
         Assert.Equal(new StreamSettings(StreamResolution.P1080, 60), StreamSettings.Default);
+        Assert.Equal(StreamQuality.Balanced, StreamSettings.Default.Quality);
         Assert.Equal("1080p", StreamSettings.Label(StreamResolution.P1080));
         Assert.Equal("Native", StreamSettings.Label(StreamResolution.Native));
         Assert.Equal(
@@ -53,12 +54,51 @@ public class StreamSettingsTests
     [InlineData(StreamResolution.P720, 60, 1920, 1080, 4_444_444)]
     [InlineData(StreamResolution.P1080, 144, 1920, 1080, 24_000_000)]
     [InlineData(StreamResolution.P1080, 60, 2560, 1080, 13_333_333)]
-    [InlineData(StreamResolution.Native, 240, 2560, 1080, 30_000_000)]  // capped
+    [InlineData(StreamResolution.Native, 240, 2560, 1080, 53_333_333)]  // was capped at 30 Mbps
     [InlineData(StreamResolution.P540, 60, 1920, 1080, 2_500_000)]
     public void Bitrate_follows_size_and_frame_rate(StreamResolution resolution, int fps, int w, int h, long expected)
     {
         var settings = new StreamSettings(resolution, fps);
         Assert.Equal(expected, settings.BitRateFor(settings.SizeFor(w, h)));
+    }
+
+    [Theory]
+    [InlineData(StreamQuality.Low, StreamResolution.P1080, 60, 1920, 1080, 6_000_000)]
+    [InlineData(StreamQuality.Balanced, StreamResolution.P1080, 60, 1920, 1080, 10_000_000)]
+    [InlineData(StreamQuality.High, StreamResolution.P1080, 60, 1920, 1080, 25_000_000)]
+    [InlineData(StreamQuality.Max, StreamResolution.P1080, 60, 1920, 1080, 50_000_000)]
+    [InlineData(StreamQuality.Balanced, StreamResolution.Native, 60, 2560, 1440, 17_777_778)]
+    [InlineData(StreamQuality.Max, StreamResolution.Native, 60, 2560, 1440, 88_888_889)]
+    [InlineData(StreamQuality.High, StreamResolution.P1080, 144, 1920, 1080, 60_000_000)]
+    [InlineData(StreamQuality.Max, StreamResolution.P1080, 144, 1920, 1080, 100_000_000)] // capped
+    [InlineData(StreamQuality.Low, StreamResolution.P540, 60, 1920, 1080, 2_000_000)]     // floor
+    public void Quality_scales_the_bitrate(StreamQuality quality, StreamResolution resolution, int fps, int w, int h, long expected)
+    {
+        var settings = new StreamSettings(resolution, fps, quality);
+        Assert.Equal(expected, settings.BitRateFor(settings.SizeFor(w, h)));
+    }
+
+    [Fact]
+    public void Qualities_are_listed_low_to_max_with_labels()
+    {
+        Assert.Equal([StreamQuality.Low, StreamQuality.Balanced, StreamQuality.High, StreamQuality.Max], StreamQualities.All);
+        Assert.Equal(["Low", "Balanced", "High", "Max"], StreamQualities.All.Select(StreamQualities.Label));
+    }
+
+    [Theory]
+    [InlineData(StreamQuality.Low, false)]
+    [InlineData(StreamQuality.Balanced, false)]
+    [InlineData(StreamQuality.High, true)]
+    [InlineData(StreamQuality.Max, true)]
+    public void Only_high_and_max_use_the_slower_encoder(StreamQuality quality, bool slower)
+    {
+        Assert.Equal(slower, StreamQualities.UsesSlowerEncoder(quality));
+    }
+
+    [Fact]
+    public void Undefined_qualities_are_rejected()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new StreamSettings(StreamResolution.P1080, 60, (StreamQuality)7));
     }
 
     [Fact]
