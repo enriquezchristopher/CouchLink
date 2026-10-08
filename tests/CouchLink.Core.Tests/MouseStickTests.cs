@@ -62,4 +62,12 @@ public class MouseStickTests
         m.Reset();
         Assert.Equal(((byte)128, (byte)128), m.Update(0.001));
     }
+
+    [Fact]
+    public void InvertY_flips_vertical_movement()
+    {
+        var m = new MouseStick { InvertY = true };
+        m.AddDelta(0, 25); // mouse toward you: stick up instead of down
+        Assert.Equal(((byte)128, (byte)65), m.Update(0.001));
+    }
 }

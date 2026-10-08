@@ -18,10 +18,13 @@ public sealed class MouseStick
     /// <summary>Stick deflection per mouse count (1.0 = full).</summary>
     public double Sensitivity { get; set; } = DefaultSensitivity;
 
+    /// <summary>Mouse toward you pushes the stick up instead of down.</summary>
+    public bool InvertY { get; set; }
+
     public void AddDelta(int dx, int dy)
     {
         _x += dx * Sensitivity;
-        _y += dy * Sensitivity;
+        _y += (InvertY ? -dy : dy) * Sensitivity;
         double magnitude = Math.Sqrt(_x * _x + _y * _y);
         if (magnitude > 1.0)
         {

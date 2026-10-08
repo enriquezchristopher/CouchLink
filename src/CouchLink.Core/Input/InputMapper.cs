@@ -2,9 +2,9 @@ namespace CouchLink.Core.Input;
 
 /// <summary>
 /// Tracks held keys and mouse movement and turns them into a DS4 state.
-/// Thread-safe: input events arrive on the UI thread, Tick runs on the send loop.
+/// Thread-safe: input events arrive on the UI thread, Tick runs on the send loop, edits come from the editor.
 /// </summary>
-public sealed class InputMapper
+public sealed class InputMapper : IDisposable
 {
     private static readonly (PadControl Control, PadButtons Button)[] ButtonMap =
     [
@@ -31,11 +31,45 @@ public sealed class InputMapper
     private readonly MouseStick _mouse;
     private readonly HashSet<ushort> _held = [];
     private readonly Lock _gate = new();
+    private readonly ControlSettings? _settings;
 
     public InputMapper(KeyLayout layout, MouseStick mouse)
     {
         _layout = layout;
         _mouse = mouse;
+    }
+
+    /// <summary>
+    /// Follows the shared controls: an edit counts from the next tick, releases held keys (nothing
+    /// stays pressed across a rebind) and applies the mouse settings. Dispose to stop following.
+    /// </summary>
+    public InputMapper(ControlSettings settings) : this(settings.Layout, new MouseStick())
+    {
+        _settings = settings;
+        ApplyMouseSettings();
+        settings.Changed += OnSettingsChanged;
+    }
+
+    private void OnSettingsChanged()
+    {
+        lock (_gate)
+        {
+            _held.Clear();
+            _mouse.Reset();
+            ApplyMouseSettings();
+        }
+    }
+
+    private void ApplyMouseSettings()
+    {
+        _mouse.Sensitivity = _settings!.Sensitivity;
+        _mouse.InvertY = _settings.InvertY;
+    }
+
+    public void Dispose()
+    {
+        if (_settings is not null)
+            _settings.Changed -= OnSettingsChanged;
     }
 
     public void KeyDown(ushort vk) { lock (_gate) _held.Add(vk); }
