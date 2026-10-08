@@ -89,4 +89,37 @@ public class OverlayTextTests
         Assert.Contains("Mouse (sensitivity 7)", text);
         Assert.Contains("Ctrl+Alt+C", text);
     }
+
+    [Fact]
+    public void The_built_in_layout_keeps_the_plain_title()
+    {
+        var text = OverlayText.Controls(new ControlSettings());
+        Assert.StartsWith("Controls (F1 hides, Ctrl+Alt+C changes keys)\n", text);
+    }
+
+    [Fact]
+    public void A_loaded_profile_is_named_in_the_title_and_shows_changes()
+    {
+        var settings = new ControlSettings();
+        settings.Apply(new ControlProfile("2K22 Café", null, 5, false,
+            KeyLayout.CreateDefault().Current, new Dictionary<PadControl, string>()));
+        Assert.StartsWith("Controls: 2K22 Café (F1 hides, Ctrl+Alt+C changes keys)\n", OverlayText.Controls(settings));
+
+        settings.SetSensitivityStep(9);
+        Assert.StartsWith("Controls: 2K22 Café (changed) (F1 hides", OverlayText.Controls(settings));
+    }
+
+    [Fact]
+    public void Labels_lead_their_rows_and_the_column_widens_to_fit()
+    {
+        var settings = new ControlSettings();
+        settings.SetLabel(PadControl.Square, "Shoot from range");
+
+        var text = OverlayText.Controls(settings);
+
+        int width = "Shoot from range (Square)".Length + 2;
+        Assert.Contains("Shoot from range (Square)".PadRight(width) + "J / Left click", text);
+        Assert.Contains("Cross".PadRight(width) + "K", text);
+        Assert.Contains("Right stick".PadRight(width) + "Mouse", text);
+    }
 }

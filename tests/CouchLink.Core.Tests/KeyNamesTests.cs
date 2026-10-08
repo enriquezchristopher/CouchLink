@@ -60,4 +60,11 @@ public class KeyNamesTests
         layout.Bind(PadControl.Circle, VirtualKeys.Letter('K')); // Cross loses its only key
         Assert.Equal("(none)", KeyNames.Describe(layout, PadControl.Cross));
     }
+
+    [Fact]
+    public void A_label_goes_before_the_control_name()
+    {
+        Assert.Equal("Shoot (Square)", KeyNames.Labelled(PadControl.Square, "Shoot"));
+        Assert.Equal("D-pad up", KeyNames.Labelled(PadControl.DpadUp, null));
+    }
 }
