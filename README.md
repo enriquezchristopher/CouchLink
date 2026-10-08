@@ -10,8 +10,9 @@ network, with **no accounts, no cloud, and no internet** required.
 
 > **Status: early development.** Joining PCs see and hear the host with low latency (GPU capture,
 > hardware H.264, FEC over UDP, GPU decode; WASAPI loopback and Opus for sound) and each gets its
-> own virtual DualShock 4. The lobby and the join/approval flow are next. See the [roadmap](ROADMAP.md) and
-> [the design spec](docs/superpowers/specs/2026-10-05-couchlink-design.md).
+> own virtual DualShock 4. Friends find the host in a list and the host approves each join.
+> Playing-screen polish (F1 help, key blocking, mouse lock), the controls editor and the installer
+> are next. See the [roadmap](ROADMAP.md) and [the design spec](docs/superpowers/specs/2026-10-05-couchlink-design.md).
 
 ## Target setup
 
