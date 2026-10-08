@@ -1,4 +1,5 @@
 using CouchLink.Core.Input;
+using CouchLink.Core.Video;
 
 namespace CouchLink.Core.Tests;
 
@@ -63,6 +64,21 @@ public class ShippedProfilesTests
         Assert.Equal("Shoot / Steal", labels[PadControl.Square]);
         Assert.Equal("Pass / Switch player", labels[PadControl.Cross]);
         Assert.Equal("Sprint", labels[PadControl.R2]);
+    }
+
+    [Fact]
+    public void F1_shows_the_NBA_2K22_labels_with_their_keys()
+    {
+        var settings = new ControlSettings();
+        settings.Apply(Nba2K22());
+
+        var panel = OverlayText.Controls(settings);
+
+        Assert.StartsWith("Controls: NBA 2K22 (F1 hides", panel);
+        var lines = panel.Split('\n');
+        Assert.Contains(lines, l => l.StartsWith("Shoot / Steal (Square)", StringComparison.Ordinal) && l.EndsWith("Num 5", StringComparison.Ordinal));
+        Assert.Contains(lines, l => l.StartsWith("Pass / Switch player (Cross)", StringComparison.Ordinal) && l.EndsWith("Space", StringComparison.Ordinal));
+        Assert.Contains(lines, l => l.StartsWith("Sprint (R2)", StringComparison.Ordinal) && l.EndsWith("Enter", StringComparison.Ordinal));
     }
 
     [Fact]
