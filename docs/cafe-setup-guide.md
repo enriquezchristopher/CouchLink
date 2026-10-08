@@ -249,6 +249,8 @@ The host lobby's **Stream** setting picks the resolution (Native, 1080p,
 monitor's refresh rate) and the quality (Low, Balanced, High, Max). Higher
 settings look sharper and need more from the host's GPU and the network.
 
+![The Quality setting in the host lobby](images/host-lobby-quality.png)
+
 - Start with **1080p** at **60 fps** and **Balanced**. On older or smaller
   GPUs, or if joining players see stutter, try **900p** or **720p**, or
   **Low**.
@@ -265,6 +267,12 @@ settings look sharper and need more from the host's GPU and the network.
 - From version 1.6.2, **Details** also shows "GPU priority: realtime" (or
   "high"). CouchLink asks Windows to run its capture and encoding ahead of
   the game on the GPU, so a busy game doesn't starve the stream.
+- **Details** also shows the quality and the bitrate. At **High** and
+  **Max** the encoder reads `h264_amf (balanced)` or `h264_nvenc (p3)`, a
+  slower setting that keeps more detail. If the card can't run it, CouchLink
+  uses the normal `h264_amf` or `h264_nvenc` instead.
+
+![Details at Max quality](images/host-lobby-details.png)
 
 ### Reading F2 on a joining PC
 
