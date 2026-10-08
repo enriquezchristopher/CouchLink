@@ -10,9 +10,11 @@ internal sealed partial class SessionView : UserControl
     {
         InitializeComponent();
         LeaveButton.Click += (_, _) => LeaveClicked?.Invoke();
+        ControlsButton.Click += (_, _) => ControlsClicked?.Invoke();
     }
 
     public event Action? LeaveClicked;
+    public event Action? ControlsClicked;
 
     public string Details
     {
@@ -25,7 +27,7 @@ internal sealed partial class SessionView : UserControl
         {
             ClientState.Connecting => ($"Connecting to {host}...", "", "Cancel"),
             ClientState.Waiting => ($"Waiting for {host} to let you in...", "The host sees a popup and can allow or deny.", "Cancel"),
-            ClientState.Playing => ($"Playing on {host} as P{slot}", "Ctrl+Alt+Q leaves. F2 shows stats.", "Leave"),
+            ClientState.Playing => ($"Playing on {host} as P{slot}", "Ctrl+Alt+Q leaves. F1 shows the keys, Ctrl+Alt+C changes them. F2 shows stats.", "Leave"),
             ClientState.Reconnecting => ($"Reconnecting to {host}...", "Your slot is kept for a minute.", "Leave"),
             _ => (Heading.Text, Hint.Text, LeaveButton.Content as string ?? "Leave"),
         };

@@ -1,17 +1,68 @@
 namespace CouchLink.Core.Input;
 
-/// <summary>Which keys drive which DS4 control. Several keys may drive one control.</summary>
+/// <summary>What <see cref="KeyLayout.Bind"/> did: refused a reserved key, or bound it, maybe taking it from another control.</summary>
+public readonly record struct BindResult(bool Bound, PadControl? MovedFrom)
+{
+    public static readonly BindResult Reserved = new(false, null);
+}
+
+/// <summary>
+/// Which keys drive which DS4 control. The defaults give a few controls two keys; a rebind gives the
+/// control exactly one key and takes that key off any other control. Thread-safe: the editor binds
+/// on the UI thread while the input loop reads every tick.
+/// </summary>
 public sealed class KeyLayout
 {
+    private static readonly ushort[] ReservedKeys =
+        [VirtualKeys.Escape, VirtualKeys.F1, VirtualKeys.F2, VirtualKeys.LWin, VirtualKeys.RWin];
+
     private readonly Dictionary<PadControl, ushort[]> _bindings;
+    private readonly Lock _gate = new();
 
     private KeyLayout(Dictionary<PadControl, ushort[]> bindings) => _bindings = bindings;
 
-    public IReadOnlyList<ushort> KeysFor(PadControl control) =>
-        _bindings.TryGetValue(control, out var keys) ? keys : [];
+    public IReadOnlyList<ushort> KeysFor(PadControl control)
+    {
+        lock (_gate)
+            return _bindings.TryGetValue(control, out var keys) ? keys : [];
+    }
+
+    /// <summary>Esc cancels a rebind, F1 and F2 toggle the player's panels, the Windows keys are blocked while playing.</summary>
+    public static bool IsReserved(ushort key) => ReservedKeys.Contains(key);
+
+    public BindResult Bind(PadControl control, ushort key)
+    {
+        if (IsReserved(key))
+            return BindResult.Reserved;
+        lock (_gate)
+        {
+            PadControl? movedFrom = null;
+            foreach (var (other, keys) in _bindings.ToList())
+            {
+                if (other == control || !keys.Contains(key))
+                    continue;
+                _bindings[other] = keys.Where(k => k != key).ToArray();
+                movedFrom = other;
+            }
+            _bindings[control] = [key];
+            return new BindResult(true, movedFrom);
+        }
+    }
+
+    public void ResetToDefault()
+    {
+        lock (_gate)
+        {
+            _bindings.Clear();
+            foreach (var (control, keys) in Defaults())
+                _bindings[control] = keys;
+        }
+    }
 
     /// <summary>Spec section 6.1 default layout.</summary>
-    public static KeyLayout CreateDefault() => new(new Dictionary<PadControl, ushort[]>
+    public static KeyLayout CreateDefault() => new(Defaults());
+
+    private static Dictionary<PadControl, ushort[]> Defaults() => new()
     {
         [PadControl.LeftUp] = [VirtualKeys.Letter('W')],
         [PadControl.LeftLeft] = [VirtualKeys.Letter('A')],
@@ -34,5 +85,5 @@ public sealed class KeyLayout
         [PadControl.Options] = [VirtualKeys.Return],
         [PadControl.Share] = [VirtualKeys.Back],
         [PadControl.Touchpad] = [VirtualKeys.Tab],
-    });
+    };
 }

@@ -1,4 +1,5 @@
 using CouchLink.Core.Audio;
+using CouchLink.Core.Input;
 using CouchLink.Core.Video;
 
 namespace CouchLink.Core.Tests;
@@ -70,5 +71,22 @@ public class OverlayTextTests
         Assert.Equal(expected, OverlayText.Status(true, false, TimeSpan.Zero, TimeSpan.FromSeconds(2), OverlayText.Reconnecting));
         Assert.Equal(expected, OverlayText.Status(false, true, TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(2), OverlayText.Reconnecting));
         Assert.Null(OverlayText.Status(true, false, TimeSpan.Zero, TimeSpan.FromSeconds(2), session: null));
+    }
+
+    [Fact]
+    public void The_controls_panel_lists_every_control_with_its_current_keys()
+    {
+        var settings = new ControlSettings();
+        settings.Bind(PadControl.Cross, VirtualKeys.Space);
+        settings.SetSensitivityStep(7);
+
+        var text = OverlayText.Controls(settings);
+
+        foreach (var control in Enum.GetValues<PadControl>())
+            Assert.Contains(KeyNames.Of(control), text);
+        Assert.Contains($"{"Cross",-18}Space", text);
+        Assert.Contains($"{"Square",-18}J / Left click", text);
+        Assert.Contains("Mouse (sensitivity 7)", text);
+        Assert.Contains("Ctrl+Alt+C", text);
     }
 }

@@ -20,8 +20,11 @@ public interface IFrameDecoder : IDisposable
     bool Decode(byte[] data, out DecodedPicture picture);
 }
 
-/// <summary>Shows a picture (or black, when null) with optional centred status text and top-left stats.</summary>
+/// <summary>
+/// Shows a picture (or black, when null) with optional text: status centred, controls top-left,
+/// stats top-right, hint bottom-left.
+/// </summary>
 public interface IFramePresenter : IDisposable
 {
-    void Present(DecodedPicture? picture, string? status, string? stats);
+    void Present(DecodedPicture? picture, string? status, string? stats, string? controls, string? hint);
 }

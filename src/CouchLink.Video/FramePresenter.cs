@@ -89,14 +89,14 @@ public sealed unsafe class FramePresenter : IFramePresenter
         ResetProcessor(); // output size changed
     }
 
-    public void Present(DecodedPicture? picture, string? status, string? stats)
+    public void Present(DecodedPicture? picture, string? status, string? stats, string? controls, string? hint)
     {
         using (var back = _swapChain.GetBuffer<D3D11Texture2D>(0))
         {
             if (picture is { } p)
                 Blt(p, back);
-            if (picture is null || status is not null || stats is not null)
-                DrawText(back, clear: picture is null, status, stats);
+            if (picture is null || status is not null || stats is not null || controls is not null || hint is not null)
+                DrawText(back, clear: picture is null, status, stats, controls, hint);
         }
         _swapChain.Present(0, _tearing ? PresentFlags.AllowTearing : PresentFlags.None).CheckError();
     }
@@ -217,7 +217,7 @@ public sealed unsafe class FramePresenter : IFramePresenter
         return _uploadView!;
     }
 
-    private void DrawText(D3D11Texture2D back, bool clear, string? status, string? stats)
+    private void DrawText(D3D11Texture2D back, bool clear, string? status, string? stats, string? controls, string? hint)
     {
         using var surface = back.QueryInterface<IDXGISurface>();
         using var target = _d2d.CreateBitmapFromDxgiSurface(surface, new BitmapProperties1(
@@ -227,23 +227,25 @@ public sealed unsafe class FramePresenter : IFramePresenter
         _d2d.BeginDraw();
         if (clear)
             _d2d.Clear(new Color4(0f, 0f, 0f, 1f));
+        if (controls is not null)
+            Panel(controls, _statsFont, 24, 24, alignX: 0, alignY: 0);
         if (stats is not null)
-            Panel(stats, _statsFont, 24, 24, centred: false);
+            Panel(stats, _statsFont, _window.Width - 24, 24, alignX: 1, alignY: 0);
+        if (hint is not null)
+            Panel(hint, _statsFont, 24, _window.Height - 24, alignX: 0, alignY: 1);
         if (status is not null)
-            Panel(status, _statusFont, _window.Width / 2f, _window.Height / 2f, centred: true);
+            Panel(status, _statusFont, _window.Width / 2f, _window.Height / 2f, alignX: 0.5f, alignY: 0.5f);
         _d2d.EndDraw();
         _d2d.Target = null;
     }
 
-    private void Panel(string text, IDWriteTextFormat font, float x, float y, bool centred)
+    /// <summary>Text on a dark panel; (x, y) is where <paramref name="alignX"/>/<paramref name="alignY"/> of the text sits (0 = left/top, 1 = right/bottom).</summary>
+    private void Panel(string text, IDWriteTextFormat font, float x, float y, float alignX, float alignY)
     {
         using var layout = _dwrite.CreateTextLayout(text, font, _window.Width, _window.Height);
         var size = layout.Metrics;
-        if (centred)
-        {
-            x -= size.Width / 2;
-            y -= size.Height / 2;
-        }
+        x -= size.Width * alignX;
+        y -= size.Height * alignY;
         _d2d.FillRectangle(new Rect(x - 12, y - 8, size.Width + 24, size.Height + 16), _panel);
         _d2d.DrawTextLayout(new Vector2(x, y), layout, _text);
     }

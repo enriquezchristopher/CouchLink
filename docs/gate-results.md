@@ -62,3 +62,20 @@ Host / client PCs: <fill in>
 | Kill and restart the client -> same slot, no popup | <pass/fail> |
 | Change resolution mid-session -> clients' picture back within about 1 s | <pass/fail> |
 | Three or more clients join at once -> distinct slots | <pass/fail> |
+
+## Playing screen, controls & single instance (Plan 8)
+
+Date: <fill in>
+Host / client PCs: <fill in>
+
+| Check | Result |
+|---|---|
+| Win key, Alt+Tab, Alt+Esc, Ctrl+Esc do nothing from the first second of play; all work again after Ctrl+Alt+Q | <pass/fail> |
+| Alt+F4 in the player leaves the session | <pass/fail> |
+| Two monitors: the pointer can't leave the game; it is free again after leaving | <pass/fail> |
+| The start hint shows for about 5 s; F1 shows every control and its keys; F1 and F2 can be on together | <pass/fail> |
+| Ctrl+Alt+C opens the editor over the game; rebind Cross to Space; closing it returns to the game, F1 shows Space and Space presses Cross in 2K | <pass/fail> |
+| Mouse side button bound to L1 works in 2K | <pass/fail> |
+| Sensitivity 1 and 10 feel clearly different; Invert Y flips the shot stick | <pass/fail> |
+| Launch CouchLink again on the Start screen, while hosting and while playing: the running copy comes forward, no second copy in Task Manager | <pass/fail> |
+| A `--windowed-player` second copy still starts and joins | <pass/fail> |

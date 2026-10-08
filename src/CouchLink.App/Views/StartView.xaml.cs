@@ -10,10 +10,12 @@ internal sealed partial class StartView : UserControl
         InitializeComponent();
         HostButton.Click += (_, _) => HostClicked?.Invoke();
         JoinButton.Click += (_, _) => JoinClicked?.Invoke();
+        ControlsButton.Click += (_, _) => ControlsClicked?.Invoke();
         CrashReportsButton.Click += (_, _) => CrashReportsClicked?.Invoke();
     }
 
     public event Action? HostClicked;
     public event Action? JoinClicked;
+    public event Action? ControlsClicked;
     public event Action? CrashReportsClicked;
 }

@@ -4,6 +4,7 @@ using System.Windows.Interop;
 using CouchLink.App.Input;
 using CouchLink.Core.Input;
 using CouchLink.Core.Net;
+using CouchLink.Core.Video;
 using CouchLink.Video;
 
 namespace CouchLink.App;
@@ -25,7 +26,7 @@ internal sealed class ClientPlay : IDisposable
     {
         _window = window;
         _streams = streams;
-        _mapper = new InputMapper(KeyLayout.CreateDefault(), new MouseStick());
+        _mapper = new InputMapper(AppServices.Controls);
         _rawInput = new RawInputSource((HwndSource)PresentationSource.FromVisual(window), InputAllowed);
         _rawInput.InputSuspended += _mapper.ReleaseAll;
         _rawInput.KeyDown += _mapper.KeyDown;
@@ -36,12 +37,15 @@ internal sealed class ClientPlay : IDisposable
     }
 
     public static bool TryStart(Window window, IPAddress host, byte slot, Action leave, Func<string?> sessionStatus,
+        Action openControls,
         out ClientPlay? play, out string? error)
     {
         play = null;
         var sender = new InputSender(new IPEndPoint(host, Ports.Input), slot);
-        var options = new PlayerOptions(new WindowInteropHelper(window).Handle, AppServices.Options.WindowedPlayer);
+        var options = new PlayerOptions(new WindowInteropHelper(window).Handle, AppServices.Options.WindowedPlayer,
+            LockInput: !AppServices.Options.WindowedPlayer);
         if (!ClientStreams.TryStart(host, sender, options, AppServices.Options.SaveVideoPath, leave, sessionStatus,
+                () => OverlayText.Controls(AppServices.Controls), openControls,
                 out var streams, out error))
         {
             sender.Dispose();
@@ -50,6 +54,8 @@ internal sealed class ClientPlay : IDisposable
         play = new ClientPlay(window, streams!, sender);
         return true;
     }
+
+    public nint PlayerWindow => _streams.PlayerWindow;
 
     private bool InputAllowed()
     {
@@ -75,6 +81,7 @@ internal sealed class ClientPlay : IDisposable
         _window.Deactivated -= OnDeactivated;
         _streams.Dispose(); // before the input sender that video sends keyframe requests through
         _input.Dispose();   // sends a neutral pad state and closes the input sender
+        _mapper.Dispose();  // stops following controls edits
         _rawInput.Dispose();
     }
 }

@@ -18,6 +18,9 @@ public sealed class PlayerCore : IDisposable
     /// <summary>No frame for this long: the host has gone quiet (stopped, gone, or a wrong address).</summary>
     public static readonly TimeSpan QuietAfter = TimeSpan.FromSeconds(2);
 
+    /// <summary>How long "F1: controls · Ctrl+Alt+Q: leave" shows after the first picture of a join.</summary>
+    public static readonly TimeSpan StartHintFor = TimeSpan.FromSeconds(5);
+
     private readonly Func<bool, IFrameDecoder> _openDecoder;
     private readonly IFramePresenter _presenter;
     private readonly Func<VideoClientStats> _stats;
@@ -26,6 +29,7 @@ public sealed class PlayerCore : IDisposable
     private readonly Action<string>? _log;
     private readonly Func<string?>? _audioLine;
     private readonly Func<string?>? _sessionStatus;
+    private readonly Func<string?>? _controlsText;
     private readonly long _start;
     private readonly Lock _queueLock = new();
     private readonly List<(AssembledFrame Frame, TimeSpan ReceivedAt)> _queue = [];
@@ -38,10 +42,13 @@ public sealed class PlayerCore : IDisposable
     private TimeSpan? _lastArrival;
     private string? _lastStatus, _lastStatsText;
     private long _clientDelayTicks;
+    private TimeSpan? _firstFrameAt;
+    private bool _showControls, _hintDismissed;
+    private string? _lastControls, _lastHint;
 
     public PlayerCore(Func<bool, IFrameDecoder> openDecoder, IFramePresenter presenter,
         Func<VideoClientStats> stats, Action decodeFailed, TimeProvider time, Action<string>? log = null,
-        Func<string?>? audioLine = null, Func<string?>? sessionStatus = null)
+        Func<string?>? audioLine = null, Func<string?>? sessionStatus = null, Func<string?>? controlsText = null)
     {
         _openDecoder = openDecoder;
         _presenter = presenter;
@@ -51,12 +58,25 @@ public sealed class PlayerCore : IDisposable
         _log = log;
         _audioLine = audioLine;
         _sessionStatus = sessionStatus;
+        _controlsText = controlsText;
         _start = time.GetTimestamp();
         _decoder = openDecoder(true);
     }
 
     public WaitHandle FrameReady => _frameReady;
     public bool ShowStats { get; set; }
+
+    /// <summary>The F1 panel. Turning it on also dismisses the start hint for good.</summary>
+    public bool ShowControls
+    {
+        get => _showControls;
+        set
+        {
+            _showControls = value;
+            if (value)
+                _hintDismissed = true;
+        }
+    }
     public long FramesShown { get; private set; }
     public string DecoderName => _decoder.Name;
     public TimeSpan ClientDelay => TimeSpan.FromTicks(Interlocked.Read(ref _clientDelayTicks));
@@ -129,22 +149,29 @@ public sealed class PlayerCore : IDisposable
         {
             _last = n.Picture;
             FramesShown++;
+            _firstFrameAt ??= Now;
         }
         UpdateStats();
         string? statsText = ShowStats ? OverlayText.Stats(_sample, DecoderName, _audioLine?.Invoke()) : null;
+        string? controls = ShowControls ? _controlsText?.Invoke() : null;
+        string? hint = !_hintDismissed && _firstFrameAt is { } first && Now - first < StartHintFor ? OverlayText.StartHint : null;
 
         bool due = newest is not null
             || _lastPresent is null
             || Now - _lastPresent >= RedrawInterval
             || status != _lastStatus
-            || statsText != _lastStatsText;
+            || statsText != _lastStatsText
+            || controls != _lastControls
+            || hint != _lastHint;
         if (!due)
             return;
 
-        _presenter.Present(_last, status, statsText);
+        _presenter.Present(_last, status, statsText, controls, hint);
         _lastPresent = Now;
         _lastStatus = status;
         _lastStatsText = statsText;
+        _lastControls = controls;
+        _lastHint = hint;
         if (newest is { } shown)
             RecordClientDelay(shown.Frame.AssemblyTime + (Now - shown.ReceivedAt));
     }

@@ -5,7 +5,7 @@ using static Vortice.Direct3D11.D3D11;
 
 namespace CouchLink.Video;
 
-public readonly record struct PlayerOptions(nint NearWindow = 0, bool Windowed = false, bool PreferHardware = true);
+public readonly record struct PlayerOptions(nint NearWindow = 0, bool Windowed = false, bool PreferHardware = true, bool LockInput = false);
 
 /// <summary>
 /// The client's video window. Its own thread owns the window, the D3D11 device, the decoder and the
@@ -13,6 +13,9 @@ public readonly record struct PlayerOptions(nint NearWindow = 0, bool Windowed =
 /// <see cref="Enqueue"/> is called from the receive thread. <c>closeRequested</c> runs on the player
 /// thread: post it to the UI thread, and never Dispose the player from inside it.
 /// <c>sessionStatus</c>, when it returns text, replaces the picture status (e.g. "Reconnecting...").
+/// <c>controlsText</c> is the F1 panel's text; <c>controlsRequested</c> runs on the player thread on Ctrl+Alt+C
+/// (post it to the UI thread). With <see cref="PlayerOptions.LockInput"/> the player blocks the Windows
+/// shortcuts and keeps the pointer while it is in front.
 /// </summary>
 public sealed class VideoPlayer : IDisposable
 {
@@ -23,12 +26,13 @@ public sealed class VideoPlayer : IDisposable
     private volatile bool _stop;
     private Exception? _startError;
     private PlayerCore? _core;
+    private PlayerWindow? _window;
 
     public VideoPlayer(PlayerOptions options, Func<VideoClientStats> stats, Action decodeFailed,
         Action closeRequested, Action<string>? log = null, Func<string?>? audioLine = null,
-        Func<string?>? sessionStatus = null)
+        Func<string?>? sessionStatus = null, Func<string?>? controlsText = null, Action? controlsRequested = null)
     {
-        _thread = new Thread(() => Run(options, stats, decodeFailed, closeRequested, log, audioLine, sessionStatus))
+        _thread = new Thread(() => Run(options, stats, decodeFailed, closeRequested, log, audioLine, sessionStatus, controlsText, controlsRequested))
         {
             IsBackground = true,
             Name = "CouchLink player",
@@ -49,10 +53,14 @@ public sealed class VideoPlayer : IDisposable
     public long FramesShown => _core?.FramesShown ?? 0;
     public TimeSpan ClientDelay => _core?.ClientDelay ?? TimeSpan.Zero;
 
+    /// <summary>Why the Windows shortcuts are not blocked (see <see cref="PlayerOptions.LockInput"/>), or null.</summary>
+    public string? InputLockError => _window?.InputLockError;
+
     public void Enqueue(AssembledFrame frame) => _core!.Enqueue(frame);
 
     private void Run(PlayerOptions options, Func<VideoClientStats> stats, Action decodeFailed,
-        Action closeRequested, Action<string>? log, Func<string?>? audioLine, Func<string?>? sessionStatus)
+        Action closeRequested, Action<string>? log, Func<string?>? audioLine, Func<string?>? sessionStatus,
+        Func<string?>? controlsText, Action? controlsRequested)
     {
         ID3D11Device? device = null;
         ID3D11DeviceContext? context = null;
@@ -70,20 +78,24 @@ public sealed class VideoPlayer : IDisposable
             using (var multithread = device!.QueryInterface<ID3D11Multithread>())
                 multithread.SetMultithreadProtected(true); // FFmpeg's D3D11VA locks the context too
 
-            window = new PlayerWindow(options.NearWindow, options.Windowed);
+            window = new PlayerWindow(options.NearWindow, options.Windowed, options.LockInput, log);
             presenter = new FramePresenter(device, context!, window.Handle, window.Width, window.Height);
             var d = device;
             core = new PlayerCore(
                 hardware => hardware && options.PreferHardware ? OpenHardware(d, log) : H264Decoder.OpenSoftware(),
-                presenter, stats, decodeFailed, TimeProvider.System, log, audioLine, sessionStatus);
+                presenter, stats, decodeFailed, TimeProvider.System, log, audioLine, sessionStatus, controlsText);
             var c = core;
             var p = presenter;
             window.StatsToggled += () => c.ShowStats = !c.ShowStats;
+            window.ControlsToggled += () => c.ShowControls = !c.ShowControls;
+            if (controlsRequested is not null)
+                window.ControlsRequested += controlsRequested;
             window.CloseRequested += closeRequested;
             window.Resized += p.Resize;
             timer = new TimerResolution(); // precise wakeups for the wait below
             WindowHandle = window.Handle;
             _core = core;
+            _window = window;
         }
         catch (Exception e)
         {

@@ -166,4 +166,57 @@ public class InputMapperTests
         m.ReleaseAll();
         Assert.Equal(PadState.Neutral, m.Tick(0.001));
     }
+
+    [Fact]
+    public void An_edit_counts_from_the_next_tick()
+    {
+        var settings = new ControlSettings();
+        using var m = new InputMapper(settings);
+        settings.Bind(PadControl.Cross, VirtualKeys.Space);
+        m.KeyDown(VirtualKeys.Space);
+        Assert.Equal(PadButtons.Cross, m.Tick(0.001).Buttons);
+    }
+
+    [Fact]
+    public void An_edit_releases_held_keys()
+    {
+        var settings = new ControlSettings();
+        using var m = new InputMapper(settings);
+        m.KeyDown(K);
+        m.MouseMove(40, 0);
+        settings.SetInvertY(true);
+        Assert.Equal(PadState.Neutral, m.Tick(0.001));
+    }
+
+    [Fact]
+    public void A_control_without_keys_is_never_pressed()
+    {
+        var settings = new ControlSettings();
+        using var m = new InputMapper(settings);
+        settings.Bind(PadControl.Circle, K); // Cross has no key now
+        m.KeyDown(K);
+        Assert.Equal(PadButtons.Circle, m.Tick(0.001).Buttons);
+    }
+
+    [Fact]
+    public void Sensitivity_and_invert_come_from_the_settings()
+    {
+        var settings = new ControlSettings();
+        settings.SetSensitivityStep(10);
+        settings.SetInvertY(true);
+        using var m = new InputMapper(settings);
+        m.MouseMove(0, 10); // 10 counts * 0.0743 = 0.743 of full deflection, upward
+        Assert.Equal((byte)34, m.Tick(0.001).RY);
+    }
+
+    [Fact]
+    public void After_Dispose_edits_no_longer_reach_the_mapper()
+    {
+        var settings = new ControlSettings();
+        var m = new InputMapper(settings);
+        m.Dispose();
+        m.KeyDown(K);
+        settings.SetInvertY(true); // would release K if still subscribed
+        Assert.Equal(PadButtons.Cross, m.Tick(0.001).Buttons);
+    }
 }

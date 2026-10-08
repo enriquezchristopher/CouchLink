@@ -1,8 +1,9 @@
 using CouchLink.Core.Audio;
+using CouchLink.Core.Input;
 
 namespace CouchLink.Core.Video;
 
-/// <summary>The player's on-screen text: the F2 stats, and why there is no live picture.</summary>
+/// <summary>The player's on-screen text: the F2 stats, the F1 controls, the start hint, and why there is no live picture.</summary>
 public static class OverlayText
 {
     public const string Waiting = "Waiting for the host's picture...";
@@ -10,6 +11,7 @@ public static class OverlayText
     public const string NoPicture = "No picture from the host";
     public const string LeaveHint = "Ctrl+Alt+Q to leave";
     public const string Reconnecting = "Reconnecting...";
+    public const string StartHint = "F1: controls · Ctrl+Alt+Q: leave";
 
     public static string Stats(StatsSample? sample, string decoder, string? audio = null)
     {
@@ -47,6 +49,21 @@ public static class OverlayText
         : sinceLastFrame >= quietAfter ? $"{NoPicture}\n{LeaveHint}"
         : hostPaused ? Paused
         : null;
+
+    /// <summary>The F1 panel: every control and its keys, grouped as in the editor, read when drawn.</summary>
+    public static string Controls(ControlSettings settings)
+    {
+        var lines = new List<string> { "Controls (F1 hides, Ctrl+Alt+C changes keys)" };
+        foreach (var (_, controls) in KeyNames.Groups)
+        {
+            lines.Add("");
+            foreach (var control in controls)
+                lines.Add($"{KeyNames.Of(control),-18}{KeyNames.Describe(settings.Layout, control)}");
+        }
+        lines.Add("");
+        lines.Add($"{"Right stick",-18}Mouse (sensitivity {settings.SensitivityStep}{(settings.InvertY ? ", inverted" : "")})");
+        return string.Join('\n', lines);
+    }
 
     private static string Ms(TimeSpan t) => Math.Round(t.TotalMilliseconds, MidpointRounding.AwayFromZero).ToString("0");
 }

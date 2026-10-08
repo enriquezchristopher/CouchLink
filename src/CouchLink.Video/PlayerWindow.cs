@@ -7,17 +7,19 @@ namespace CouchLink.Video;
 
 /// <summary>
 /// The player's Win32 window: borderless and covering the monitor of <c>nearWindow</c> (or 1280x720
-/// windowed, for testing on one PC), cursor hidden. F2 toggles stats; Ctrl+Alt+Q, Alt+F4 and the close
-/// button ask to leave. Messages are handled on the thread that created it.
+/// windowed, for testing on one PC), cursor hidden. F1 toggles the controls panel, F2 the stats,
+/// Ctrl+Alt+C asks for the controls editor; Ctrl+Alt+Q, Alt+F4 and the close button ask to leave. With
+/// lockInput, while it is active it blocks the Windows shortcuts (<see cref="KeyboardBlocker"/>) and
+/// keeps the pointer inside it. Messages are handled on the thread that created it.
 /// </summary>
 public sealed unsafe partial class PlayerWindow : IDisposable
 {
     private const string ClassName = "CouchLinkPlayer";
     private const uint WS_POPUP = 0x80000000, WS_VISIBLE = 0x10000000, WS_OVERLAPPEDWINDOW = 0x00CF0000;
     private const uint WS_EX_APPWINDOW = 0x00040000;
-    private const uint WM_DESTROY = 0x0002, WM_SIZE = 0x0005, WM_CLOSE = 0x0010, WM_ERASEBKGND = 0x0014,
+    private const uint WM_DESTROY = 0x0002, WM_SIZE = 0x0005, WM_ACTIVATE = 0x0006, WM_CLOSE = 0x0010, WM_ERASEBKGND = 0x0014,
         WM_SETCURSOR = 0x0020, WM_KEYDOWN = 0x0100, WM_SYSKEYDOWN = 0x0104, WM_SYSCOMMAND = 0x0112;
-    private const int VK_CONTROL = 0x11, VK_MENU = 0x12, VK_F2 = 0x71, VK_Q = 0x51;
+    private const int VK_CONTROL = 0x11, VK_MENU = 0x12, VK_F1 = 0x70, VK_F2 = 0x71, VK_Q = 0x51, VK_C = 0x43, WA_INACTIVE = 0;
     private const int HTCLIENT = 1, SC_KEYMENU = 0xF100;
     private const uint PM_REMOVE = 1, QS_ALLINPUT = 0x04FF, MWMO_INPUTAVAILABLE = 0x0004, MONITOR_DEFAULTTOPRIMARY = 1;
 
@@ -25,9 +27,15 @@ public sealed unsafe partial class PlayerWindow : IDisposable
     private static bool _registered;
     private bool _destroyed;
     private ExceptionDispatchInfo? _error;
+    private readonly bool _lockInput;
+    private readonly Action<string>? _log;
+    private readonly KeyboardBlocker _blocker = new();
+    private bool _inputLocked, _clipFailedLogged;
 
-    public PlayerWindow(nint nearWindow, bool windowed)
+    public PlayerWindow(nint nearWindow, bool windowed, bool lockInput = false, Action<string>? log = null)
     {
+        _lockInput = lockInput && !windowed;
+        _log = log;
         RegisterClassOnce();
         var info = new MonitorInfo { Size = (uint)sizeof(MonitorInfo) };
         GetMonitorInfoW(MonitorFromWindow(nearWindow, MONITOR_DEFAULTTOPRIMARY), ref info);
@@ -54,6 +62,10 @@ public sealed unsafe partial class PlayerWindow : IDisposable
         Width = client.Right;
         Height = client.Bottom;
         SetForegroundWindow(Handle);
+
+        // Creation activated the window before it was registered above, so that WM_ACTIVATE was missed.
+        if (_lockInput && GetForegroundWindow() == Handle)
+            LockInput();
     }
 
     public nint Handle { get; }
@@ -63,6 +75,11 @@ public sealed unsafe partial class PlayerWindow : IDisposable
     public event Action? CloseRequested;
     public event Action? StatsToggled;
     public event Action<int, int>? Resized;
+    public event Action? ControlsToggled;
+    public event Action? ControlsRequested;
+
+    /// <summary>Why the Windows shortcuts can't be blocked, or null. Set on the player thread, read anywhere.</summary>
+    public string? InputLockError { get; private set; }
 
     /// <summary>
     /// Handles every waiting message. False once the window is gone. Rethrows an exception from an
@@ -97,6 +114,11 @@ public sealed unsafe partial class PlayerWindow : IDisposable
         {
             case WM_KEYDOWN or WM_SYSKEYDOWN:
                 bool repeat = (lParam & (1 << 30)) != 0;
+                if (wParam == VK_F1 && !repeat)
+                {
+                    ControlsToggled?.Invoke();
+                    return 0;
+                }
                 if (wParam == VK_F2 && !repeat)
                 {
                     StatsToggled?.Invoke();
@@ -107,9 +129,20 @@ public sealed unsafe partial class PlayerWindow : IDisposable
                     CloseRequested?.Invoke();
                     return 0;
                 }
+                if (wParam == VK_C && GetKeyState(VK_CONTROL) < 0 && GetKeyState(VK_MENU) < 0)
+                {
+                    ControlsRequested?.Invoke();
+                    return 0;
+                }
                 return null; // Alt+F4 goes on to DefWindowProc, which sends WM_CLOSE
             case WM_SYSCOMMAND when ((int)wParam & 0xFFF0) == SC_KEYMENU:
                 return 0; // Alt alone must not open a window menu and steal keys
+            case WM_ACTIVATE when _lockInput:
+                if ((wParam & 0xFFFF) != WA_INACTIVE)
+                    LockInput();
+                else
+                    UnlockInput();
+                return null; // DefWindowProc still sets the focus
             case WM_SETCURSOR when (lParam & 0xFFFF) == HTCLIENT:
                 SetCursor(0);
                 return 1;
@@ -118,6 +151,8 @@ public sealed unsafe partial class PlayerWindow : IDisposable
             case WM_SIZE:
                 Width = (int)(lParam & 0xFFFF);
                 Height = (int)((lParam >> 16) & 0xFFFF);
+                if (_inputLocked)
+                    ClipToWindow();
                 if (Width > 0 && Height > 0)
                     Resized?.Invoke(Width, Height);
                 return 0;
@@ -129,6 +164,36 @@ public sealed unsafe partial class PlayerWindow : IDisposable
                 return 0;
             default:
                 return null;
+        }
+    }
+
+    private void LockInput()
+    {
+        _inputLocked = true;
+        ClipToWindow();
+        if (!_blocker.Install(out var error) && InputLockError is null)
+        {
+            InputLockError = $"Key blocking unavailable ({error})";
+            _log?.Invoke($"Could not block the Windows shortcuts: {error}");
+        }
+    }
+
+    private void UnlockInput()
+    {
+        if (!_inputLocked)
+            return; // never release a clip some other app set
+        _inputLocked = false;
+        _blocker.Uninstall();
+        ClipCursor(null);
+    }
+
+    private void ClipToWindow()
+    {
+        GetWindowRect(Handle, out var r);
+        if (!ClipCursor(&r) && !_clipFailedLogged)
+        {
+            _clipFailedLogged = true;
+            _log?.Invoke($"Could not keep the pointer in the player (error {Marshal.GetLastPInvokeError()})");
         }
     }
 
@@ -176,6 +241,7 @@ public sealed unsafe partial class PlayerWindow : IDisposable
 
     public void Dispose()
     {
+        UnlockInput();
         if (!_destroyed)
             DestroyWindow(Handle);
         lock (Windows)
@@ -247,6 +313,17 @@ public sealed unsafe partial class PlayerWindow : IDisposable
 
     [LibraryImport("user32.dll")]
     private static partial nint SetCursor(nint cursor);
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool ClipCursor(Rect* rect);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetWindowRect(nint hwnd, out Rect rect);
+
+    [LibraryImport("user32.dll")]
+    private static partial nint GetForegroundWindow();
 
     [LibraryImport("user32.dll")]
     private static partial short GetKeyState(int key);

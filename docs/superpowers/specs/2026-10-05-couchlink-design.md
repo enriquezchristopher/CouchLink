@@ -246,15 +246,18 @@ Pressed directions combine; diagonals are normalized to unit length;
 opposite keys cancel.
 
 ### 6.3 Mouse -> right stick
-Mouse delta deflects the stick, scaled by a **sensitivity** slider.
-After the mouse stops, the stick returns to center within **~50 ms**
+Mouse delta deflects the stick, scaled by a **sensitivity** slider. An
+**Invert Y** checkbox flips the vertical. After the mouse stops, the stick returns to center within **~50 ms**
 (supports 2K shot-stick flicks). Pointer is hidden and clipped to the
 window while playing.
 
 ### 6.4 Capture rules
-Raw Input, only while the CouchLink window has focus. **Windows key and
-Alt+Tab are blocked** while playing (low-level keyboard hook);
-**Ctrl+Alt+Q** always exits.
+Raw Input, only while the CouchLink window has focus. While the fullscreen
+player is in front, a low-level keyboard hook blocks **both Windows keys,
+Alt+Tab, Alt+Esc and Ctrl+Esc**, and the pointer is kept inside the
+player. **Ctrl+Alt+Q** always exits and Alt+F4 still leaves;
+**Ctrl+Alt+C** opens the controls editor over the game. Nothing is
+blocked with `--windowed-player`.
 
 ### 6.5 Transport
 The client sends the **full DS4 state** (buttons bitmask, 4 stick axes,
@@ -268,9 +271,14 @@ If the driver is missing, Host mode refuses to start with "ViGEmBus
 driver not installed".
 
 ### 6.7 Controls editor
-⚙ Controls lists every DS4 control with its key: click a control, press a
-key to rebind. **Reset to default** and the mouse sensitivity slider.
-Edits are kept in memory only and reset when CouchLink closes, by design.
+⚙ Controls (Start screen, session screen, or Ctrl+Alt+C in the game) lists
+every DS4 control with its keys: click a control, press a key or mouse
+button to bind it. One key drives one control; binding a key takes it off
+any other. Esc, F1, F2 and the Windows keys are reserved. **Reset to
+default**, the mouse sensitivity slider (steps 1-10) and Invert Y. Edits
+apply at once and are kept in memory only, reset when CouchLink closes, by
+design. Details: [playing screen & controls
+design](2026-10-08-couchlink-playing-screen-controls-design.md).
 
 ## 7. Error Handling & Diagnostics
 
@@ -280,7 +288,7 @@ Edits are kept in memory only and reset when CouchLink closes, by design.
 | ViGEmBus missing | Host mode refuses to start with a clear message |
 | Capture lost (UAC prompt, resolution change, exclusive fullscreen) | Recreate capture, force keyframe; clients show "Host screen paused" |
 | Client hardware decode fails | Switch to software decode |
-| Ports in use (CouchLink already running) | Focus the running instance |
+| CouchLink launched again | The running copy comes forward; the new one exits (not with `--windowed-player`) |
 | Client silent 5 s | Host unplugs its pad (section 4.4) |
 | Host lost | Client "Reconnecting..." 10 s, then back to list |
 
