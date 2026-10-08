@@ -248,6 +248,12 @@ A profile is a key layout for one game, saved as a file. Players pick one
 from the **Profile** list at the top of the controls editor instead of
 changing keys one by one.
 
+![The controls editor with the NBA 2K22 profile loaded and Show labels ticked](images/controls-profile.png)
+
+During a game, F1 shows the profile's name and what each button does:
+
+![The F1 panel in a game with the NBA 2K22 profile](images/f1-profile.png)
+
 - **NBA 2K22 comes with CouchLink:** the **NBA 2K22** profile uses the
   game's own PC keyboard keys (Space to pass, Num 5 to shoot, Num 1 bounce
   pass, Num 3 lob, Enter to sprint, Left Shift to post up, Tab to call a
