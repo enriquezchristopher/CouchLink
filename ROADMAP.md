@@ -85,6 +85,7 @@ Easy to deploy to every PC in a café.
 
 ## Later
 
+- Full color (4:4:4) at the top Quality step, for sharp colored text and edges. Needs NVENC on the host and a decode check on each joining PC.
 - [#50](https://github.com/enriquezchristopher/CouchLink/issues/50) Self-serve diagnostics: everything we ask a reporter for, from inside the app
 
 ## Not planned

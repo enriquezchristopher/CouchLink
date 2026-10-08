@@ -245,12 +245,19 @@ CouchLink closes, so each new customer starts with the default layout.
 ## 8. Stream quality and performance
 
 The host lobby's **Stream** setting picks the resolution (Native, 1080p,
-900p, 720p, 540p) and the frame rate (60 fps, or higher up to the host
-monitor's refresh rate). Higher settings look sharper and need more from the
-host's GPU and the network.
+900p, 720p, 540p), the frame rate (60 fps, or higher up to the host
+monitor's refresh rate) and the quality (Low, Balanced, High, Max). Higher
+settings look sharper and need more from the host's GPU and the network.
 
-- Start with **1080p** at **60 fps**. On older or smaller GPUs, or if
-  joining players see stutter, try **900p** or **720p**.
+- Start with **1080p** at **60 fps** and **Balanced**. On older or smaller
+  GPUs, or if joining players see stutter, try **900p** or **720p**, or
+  **Low**.
+- On a gigabit network, **High** or **Max** makes text and fine detail
+  sharper. Max at 1080p60 sends up to about 50 Mbps to each joining PC.
+- If the stream needs more than the host PC's network link can carry, the
+  lobby shows an orange warning under the Stream row with the numbers.
+  Lower the quality or the resolution until it goes away. A 100 Mbps link
+  fits Balanced at 1080p60 for up to 5 joining PCs.
 - The host lobby's **Details** shows the video encoder. `h264_amf` (AMD) or
   `h264_nvenc` (NVIDIA) with "(hardware)" is what you want. `libx264` with
   "(software)" and "No hardware encoder - may lag with heavy games." means

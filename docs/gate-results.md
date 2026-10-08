@@ -79,3 +79,17 @@ Host / client PCs: <fill in>
 | Sensitivity 1 and 10 feel clearly different; Invert Y flips the shot stick | <pass/fail> |
 | Launch CouchLink again on the Start screen, while hosting and while playing: the running copy comes forward, no second copy in Task Manager | <pass/fail> |
 | A `--windowed-player` second copy still starts and joins | <pass/fail> |
+
+## Stream quality (Plan 9)
+
+Date: <fill in>
+Host / client PCs: <fill in>
+
+| Check | Result |
+|---|---|
+| `VideoTest encode 10 --quality=high` on AMD: `h264_amf (balanced)` opens (or is skipped and `h264_amf` opens); median encode time within 1 ms of Balanced | pass, RX 6600 at 2560x1080: 4.34 ms Balanced, 4.36 ms High, 4.39 ms Max (2026-10-08) |
+| Same on NVIDIA with `h264_nvenc (p3)` | <pass/fail, ms> |
+| AMF: `quality=balanced` encodes visibly better than Balanced at the same bitrate (else switch to `quality=quality`, spec 2.3) | <pass/fail> |
+| Live session at Max on the gigabit switch: colored text sharper than at Balanced; F2 packet loss on the client no higher than at Balanced, keyframes included | <pass/fail> |
+| Changing Quality while two clients play: both stay in, the picture comes back within a second | <pass/fail> |
+| Host card forced to 100 Mbps: the orange warning appears as clients join at High, and goes away after switching to Balanced | <pass/fail> |
