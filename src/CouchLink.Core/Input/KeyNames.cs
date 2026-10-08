@@ -54,6 +54,10 @@ public static class KeyNames
         _ => control.ToString(), // Cross, Circle, L1, Options, Touchpad...
     };
 
+    /// <summary>A control as the player sees it: "Shoot (Square)" when a profile names it, else "Square".</summary>
+    public static string Labelled(PadControl control, string? label) =>
+        label is null ? Of(control) : $"{label} ({Of(control)})";
+
     /// <summary>The control's keys, e.g. "J / Left click", or "(none)".</summary>
     public static string Describe(KeyLayout layout, PadControl control)
     {

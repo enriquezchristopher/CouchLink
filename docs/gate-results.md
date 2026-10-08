@@ -80,7 +80,25 @@ Host / client PCs: <fill in>
 | Launch CouchLink again on the Start screen, while hosting and while playing: the running copy comes forward, no second copy in Task Manager | <pass/fail> |
 | A `--windowed-player` second copy still starts and joins | <pass/fail> |
 
-## Stream quality (Plan 9)
+## Controller profiles (Plan 9)
+
+Date: <fill in>
+Client PC: <fill in>
+
+| Check | Result |
+|---|---|
+| Two profiles and one broken file in `profiles\`: the two are listed, the broken one isn't, and the log says why | <pass/fail> |
+| Load a profile mid-game in NBA 2K22 (Ctrl+Alt+C): the new keys work at once; F1 shows the profile name and labels | <pass/fail> |
+| Rebind a key after loading: the list and F1 show "(changed)"; the file on disk is unchanged | <pass/fail> |
+| Type a label and close the editor at once: the label is kept | <pass/fail> |
+| Type labels, Save as…, copy the file to another PC, load it there: same keys, labels, sensitivity and Invert Y | <pass/fail> |
+| Browse… to a profile on a USB stick: it loads; a broken one shows its message | <pass/fail> |
+| Open the editor with Ctrl+Alt+C and click Save as…: both dialogs open in front of the game | <pass/fail> |
+| Reset to default after loading: built-in keys, no labels, no profile name | <pass/fail> |
+| Close and restart CouchLink: built-in layout | <pass/fail> |
+| Shipped NBA 2K22 profile in 2K22 (Num Lock on): Space passes, Num 5 shoots, Num 1 bounce pass, Num 3 lob, Enter sprints, Left Shift posts up, Tab calls a play, Page Down pauses, the mouse is the pro stick | <pass/fail> |
+
+## Stream quality (Plan 10)
 
 Date: <fill in>
 Host / client PCs: <fill in>

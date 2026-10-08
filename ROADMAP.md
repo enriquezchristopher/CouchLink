@@ -78,6 +78,14 @@ Easy to deploy to every PC in a café.
 - [#28](https://github.com/enriquezchristopher/CouchLink/issues/28) Ship FFmpeg with correct GPL notices
 - [#29](https://github.com/enriquezchristopher/CouchLink/issues/29) Setup guide for café owners (the [guide](docs/cafe-setup-guide.md) exists for the zip; the installer will update it)
 
+## v1.6 — Controller profiles
+
+Players load a key layout made for a game from a file, with action labels
+such as "Shoot" on the F1 panel. Design:
+[controller profiles](docs/superpowers/specs/2026-10-08-couchlink-controller-profiles-design.md).
+
+- [#56](https://github.com/enriquezchristopher/CouchLink/issues/56) Controller profiles: load a game's key layout from a file
+
 ## Game compatibility
 
 - [#30](https://github.com/enriquezchristopher/CouchLink/issues/30) Check whether NBA 2K14 works

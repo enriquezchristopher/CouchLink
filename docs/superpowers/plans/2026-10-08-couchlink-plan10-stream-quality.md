@@ -1,4 +1,4 @@
-# CouchLink Plan 9: Stream Quality Implementation Plan
+# CouchLink Plan 10: Stream Quality Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -995,7 +995,7 @@ In `ROADMAP.md`, under `## Later`, add:
 Append to `docs/gate-results.md`:
 
 ```markdown
-## Stream quality (Plan 9)
+## Stream quality (Plan 10)
 
 Date: <fill in>
 Host / client PCs: <fill in>

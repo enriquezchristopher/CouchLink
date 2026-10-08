@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.7.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.6.2...v1.7.0) (2026-10-08)
+
+
+### Features
+
+* **app:** load, browse and save controller profiles in the controls editor ([8a67fe1](https://github.com/enriquezchristopher/CouchLink/commit/8a67fe16feab7eadfac5a7af3986cbe81f07c015)), closes [#56](https://github.com/enriquezchristopher/CouchLink/issues/56)
+* **app:** ship an NBA 2K22 profile with the game's own keyboard keys ([c037440](https://github.com/enriquezchristopher/CouchLink/commit/c037440e2f14969a23a0cda33c01d50e594be0a4)), closes [#56](https://github.com/enriquezchristopher/CouchLink/issues/56)
+* controller profiles, with an NBA 2K22 profile ([eb17ec0](https://github.com/enriquezchristopher/CouchLink/commit/eb17ec06e91d5badbc440c59b6aa7f6abaec7ef3))
+* **input:** fixed key IDs for controller profile files ([347ffe2](https://github.com/enriquezchristopher/CouchLink/commit/347ffe21c700902a186365dafbcf64735ed871f6)), closes [#56](https://github.com/enriquezchristopher/CouchLink/issues/56)
+* **input:** list, read and safely write profile files ([b29ba88](https://github.com/enriquezchristopher/CouchLink/commit/b29ba88408c79980d4d4e71dfb36dcb4cf5e8700)), closes [#56](https://github.com/enriquezchristopher/CouchLink/issues/56)
+* **input:** load a profile into the controls, with action labels ([ed757ed](https://github.com/enriquezchristopher/CouchLink/commit/ed757ede5ac061df5a785eb794091f68f951b19c)), closes [#56](https://github.com/enriquezchristopher/CouchLink/issues/56)
+* **input:** read and write controller profile files ([30f10dd](https://github.com/enriquezchristopher/CouchLink/commit/30f10dd06da3e593dfece7a648e44fe48060067e)), closes [#56](https://github.com/enriquezchristopher/CouchLink/issues/56)
+* **input:** the F1 panel shows the profile name and action labels ([b71c1af](https://github.com/enriquezchristopher/CouchLink/commit/b71c1af856988ede881cf56673c36240ee5ba51b)), closes [#56](https://github.com/enriquezchristopher/CouchLink/issues/56)
+
+
+### Bug Fixes
+
+* **app:** Show labels reacts to Checked/Unchecked, so accessibility tools can tick it ([ac5d705](https://github.com/enriquezchristopher/CouchLink/commit/ac5d705e14dcc0445479456f7cd9648ae08edd8e)), closes [#56](https://github.com/enriquezchristopher/CouchLink/issues/56)
+* **input:** a profile with half an emoji escape is refused instead of crashing ([f2d55cd](https://github.com/enriquezchristopher/CouchLink/commit/f2d55cd63c3b1fa9e2a2de5eed4d7fa8ebd85cbd)), closes [#56](https://github.com/enriquezchristopher/CouchLink/issues/56)
+
 ## [1.6.2](https://github.com/enriquezchristopher/CouchLink/compare/v1.6.1...v1.6.2) (2026-10-08)
 
 

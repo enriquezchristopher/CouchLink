@@ -242,6 +242,48 @@ screen, or with **Ctrl+Alt+C** during a game.
 Changes apply at once, even in the middle of a game. They last until
 CouchLink closes, so each new customer starts with the default layout.
 
+### Profiles
+
+A profile is a key layout for one game, saved as a file. Players pick one
+from the **Profile** list at the top of the controls editor instead of
+changing keys one by one.
+
+![The controls editor with the NBA 2K22 profile loaded and Show labels ticked](images/controls-profile.png)
+
+During a game, F1 shows the profile's name and what each button does:
+
+![The F1 panel in a game with the NBA 2K22 profile](images/f1-profile.png)
+
+- **NBA 2K22 comes with CouchLink:** the **NBA 2K22** profile uses the
+  game's own PC keyboard keys (Space to pass, Num 5 to shoot, Num 1 bounce
+  pass, Num 3 lob, Enter to sprint, Left Shift to post up, Tab to call a
+  play, Num + icon pass, Page Up timeout, Page Down pause, arrows for
+  coaching), so players who know 2K's keyboard controls feel at home. The
+  pro stick stays on the mouse. Keep **Num Lock** on, or the number pad
+  keys send other keys.
+- **Add your own:** the profiles live in the `profiles` folder next to
+  `CouchLink.App.exe`. Put more profile files there and copy the folder to
+  every PC. The list reads the folder each time the editor opens.
+- **Make one:** change the keys in the editor, then click **Save as…**,
+  give it a name (this is what players see in the list) and save it in the
+  `profiles` folder.
+- **Name the buttons:** tick **Show labels** and type what each button
+  does in the game, such as "Shoot" or "Pass". The labels are saved with
+  the profile, and F1 shows them during a game.
+- **Load one from elsewhere:** **Browse…** opens a profile from a USB stick
+  or any folder.
+- A profile that doesn't load is left out of the list. The editor (for
+  **Browse…**) or the log (for the `profiles` folder) says why, for example
+  `"Square": unknown key "Spcae"`.
+
+Changes made after loading a profile show "(changed)" and don't change the
+file. **Reset to default** goes back to the layout above. As with any key
+change, everything resets when CouchLink closes.
+
+Profiles are JSON files that can also be edited in Notepad. The design
+document lists every field and key name:
+[controller profiles design](superpowers/specs/2026-10-08-couchlink-controller-profiles-design.md#2-file-format).
+
 ## 8. Stream quality and performance
 
 The host lobby's **Stream** setting picks the resolution (Native, 1080p,
