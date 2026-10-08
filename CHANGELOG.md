@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.2](https://github.com/enriquezchristopher/CouchLink/compare/v1.6.1...v1.6.2) (2026-10-08)
+
+
+### Performance
+
+* **video:** the host's capture and encode get GPU priority over the game ([96efed8](https://github.com/enriquezchristopher/CouchLink/commit/96efed88ddf7207b9378f37b8060af111cd086c0))
+* **video:** the host's capture and encode get GPU priority over the game ([79e0c5a](https://github.com/enriquezchristopher/CouchLink/commit/79e0c5a191b38b34c1c77b57520deb280d4804f8))
+
 ## [1.6.1](https://github.com/enriquezchristopher/CouchLink/compare/v1.6.0...v1.6.1) (2026-10-08)
 
 
