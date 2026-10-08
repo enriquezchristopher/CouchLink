@@ -156,7 +156,9 @@ internal sealed class ControlsWindow : Window
         var saveAs = new Button { Content = "Save as…", Padding = new Thickness(10, 2, 10, 2), Margin = new Thickness(6, 0, 0, 0) };
         saveAs.Click += (_, _) => SaveAs();
         _profile.SelectionChanged += (_, _) => OnProfileChosen();
-        _showLabels.Click += (_, _) => ShowLabels(_showLabels.IsChecked == true);
+        // Checked/Unchecked, not Click: screen readers and other accessibility tools tick it without a click
+        _showLabels.Checked += (_, _) => ShowLabels(true);
+        _showLabels.Unchecked += (_, _) => ShowLabels(false);
 
         var profileLabel = new TextBlock { Text = "Profile:", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
         var profileRow = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
