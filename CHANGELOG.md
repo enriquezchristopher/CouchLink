@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.1](https://github.com/enriquezchristopher/CouchLink/compare/v1.6.0...v1.6.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **video:** older AMD GPUs encode with AMF lowlatency instead of falling back to the CPU ([efef461](https://github.com/enriquezchristopher/CouchLink/commit/efef461bc3de5117f0934eae79c01450830acd23))
+* **video:** older AMD GPUs encode with AMF lowlatency instead of falling back to the CPU ([e6cd213](https://github.com/enriquezchristopher/CouchLink/commit/e6cd213d2523e4977f28665b8f1101a84387ab89))
+
 ## [1.6.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.5.0...v1.6.0) (2026-10-08)
 
 
