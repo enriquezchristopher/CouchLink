@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.5.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.4.0...v1.5.0) (2026-10-08)
+
+
+### Features
+
+* **app:** join list, waiting and playing screens; leave, kick and reconnect end in clear messages ([d1e66d0](https://github.com/enriquezchristopher/CouchLink/commit/d1e66d0b295af5bd182c69e46fdb5d28b3a7d756))
+* **app:** Start screen, host lobby with players, kick and stream settings, approval popup ([79df969](https://github.com/enriquezchristopher/CouchLink/commit/79df9699ad8e6d5f372c35956e67d56e88529801))
+* **core:** client session: join, wait, play, reconnect for 10 s, and every way it ends ([7f4c082](https://github.com/enriquezchristopher/CouchLink/commit/7f4c082fba0d328198a6d46ccbe44f2f5dd846d1))
+* **core:** host announce packet (wire type 7), PC names and the discovery and session ports ([fe0f478](https://github.com/enriquezchristopher/CouchLink/commit/fe0f4780279208c1d7f0a16f1c566108f7bc485b))
+* **core:** host session: approval, slots, heartbeat silence, 60 s reservations, kick and stop ([f904e57](https://github.com/enriquezchristopher/CouchLink/commit/f904e57bfbb1d81217c2ff86134446a27114cbcb))
+* **core:** LAN discovery: host announces on every adapter, clients keep a host list ([44c850f](https://github.com/enriquezchristopher/CouchLink/commit/44c850fe75b57ec31f0c6affe81a13ffdab95e25))
+* **core:** pads are plugged, held and unplugged explicitly and bound to the client's address ([1c527b9](https://github.com/enriquezchristopher/CouchLink/commit/1c527b93143949b788c0ab0455498b80e2e87d29))
+* **core:** session messages (wire types 8-14) and length-prefixed framing ([bc2771a](https://github.com/enriquezchristopher/CouchLink/commit/bc2771abd39ab4c144fa73beb30fb87f870b0d68))
+* **core:** session server and client over TCP 47801 with heartbeats ([f7d28d0](https://github.com/enriquezchristopher/CouchLink/commit/f7d28d0db0a5ad057356c8bb114fbe7fba67bc44))
+* **core:** video and audio targets are set explicitly, not learned from input ([791fa60](https://github.com/enriquezchristopher/CouchLink/commit/791fa60afb18253b99cc9fa68ae69a6e5c56d721))
+* find the host in a list and join with approval (Plan 7) ([519072b](https://github.com/enriquezchristopher/CouchLink/commit/519072bef4c4ecd802e71ebcc562caad8f944b50))
+* **video:** the player shows the session's Reconnecting line over the last picture ([7d104f4](https://github.com/enriquezchristopher/CouchLink/commit/7d104f433bb8dcbc8e1f3d6328203862e4579e3c))
+
 ## [1.4.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.3.0...v1.4.0) (2026-10-07)
 
 
