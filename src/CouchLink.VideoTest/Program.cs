@@ -6,7 +6,7 @@ using CouchLink.Video;
 //   VideoTest capture [seconds]   counts screen changes and lost captures
 if (args.Length == 0 || args[0] is not ("capture" or "encode" or "play"))
 {
-    Console.WriteLine("Usage: VideoTest capture [seconds] | VideoTest encode [seconds] [--resolution=1080p] [--fps=60] [--encoder=h264_amf] [--out=videotest.h264]");
+    Console.WriteLine("Usage: VideoTest capture [seconds] | VideoTest encode [seconds] [--resolution=1080p] [--fps=60] [--encoder=h264_amf] [--out=videotest.h264] [--normal-priority]");
     Console.WriteLine("       VideoTest play <file.h264> [more files] [--software] [--windowed] [--fps=60]");
     return 2;
 }
@@ -102,6 +102,8 @@ static int Encode(int seconds, string[] args)
     }
 
     var capture = DesktopCapture.Open();
+    if (!args.Contains("--normal-priority"))
+        Console.WriteLine(GpuPriority.Raise(capture));
     IReadOnlyList<string> encoders = args.Any(a => a.StartsWith("--encoder=", StringComparison.Ordinal))
         ? [Option("encoder", EncoderChoice.Software)]
         : EncoderChoice.Candidates(capture.VendorId);

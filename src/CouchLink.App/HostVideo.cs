@@ -39,6 +39,8 @@ internal sealed class HostVideo : IDisposable
         try
         {
             capture = DesktopCapture.Open();
+            var priority = GpuPriority.Raise(capture);
+            AppServices.Log.Write(priority);
             var screenCapture = capture;
             var screen = new ScreenVideoSource(screenCapture, EncoderChoice.Candidates(capture.VendorId),
                 (name, size) => new H264Encoder(screenCapture, name, size, settings.FrameRate, settings.BitRateFor(size)),
@@ -48,7 +50,7 @@ internal sealed class HostVideo : IDisposable
             var summary = $"{screen.EncoderName} {screen.Size.Width}x{screen.Size.Height} at {settings.FrameRate} fps, " +
                 $"{settings.BitRateFor(screen.Size) / 1e6:0.0} Mbps ({(screen.IsHardware ? "hardware" : "software")}) on {capture.AdapterName}";
             AppServices.Log.Write($"Video: {summary}");
-            return new HostVideo(Stream(screen, onError), screen, summary);
+            return new HostVideo(Stream(screen, onError), screen, $"{summary}\n  {priority}");
         }
         catch (Exception e)
         {
