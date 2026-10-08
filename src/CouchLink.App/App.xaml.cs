@@ -7,12 +7,20 @@ namespace CouchLink.App;
 
 public partial class App : Application
 {
+    private SingleInstance? _instance;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         CrashHandler.Install(this); // first, so even startup crashes are reported
         base.OnStartup(e);
         AppServices.Log.Write($"CouchLink started (args: {string.Join(' ', e.Args)})");
         AppServices.Options = DevOptions.Parse(e.Args);
+        if (!SingleInstance.TryClaim(AppServices.Options, out _instance))
+        {
+            AppServices.Log.Write("CouchLink is already running; asked it to come forward");
+            Shutdown(0);
+            return;
+        }
 
         var crashTest = e.Args.FirstOrDefault(a => a.StartsWith("--crash-test=", StringComparison.Ordinal))?["--crash-test=".Length..];
         if (crashTest == "startup")
@@ -30,6 +38,7 @@ public partial class App : Application
         var window = new MainWindow();
         MainWindow = window;
         window.Show();
+        _instance?.OnActivate(() => window.Dispatcher.InvokeAsync(window.BringToFront));
 
         if (crashTest is not null)
             Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () => RunCrashTest(crashTest));
@@ -38,6 +47,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         AppServices.Log.Write($"CouchLink exited (code {e.ApplicationExitCode})");
+        _instance?.Dispose();
         base.OnExit(e);
     }
 

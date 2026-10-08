@@ -129,6 +129,20 @@ public partial class MainWindow : Window, IClientUi
         Activate();
     }
 
+    /// <summary>A later launch asked for this copy: the game if one is playing, otherwise this window.</summary>
+    internal void BringToFront()
+    {
+        if (_play is { PlayerWindow: not 0 } play)
+        {
+            NativeMethods.SetForegroundWindow(play.PlayerWindow);
+            return;
+        }
+        if (WindowState == WindowState.Minimized)
+            WindowState = WindowState.Normal;
+        Show();
+        Activate();
+    }
+
     /// <summary>Ctrl+Alt+C in the player: the editor on top of the game, and back to the game when it closes.</summary>
     private void OpenControlsOverGame()
     {
