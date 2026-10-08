@@ -1,0 +1,47 @@
+name: FFmpeg
+
+# Builds CouchLink's minimal FFmpeg (eng/ffmpeg/build.sh). Branch pushes that touch the build only
+# build it; pushing the tag deps-ffmpeg-<BUILD_ID> also publishes it as a prerelease that
+# eng/get-ffmpeg.ps1 downloads from.
+on:
+  push:
+    branches: ['**']
+    tags: ['deps-ffmpeg-*']
+    paths: ['eng/ffmpeg/**', '.github/workflows/ffmpeg.yml']
+  pull_request:
+    paths: ['eng/ffmpeg/**', '.github/workflows/ffmpeg.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Tools
+        run: sudo apt-get update && sudo apt-get install -y mingw-w64 nasm pkg-config make git curl xz-utils zip
+
+      - name: Build
+        run: bash eng/ffmpeg/build.sh "$RUNNER_TEMP/ffmpeg-build"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: couchlink-ffmpeg
+          path: ${{ runner.temp }}/ffmpeg-build/out/*.zip
+          retention-days: 7
+
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/deps-ffmpeg-')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          source eng/ffmpeg/versions.env
+          if [ "$GITHUB_REF_NAME" != "deps-ffmpeg-$BUILD_ID" ]; then
+            echo "Tag $GITHUB_REF_NAME doesn't match BUILD_ID $BUILD_ID in versions.env" >&2
+            exit 1
+          fi
+          gh release create "$GITHUB_REF_NAME" --prerelease --title "FFmpeg $BUILD_ID for CouchLink" \
+            --notes "CouchLink's minimal FFmpeg $FFMPEG_VERSION build for Windows x64. The -source.zip is its complete source and build script." \
+            "$RUNNER_TEMP"/ffmpeg-build/out/*.zip
