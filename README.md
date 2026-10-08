@@ -34,6 +34,9 @@ network, with **no accounts, no cloud and no internet** required.
 - **Built for shared PCs**: while playing, the Windows key and Alt+Tab are
   blocked and the mouse stays in the game; F1 shows the keys; Ctrl+Alt+Q
   leaves. Keys can be changed mid-game and reset when CouchLink closes.
+- **Controller profiles**: save a key layout for a game as a file, put it
+  in the `profiles` folder on every PC, and players pick it from a list.
+  Profiles can name each button ("Shoot", "Pass") on the F1 panel.
 - **Recovers by itself**: brief network drops reconnect automatically, and a
   dropped player gets the same controller back.
 - **No install needed** on joining PCs: unzip and run. No .NET to install.

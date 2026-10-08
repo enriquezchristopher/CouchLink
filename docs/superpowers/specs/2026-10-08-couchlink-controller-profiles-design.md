@@ -1,6 +1,6 @@
 # CouchLink Controller Profiles (v1.6 milestone: #56)
 
-Status: Draft, awaiting review
+Status: Approved; ProfileStore lives in CouchLink.Core (plan 9) so it is unit-tested
 Date: 2026-10-08
 Author: Christopher Enriquez (@enriquezchristopher) (with Claude Code)
 
