@@ -34,9 +34,9 @@ public sealed unsafe class H264Encoder : IFrameEncoder
         Size = size;
         try
         {
-            AVCodec* codec = ffmpeg.avcodec_find_encoder_by_name(name);
+            AVCodec* codec = ffmpeg.avcodec_find_encoder_by_name(EncoderChoice.CodecOf(name));
             if (codec == null)
-                throw new FfmpegException($"FFmpeg has no {name} encoder.");
+                throw new FfmpegException($"FFmpeg has no {EncoderChoice.CodecOf(name)} encoder.");
 
             _codec = ffmpeg.avcodec_alloc_context3(codec);
             _codec->width = size.Width;

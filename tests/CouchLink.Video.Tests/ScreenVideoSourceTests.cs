@@ -24,7 +24,7 @@ public class ScreenVideoSourceTests
     private TimeSpan Elapsed => _time.GetUtcNow() - _start;
 
     private ScreenVideoSource Source(StreamSettings? settings = null, params string[] failing) =>
-        new(_capture, [EncoderChoice.Amf, EncoderChoice.Software],
+        new(_capture, EncoderChoice.Candidates(EncoderChoice.AmdVendorId),
             (name, size) =>
             {
                 _openAttempts++;
@@ -143,7 +143,7 @@ public class ScreenVideoSourceTests
         Next(source);
 
         _capture.Width = 2560;
-        _failing.UnionWith([EncoderChoice.Amf, EncoderChoice.Software]);
+        _failing.UnionWith(EncoderChoice.Candidates(EncoderChoice.AmdVendorId));
         Assert.False(source.TryGetFrame(false, Timeout, out _));
         Assert.False(source.HasEncoder);
         Assert.True(_opened[0].Disposed);
@@ -164,7 +164,7 @@ public class ScreenVideoSourceTests
         using var source = Source();
         Next(source);
         _capture.Width = 2560;
-        _failing.UnionWith([EncoderChoice.Amf, EncoderChoice.Software]);
+        _failing.UnionWith(EncoderChoice.Candidates(EncoderChoice.AmdVendorId));
         _openAttempts = 0;
         int calls = 0;
 
@@ -175,7 +175,7 @@ public class ScreenVideoSourceTests
             Assert.True(++calls < 1000, "TryGetFrame returns without waiting");
         }
 
-        Assert.Equal(3 * 2, _openAttempts); // at 0, 1 and 2 s, both encoders each time
+        Assert.Equal(3 * 3, _openAttempts); // at 0, 1 and 2 s, all three AMD candidates each time
     }
 
     [Fact]
@@ -243,20 +243,34 @@ public class ScreenVideoSourceTests
     }
 
     [Fact]
+    public void An_AMD_GPU_that_refuses_ultra_low_latency_still_encodes_on_the_GPU()
+    {
+        // The RX 550 (VCE 3.4) fails encoder->Init() with usage=ultralowlatency but opens with lowlatency.
+        using var source = Source(null, EncoderChoice.Amf);
+
+        Assert.Equal(EncoderChoice.AmfLowLatency, source.EncoderName);
+        Assert.True(source.IsHardware);
+        Assert.Equal(["h264_amf: h264_amf is not available"], source.SkippedEncoders);
+    }
+
+    [Fact]
     public void Falls_back_to_the_software_encoder()
     {
-        using var source = Source(null, EncoderChoice.Amf);
+        using var source = Source(null, EncoderChoice.Amf, EncoderChoice.AmfLowLatency);
 
         Assert.Equal(EncoderChoice.Software, source.EncoderName);
         Assert.False(source.IsHardware);
-        Assert.Equal(["h264_amf: h264_amf is not available"], source.SkippedEncoders);
+        Assert.Equal(["h264_amf: h264_amf is not available", "h264_amf (lowlatency): h264_amf (lowlatency) is not available"],
+            source.SkippedEncoders);
     }
 
     [Fact]
     public void No_encoder_at_all_throws_with_every_reason()
     {
-        var e = Assert.Throws<InvalidOperationException>(() => Source(null, EncoderChoice.Amf, EncoderChoice.Software));
+        var e = Assert.Throws<InvalidOperationException>(() =>
+            Source(null, EncoderChoice.Amf, EncoderChoice.AmfLowLatency, EncoderChoice.Software));
         Assert.Contains("h264_amf is not available", e.Message);
+        Assert.Contains("h264_amf (lowlatency) is not available", e.Message);
         Assert.Contains("libx264 is not available", e.Message);
     }
 

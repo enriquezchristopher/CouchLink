@@ -163,7 +163,7 @@ one shared stream.
   | | AMD | NVIDIA |
   |---|---|---|
   | Encoder | `h264_amf` | `h264_nvenc` |
-  | Settings | usage `ultralowlatency`, latency-oriented VBR, no pre-analysis | preset `p1`, tune `ull`, CBR, no B-frames |
+  | Settings | usage `ultralowlatency` (`lowlatency` on older AMD encoders that refuse it, e.g. the RX 550), latency-oriented VBR, no pre-analysis | preset `p1`, tune `ull`, CBR, no B-frames |
 
   No hardware encoder (e.g. GT 710 / GT 1030) -> **software fallback**
   (x264 `ultrafast` + `zerolatency`) and a host lobby warning: "No
