@@ -73,4 +73,34 @@ public class KeyLayoutTests
         foreach (var control in Enum.GetValues<PadControl>())
             Assert.Equal(fresh.KeysFor(control), layout.KeysFor(control));
     }
+
+    [Fact]
+    public void Replace_swaps_every_binding()
+    {
+        var layout = KeyLayout.CreateDefault();
+        layout.Replace(new Dictionary<PadControl, IReadOnlyList<ushort>> { [PadControl.Cross] = [VirtualKeys.Space] });
+        Assert.Equal([VirtualKeys.Space], layout.KeysFor(PadControl.Cross));
+        Assert.Empty(layout.KeysFor(PadControl.Square)); // left out of the profile: no key
+    }
+
+    [Fact]
+    public void A_snapshot_taken_before_a_change_keeps_the_old_bindings()
+    {
+        var layout = KeyLayout.CreateDefault();
+        var before = layout.Current;
+        layout.Replace(new Dictionary<PadControl, IReadOnlyList<ushort>> { [PadControl.Circle] = [K] });
+        layout.Bind(PadControl.Triangle, VirtualKeys.Space);
+        Assert.Equal([K], before[PadControl.Cross]);
+        Assert.False(before.ContainsKey(PadControl.Triangle) && before[PadControl.Triangle].Contains(VirtualKeys.Space));
+    }
+
+    [Fact]
+    public void Replace_copies_the_keys_it_is_given()
+    {
+        var layout = KeyLayout.CreateDefault();
+        ushort[] keys = [VirtualKeys.Space];
+        layout.Replace(new Dictionary<PadControl, IReadOnlyList<ushort>> { [PadControl.Cross] = keys });
+        keys[0] = K;
+        Assert.Equal([VirtualKeys.Space], layout.KeysFor(PadControl.Cross));
+    }
 }

@@ -102,14 +102,15 @@ public sealed class InputMapper : IDisposable
     {
         lock (_gate)
         {
+            var layout = _layout.Current; // one snapshot for the whole tick
             var buttons = PadButtons.None;
             foreach (var (control, button) in ButtonMap)
-                if (IsDown(control))
+                if (IsDown(layout, control))
                     buttons |= button;
 
             var (lx, ly) = StickMath.FromDirections(
-                IsDown(PadControl.LeftUp), IsDown(PadControl.LeftDown),
-                IsDown(PadControl.LeftLeft), IsDown(PadControl.LeftRight));
+                IsDown(layout, PadControl.LeftUp), IsDown(layout, PadControl.LeftDown),
+                IsDown(layout, PadControl.LeftLeft), IsDown(layout, PadControl.LeftRight));
             var (rx, ry) = _mouse.Update(dtSeconds);
             byte l2 = buttons.HasFlag(PadButtons.L2) ? (byte)255 : (byte)0;
             byte r2 = buttons.HasFlag(PadButtons.R2) ? (byte)255 : (byte)0;
@@ -117,9 +118,11 @@ public sealed class InputMapper : IDisposable
         }
     }
 
-    private bool IsDown(PadControl control)
+    private bool IsDown(IReadOnlyDictionary<PadControl, IReadOnlyList<ushort>> layout, PadControl control)
     {
-        foreach (var key in _layout.KeysFor(control))
+        if (!layout.TryGetValue(control, out var keys))
+            return false;
+        foreach (var key in keys)
             if (_held.Contains(key))
                 return true;
         return false;
