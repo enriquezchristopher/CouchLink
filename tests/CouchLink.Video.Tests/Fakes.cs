@@ -78,7 +78,10 @@ internal sealed class FakeDecoder(bool hardware) : IFrameDecoder
 
 internal sealed class FakePresenter : IFramePresenter
 {
-    public List<(DecodedPicture? Picture, string? Status, string? Stats)> Shown { get; } = [];
-    public void Present(DecodedPicture? picture, string? status, string? stats) => Shown.Add((picture, status, stats));
+    public List<(DecodedPicture? Picture, string? Status, string? Stats, string? Controls, string? Hint)> Shown { get; } = [];
+
+    public void Present(DecodedPicture? picture, string? status, string? stats, string? controls, string? hint) =>
+        Shown.Add((picture, status, stats, controls, hint));
+
     public void Dispose() { }
 }
