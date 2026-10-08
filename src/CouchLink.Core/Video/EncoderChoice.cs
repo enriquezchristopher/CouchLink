@@ -13,6 +13,8 @@ public static class EncoderChoice
     public const uint NvidiaVendorId = 0x10DE;
 
     public const string Amf = "h264_amf";
+    /// <summary>AMF with usage=lowlatency, for older AMD encoders (VCE, e.g. the RX 550) that refuse ultralowlatency.</summary>
+    public const string AmfLowLatency = "h264_amf (lowlatency)";
     public const string Nvenc = "h264_nvenc";
     public const string Software = "libx264";
 
@@ -20,22 +22,28 @@ public static class EncoderChoice
 
     public static IReadOnlyList<string> Candidates(uint vendorId) => vendorId switch
     {
-        AmdVendorId => [Amf, Software],
+        AmdVendorId => [Amf, AmfLowLatency, Software],
         NvidiaVendorId => [Nvenc, Software],
         _ => [Software],
     };
 
     public static bool IsHardware(string encoder) => encoder != Software;
 
+    /// <summary>The FFmpeg encoder a candidate opens; a candidate is an encoder plus a set of options.</summary>
+    public static string CodecOf(string encoder) => encoder == AmfLowLatency ? Amf : encoder;
+
     public static IReadOnlyList<(string Name, string Value)> Options(string encoder) => encoder switch
     {
-        Amf =>
-        [
-            ("usage", "ultralowlatency"), ("rc", "vbr_latency"), ("preanalysis", "false"),
-            ("async_depth", "1"), ("bf", "0"), ("forced_idr", "1"),
-        ],
+        Amf => AmfOptions("ultralowlatency"),
+        AmfLowLatency => AmfOptions("lowlatency"),
         Nvenc => [("preset", "p1"), ("tune", "ull"), ("rc", "cbr"), ("zerolatency", "1"), ("forced-idr", "1")],
         Software => [("preset", "ultrafast"), ("tune", "zerolatency")],
         _ => throw new ArgumentException($"Unknown encoder {encoder}.", nameof(encoder)),
     };
+
+    private static (string Name, string Value)[] AmfOptions(string usage) =>
+    [
+        ("usage", usage), ("rc", "vbr_latency"), ("preanalysis", "false"),
+        ("async_depth", "1"), ("bf", "0"), ("forced_idr", "1"),
+    ];
 }
