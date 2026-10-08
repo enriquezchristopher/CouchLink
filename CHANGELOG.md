@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.6.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.5.0...v1.6.0) (2026-10-08)
+
+
+### Features
+
+* **app:** controls editor on the Start and session screens and over the game; side mouse buttons ([27ec88f](https://github.com/enriquezchristopher/CouchLink/commit/27ec88fa41072ea050ba80aaf6b7610564d7ca12))
+* **app:** launching again brings the running copy forward ([142a2ab](https://github.com/enriquezchristopher/CouchLink/commit/142a2ab6593a2cd8aed7fbfc88e185a6de5c8f90))
+* **core:** editable key layout with one key per control, reserved keys and key names ([8841658](https://github.com/enriquezchristopher/CouchLink/commit/88416589e1d127d4a071fddd4dc24daf44fe789e))
+* **core:** in-memory control settings with sensitivity steps and Invert Y; the mapper follows edits ([d625ed9](https://github.com/enriquezchristopher/CouchLink/commit/d625ed98c8731c5fb7ce5e9c4982feb578d100a2))
+* **core:** which Windows shortcuts to block while playing, and the single-instance decision ([314fbe4](https://github.com/enriquezchristopher/CouchLink/commit/314fbe474e632b6fc9a4e16d7788c996d99c6a32))
+* playing screen, controls editor and single instance (Plan 8) ([78869aa](https://github.com/enriquezchristopher/CouchLink/commit/78869aa5c29c4b9cef317e73df952b26bb6faa97))
+* **video:** F1 controls panel and a 5 s start hint; stats move to the top-right ([09b9d39](https://github.com/enriquezchristopher/CouchLink/commit/09b9d396e66ad5b02d2589bbc3887ced4bb9d931))
+* **video:** the fullscreen player blocks Windows shortcuts and keeps the pointer; F1 and Ctrl+Alt+C ([ffd457f](https://github.com/enriquezchristopher/CouchLink/commit/ffd457f20a08f4d4c5ee9f69297d26e4e6eb0efd))
+
+
+### Bug Fixes
+
+* **video:** the keyboard hook gets its own thread so a busy player can't lag keys or lose the hook ([155efd0](https://github.com/enriquezchristopher/CouchLink/commit/155efd06c352226bdc671d2d0304535e3555439a))
+
 ## [1.5.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.4.0...v1.5.0) (2026-10-08)
 
 
