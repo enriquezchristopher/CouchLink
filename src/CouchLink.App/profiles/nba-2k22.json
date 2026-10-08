@@ -1,0 +1,34 @@
+{
+  // NBA 2K22's own PC keyboard keys, each on the DualShock 4 button that does
+  // the same thing in the game. The pro stick (Num 8/4/2/6 in the game) stays
+  // on the mouse: CouchLink's right stick is always the mouse.
+  // Keep Num Lock on so the number pad keys work.
+  "format": 1,
+  "name": "NBA 2K22",
+  "game": "NBA 2K22",
+  "sensitivity": 5,
+  "invertY": false,
+  "controls": {
+    "LeftUp":    { "keys": ["W"] },
+    "LeftDown":  { "keys": ["S"] },
+    "LeftLeft":  { "keys": ["A"] },
+    "LeftRight": { "keys": ["D"] },
+    "DpadUp":    { "keys": ["Up"], "label": "Double team" },
+    "DpadDown":  { "keys": ["Down"], "label": "Substitutions" },
+    "DpadLeft":  { "keys": ["Left"], "label": "Quick plays" },
+    "DpadRight": { "keys": ["Right"], "label": "Points of emphasis" },
+    "Cross":     { "keys": ["Space"], "label": "Pass / Switch player" },
+    "Circle":    { "keys": ["Num1"], "label": "Bounce pass / Charge" },
+    "Square":    { "keys": ["Num5"], "label": "Shoot / Steal" },
+    "Triangle":  { "keys": ["Num3"], "label": "Lob pass / Block" },
+    "L1":        { "keys": ["Tab"], "label": "Call play" },
+    "R1":        { "keys": ["NumAdd"], "label": "Icon pass" },
+    "L2":        { "keys": ["LShift"], "label": "Post up / Intense D" },
+    "R2":        { "keys": ["Enter"], "label": "Sprint" },
+    "L3":        { "keys": ["F"] },
+    "R3":        { "keys": ["MiddleClick"] },
+    "Options":   { "keys": ["PageDown"], "label": "Pause" },
+    "Share":     { "keys": ["Backspace"] },
+    "Touchpad":  { "keys": ["PageUp"], "label": "Timeout / Foul" }
+  }
+}

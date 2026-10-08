@@ -33,6 +33,20 @@ Settled in brainstorming (2026-10-08):
   by default, so labels can be made without editing JSON either.
 - **Reset to default** always restores CouchLink's built-in layout and drops
   the loaded profile and its labels.
+- **One profile ships in the release zip:** `profiles\nba-2k22.json`,
+  named "NBA 2K22" (added during implementation, 2026-10-08). It puts NBA
+  2K22's own default PC keyboard keys on the DualShock 4 buttons that do
+  the same thing in the game, so a player who knows the game's keyboard
+  controls uses the same keys: Space is Pass (Cross), Num 5 is Shoot
+  (Square), Num 1 bounce pass (Circle), Num 3 lob (Triangle), Tab call play
+  (L1), Num + icon pass (R1), Left Shift post up (L2), Enter sprint (R2;
+  sources give Enter or Num Enter, which Windows reports as the same key),
+  Page Up timeout (Touchpad), Page Down pause (Options), arrows on-the-fly
+  coaching (D-pad), WASD movement. The game's pro stick keys (Num 8/4/2/6)
+  have no equivalent: CouchLink's right stick is always the mouse. L3, R3
+  and Share keep CouchLink's keys. Labels name the game's actions. A test
+  pins every binding. The file lives in `src/CouchLink.App/profiles/` and
+  is copied next to the exe on build and publish.
 - **Nothing is remembered between runs.** Settings still reset to the
   built-in layout when CouchLink closes (spec 6.7), so each customer starts
   fresh. A profile is a preset the player picks, not saved state.
@@ -372,7 +386,6 @@ In the App, around `ProfileFile`:
   message).
 - Picking a profile automatically from the running game.
 - Remembering the last profile between runs.
-- Shipping profiles in the release zip.
 - Per-game mouse modes (a right stick that doesn't spring back).
 - Editing the JSON inside CouchLink, or a profile manager (rename, delete).
   Owners use Explorer for that.

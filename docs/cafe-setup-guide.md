@@ -248,8 +248,15 @@ A profile is a key layout for one game, saved as a file. Players pick one
 from the **Profile** list at the top of the controls editor instead of
 changing keys one by one.
 
-- **Set them up once:** make a `profiles` folder next to
-  `CouchLink.App.exe` and put the profile files in it. Copy the folder to
+- **NBA 2K22 comes with CouchLink:** the **NBA 2K22** profile uses the
+  game's own PC keyboard keys (Space to pass, Num 5 to shoot, Num 1 bounce
+  pass, Num 3 lob, Enter to sprint, Left Shift to post up, Tab to call a
+  play, Num + icon pass, Page Up timeout, Page Down pause, arrows for
+  coaching), so players who know 2K's keyboard controls feel at home. The
+  pro stick stays on the mouse. Keep **Num Lock** on, or the number pad
+  keys send other keys.
+- **Add your own:** the profiles live in the `profiles` folder next to
+  `CouchLink.App.exe`. Put more profile files there and copy the folder to
   every PC. The list reads the folder each time the editor opens.
 - **Make one:** change the keys in the editor, then click **Save as…**,
   give it a name (this is what players see in the list) and save it in the

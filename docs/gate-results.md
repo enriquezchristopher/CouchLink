@@ -96,3 +96,4 @@ Client PC: <fill in>
 | Open the editor with Ctrl+Alt+C and click Save as…: both dialogs open in front of the game | <pass/fail> |
 | Reset to default after loading: built-in keys, no labels, no profile name | <pass/fail> |
 | Close and restart CouchLink: built-in layout | <pass/fail> |
+| Shipped NBA 2K22 profile in 2K22 (Num Lock on): Space passes, Num 5 shoots, Num 1 bounce pass, Num 3 lob, Enter sprints, Left Shift posts up, Tab calls a play, Page Down pauses, the mouse is the pro stick | <pass/fail> |
