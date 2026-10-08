@@ -25,6 +25,8 @@ public class EncoderChoiceTests
     [InlineData("h264_amf (lowlatency)", "h264_amf")]
     [InlineData("h264_nvenc", "h264_nvenc")]
     [InlineData("libx264", "libx264")]
+    [InlineData("h264_amf (balanced)", "h264_amf")]
+    [InlineData("h264_nvenc (p3)", "h264_nvenc")]
     public void Each_candidate_names_the_FFmpeg_encoder_it_opens(string candidate, string codec)
     {
         Assert.Equal(codec, EncoderChoice.CodecOf(candidate));
@@ -51,6 +53,8 @@ public class EncoderChoiceTests
         Assert.True(EncoderChoice.IsHardware("h264_amf (lowlatency)"));
         Assert.True(EncoderChoice.IsHardware("h264_nvenc"));
         Assert.False(EncoderChoice.IsHardware("libx264"));
+        Assert.True(EncoderChoice.IsHardware("h264_amf (balanced)"));
+        Assert.True(EncoderChoice.IsHardware("h264_nvenc (p3)"));
     }
 
     [Fact]
@@ -74,6 +78,56 @@ public class EncoderChoiceTests
     public void X264_uses_ultrafast_zerolatency()
     {
         Assert.Equal([("preset", "ultrafast"), ("tune", "zerolatency")], EncoderChoice.Options("libx264"));
+    }
+
+    [Theory]
+    [InlineData(StreamQuality.High)]
+    [InlineData(StreamQuality.Max)]
+    public void Amd_at_high_quality_tries_AMF_balanced_first_then_the_usual_order(StreamQuality quality)
+    {
+        // An AMF that refuses quality=balanced still lands on the GPU, not on x264.
+        Assert.Equal(["h264_amf (balanced)", "h264_amf", "h264_amf (lowlatency)", "libx264"],
+            EncoderChoice.Candidates(0x1002, quality));
+    }
+
+    [Theory]
+    [InlineData(StreamQuality.High)]
+    [InlineData(StreamQuality.Max)]
+    public void Nvidia_at_high_quality_tries_NVENC_p3_first(StreamQuality quality)
+    {
+        Assert.Equal(["h264_nvenc (p3)", "h264_nvenc", "libx264"], EncoderChoice.Candidates(0x10DE, quality));
+    }
+
+    [Theory]
+    [InlineData(StreamQuality.Low)]
+    [InlineData(StreamQuality.Balanced)]
+    public void Low_and_balanced_keep_todays_candidates(StreamQuality quality)
+    {
+        Assert.Equal(["h264_amf", "h264_amf (lowlatency)", "libx264"], EncoderChoice.Candidates(0x1002, quality));
+        Assert.Equal(["h264_nvenc", "libx264"], EncoderChoice.Candidates(0x10DE, quality));
+    }
+
+    [Fact]
+    public void Other_GPUs_use_x264_at_every_quality()
+    {
+        Assert.Equal(["libx264"], EncoderChoice.Candidates(0x8086, StreamQuality.Max));
+    }
+
+    [Fact]
+    public void AMF_balanced_is_AMF_ultra_low_latency_plus_quality_balanced()
+    {
+        Assert.Equal(
+            [("usage", "ultralowlatency"), ("rc", "vbr_latency"), ("preanalysis", "false"),
+             ("async_depth", "1"), ("bf", "0"), ("forced_idr", "1"), ("quality", "balanced")],
+            EncoderChoice.Options("h264_amf (balanced)"));
+    }
+
+    [Fact]
+    public void NVENC_p3_is_NVENC_with_preset_p3()
+    {
+        Assert.Equal(
+            [("preset", "p3"), ("tune", "ull"), ("rc", "cbr"), ("zerolatency", "1"), ("forced-idr", "1")],
+            EncoderChoice.Options("h264_nvenc (p3)"));
     }
 
     [Fact]
