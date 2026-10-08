@@ -12,6 +12,7 @@ public readonly record struct PlayerOptions(nint NearWindow = 0, bool Windowed =
 /// presenter, and runs <see cref="PlayerCore"/> whenever a frame arrives or a window message does.
 /// <see cref="Enqueue"/> is called from the receive thread. <c>closeRequested</c> runs on the player
 /// thread: post it to the UI thread, and never Dispose the player from inside it.
+/// <c>sessionStatus</c>, when it returns text, replaces the picture status (e.g. "Reconnecting...").
 /// </summary>
 public sealed class VideoPlayer : IDisposable
 {
@@ -24,9 +25,10 @@ public sealed class VideoPlayer : IDisposable
     private PlayerCore? _core;
 
     public VideoPlayer(PlayerOptions options, Func<VideoClientStats> stats, Action decodeFailed,
-        Action closeRequested, Action<string>? log = null, Func<string?>? audioLine = null)
+        Action closeRequested, Action<string>? log = null, Func<string?>? audioLine = null,
+        Func<string?>? sessionStatus = null)
     {
-        _thread = new Thread(() => Run(options, stats, decodeFailed, closeRequested, log, audioLine))
+        _thread = new Thread(() => Run(options, stats, decodeFailed, closeRequested, log, audioLine, sessionStatus))
         {
             IsBackground = true,
             Name = "CouchLink player",
@@ -50,7 +52,7 @@ public sealed class VideoPlayer : IDisposable
     public void Enqueue(AssembledFrame frame) => _core!.Enqueue(frame);
 
     private void Run(PlayerOptions options, Func<VideoClientStats> stats, Action decodeFailed,
-        Action closeRequested, Action<string>? log, Func<string?>? audioLine)
+        Action closeRequested, Action<string>? log, Func<string?>? audioLine, Func<string?>? sessionStatus)
     {
         ID3D11Device? device = null;
         ID3D11DeviceContext? context = null;
@@ -73,7 +75,7 @@ public sealed class VideoPlayer : IDisposable
             var d = device;
             core = new PlayerCore(
                 hardware => hardware && options.PreferHardware ? OpenHardware(d, log) : H264Decoder.OpenSoftware(),
-                presenter, stats, decodeFailed, TimeProvider.System, log, audioLine);
+                presenter, stats, decodeFailed, TimeProvider.System, log, audioLine, sessionStatus);
             var c = core;
             var p = presenter;
             window.StatsToggled += () => c.ShowStats = !c.ShowStats;

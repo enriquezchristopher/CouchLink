@@ -12,6 +12,7 @@ public class PlayerCoreTests
     private int _decodeFailed;
     private Func<uint, bool> _hardwareFailsOn = _ => false;
     private string? _audio;
+    private string? _session;
 
     private PlayerCore Core() => new(
         hardware =>
@@ -20,7 +21,7 @@ public class PlayerCoreTests
             _decoders.Add(d);
             return d;
         },
-        _presenter, () => _stats, () => _decodeFailed++, _time, audioLine: () => _audio);
+        _presenter, () => _stats, () => _decodeFailed++, _time, audioLine: () => _audio, sessionStatus: () => _session);
 
     private static AssembledFrame F(uint number, bool keyframe = false, TimeSpan assembly = default) =>
         new(number, keyframe, BitConverter.GetBytes(number), AssemblyTime: assembly);
@@ -225,6 +226,21 @@ public class PlayerCoreTests
         core.Run();
 
         Assert.Equal($"{OverlayText.NoPicture}\n{OverlayText.LeaveHint}", _presenter.Shown[^1].Status);
+        Assert.Equal(1u, ShownFrame(_presenter.Shown[^1])); // over the last picture
+    }
+
+    [Fact]
+    public void Session_status_overrides_the_picture_status()
+    {
+        using var core = Core();
+        core.Enqueue(F(1, keyframe: true));
+        core.Run();
+        Assert.Null(_presenter.Shown[^1].Status);
+
+        _session = OverlayText.Reconnecting;
+        core.Run();                          // status changed: redraw at once
+
+        Assert.Equal($"{OverlayText.Reconnecting}\n{OverlayText.LeaveHint}", _presenter.Shown[^1].Status);
         Assert.Equal(1u, ShownFrame(_presenter.Shown[^1])); // over the last picture
     }
 }
