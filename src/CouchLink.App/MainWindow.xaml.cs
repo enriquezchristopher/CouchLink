@@ -1,128 +1,132 @@
 using System.Diagnostics;
-using System.IO;
 using System.Net;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Interop;
+using System.Windows.Input;
 using System.Windows.Threading;
-using CouchLink.App.Input;
-using CouchLink.Core.Input;
-using CouchLink.Core.Net;
-using CouchLink.Core.Video;
-using CouchLink.Video;
+using CouchLink.App.Views;
 
 namespace CouchLink.App;
 
-public partial class MainWindow : Window
+/// <summary>
+/// The app's one window: the Start screen, the host lobby, the join list, or the session view while
+/// joining and playing (the fullscreen player sits in front of it).
+/// </summary>
+public partial class MainWindow : Window, IClientUi
 {
-    private readonly DispatcherTimer _statusTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
-    private HostInputService? _host;
-    private RawInputSource? _rawInput;
-    private InputMapper? _mapper;
-    private ClientInputLoop? _client;
-    private ClientStreams? _streams;
-    private string _clientStatus = "";
+    private readonly DispatcherTimer _detailsTimer = new() { Interval = TimeSpan.FromMilliseconds(250) };
+    private ClientSessionService? _session;
+    private ClientPlay? _play;
+    private SessionView? _sessionView;
+    private bool _closed;
 
     public MainWindow()
     {
         InitializeComponent();
-        for (int slot = 2; slot <= 10; slot++)
-            SlotBox.Items.Add(slot);
-        SlotBox.SelectedIndex = 0;
-        foreach (var resolution in StreamSettings.Resolutions)
-            ResolutionBox.Items.Add(new ComboBoxItem { Content = StreamSettings.Label(resolution), Tag = resolution });
-        ResolutionBox.SelectedIndex = StreamSettings.Resolutions.ToList().IndexOf(StreamSettings.Default.Resolution);
-        foreach (int rate in StreamSettings.FrameRatesFor(DisplayInfo.PrimaryRefreshRate()))
-            FrameRateBox.Items.Add(new ComboBoxItem { Content = $"{rate} fps", Tag = rate });
-        FrameRateBox.SelectedIndex = 0; // 60
-        _statusTimer.Tick += (_, _) => UpdateStatus();
-        _statusTimer.Start();
-        Deactivated += (_, _) =>
+        _detailsTimer.Tick += (_, _) =>
         {
-            if (!InputAllowed())
-                _mapper?.ReleaseAll(); // never leave keys stuck
+            if (_sessionView is not null)
+                _sessionView.Details = _play?.Describe() ?? "";
         };
+        ShowStart();
     }
 
-    /// <summary>True while this window or the player window is in front: input belongs to the game.</summary>
-    private bool InputAllowed()
+    /// <summary>Shows a view; the one it replaces is disposed (stopping whatever it owned).</summary>
+    private void Show(UserControl view)
     {
-        var foreground = NativeMethods.GetForegroundWindow();
-        return foreground == new WindowInteropHelper(this).Handle
-            || (_streams is not null && foreground == _streams.PlayerWindow);
+        if (Screen.Content is IDisposable old && !ReferenceEquals(old, view))
+            old.Dispose();
+        Screen.Content = view;
     }
 
-    private void OnHost(object sender, RoutedEventArgs e)
+    private void ShowStart()
     {
-        var settings = new StreamSettings(
-            (StreamResolution)((ComboBoxItem)ResolutionBox.SelectedItem).Tag,
-            (int)((ComboBoxItem)FrameRateBox.SelectedItem).Tag);
-        if (!HostInputService.TryStart(settings, out _host, out var error))
+        var start = new StartView();
+        start.HostClicked += ShowHost;
+        start.JoinClicked += () => ShowJoinList(null);
+        start.CrashReportsClicked += OpenCrashReports;
+        Show(start);
+        AppServices.DescribeMode = () => "Idle";
+    }
+
+    private void ShowHost()
+    {
+        var lobby = new HostLobbyView();
+        if (!lobby.TryStart(out var error))
         {
             MessageBox.Show(this, error, "CouchLink");
             return;
         }
-        HostButton.IsEnabled = JoinButton.IsEnabled = ResolutionBox.IsEnabled = FrameRateBox.IsEnabled = false;
-        AppServices.DescribeMode = () => $"Host (virtual pads: {_host?.PadCount ?? 0})";
-        AppServices.Log.Write("Hosting started");
+        lobby.Stopped += ShowStart;
+        Show(lobby);
     }
 
-    private void OnJoin(object sender, RoutedEventArgs e)
+    private void ShowJoinList(string? message)
     {
-        if (!IPAddress.TryParse(HostIpBox.Text.Trim(), out var ip))
+        var list = new JoinListView();
+        list.BackClicked += ShowStart;
+        list.JoinRequested += Join;
+        list.ShowMessage(message);
+        Show(list);
+    }
+
+    private void Join(IPAddress host, string hostName)
+    {
+        _sessionView = new SessionView();
+        _sessionView.LeaveClicked += LeaveSession;
+        Show(_sessionView); // closes the join list, freeing UDP 47800
+        _session = new ClientSessionService(host, hostName, Dispatcher, this);
+        UpdateSessionView();
+        _detailsTimer.Start();
+    }
+
+    void IClientUi.StartPlaying(byte slot)
+    {
+        if (_session is not { } session || _closed)
+            return;
+        if (!ClientPlay.TryStart(this, session.Host, slot, () => Dispatcher.InvokeAsync(LeaveSession),
+                () => session.PlayerStatus, out _play, out var error))
         {
-            MessageBox.Show(this, "Enter a valid host IP address.", "CouchLink");
+            session.Fail(error!);
             return;
         }
-
-        var slot = (int)SlotBox.SelectedItem;
-        var inputSender = new InputSender(new IPEndPoint(ip, Ports.Input), (byte)slot);
-        var playerOptions = new PlayerOptions(new WindowInteropHelper(this).Handle, AppServices.Options.WindowedPlayer);
-        if (!ClientStreams.TryStart(ip, inputSender, playerOptions, AppServices.Options.SaveVideoPath,
-                () => Dispatcher.InvokeAsync(LeaveSession), out _streams, out var streamError))
-        {
-            inputSender.Dispose();
-            MessageBox.Show(this, streamError, "CouchLink");
-            return;
-        }
-
-        _mapper = new InputMapper(KeyLayout.CreateDefault(), new MouseStick());
-        _rawInput = new RawInputSource((HwndSource)PresentationSource.FromVisual(this), InputAllowed);
-        _rawInput.InputSuspended += _mapper.ReleaseAll;
-        _rawInput.KeyDown += _mapper.KeyDown;
-        _rawInput.KeyUp += _mapper.KeyUp;
-        _rawInput.MouseMove += _mapper.MouseMove;
-
-        _client = new ClientInputLoop(_mapper, inputSender);
-        // Raw Input keys still reach focused controls; lock them so play can't change what's shown.
-        HostButton.IsEnabled = JoinButton.IsEnabled = HostIpBox.IsEnabled = SlotBox.IsEnabled = false;
-        ResolutionBox.IsEnabled = FrameRateBox.IsEnabled = false; // a client doesn't stream
-        _clientStatus = $"Sending to {ip} as P{slot}";
+        Keyboard.ClearFocus(); // Raw Input keys still reach a focused control
         AppServices.DescribeMode = () => $"Client (slot P{slot})";
-        AppServices.Log.Write($"Joined as P{slot}");
+        UpdateSessionView();
     }
 
-    /// <summary>Back to the start: the player closed (Ctrl+Alt+Q) or failed.</summary>
-    private void LeaveSession()
+    void IClientUi.Ended(string? message)
     {
-        if (_client is null)
+        if (_closed)
             return;
-        _streams?.Dispose();
-        _streams = null;
-        _client.Dispose(); // sends a neutral pad state and closes the input sender
-        _client = null;
-        _rawInput?.Dispose();
-        _rawInput = null;
-        _mapper = null;
-        HostButton.IsEnabled = JoinButton.IsEnabled = HostIpBox.IsEnabled = SlotBox.IsEnabled = true;
-        ResolutionBox.IsEnabled = FrameRateBox.IsEnabled = true;
+        EndSession();
+        ShowJoinList(message);
+    }
+
+    void IClientUi.StateChanged() => UpdateSessionView();
+
+    private void UpdateSessionView()
+    {
+        if (_session is { } session && _sessionView is { } view)
+            view.Show(session.State, session.HostName, session.Slot);
+    }
+
+    /// <summary>Cancel, Leave or Ctrl+Alt+Q: the session tells the host, then ends and calls Ended(null).</summary>
+    private void LeaveSession() => _session?.Leave();
+
+    private void EndSession()
+    {
+        _detailsTimer.Stop();
+        _play?.Dispose();
+        _play = null;
+        _session?.Dispose();
+        _session = null;
+        _sessionView = null;
         AppServices.DescribeMode = () => "Idle";
-        StatusText.Text = "Left the session.";
-        AppServices.Log.Write("Left the session");
         Activate();
     }
 
-    private void OnOpenCrashReports(object sender, RoutedEventArgs e)
+    private void OpenCrashReports()
     {
         try
         {
@@ -135,30 +139,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private void UpdateStatus()
-    {
-        if (_host is not null)
-        {
-            StatusText.Text = $"Hosting. Virtual pads: {_host.PadCount}\n{_host.DescribeStreams()}" +
-                (_host.LastError is { } err ? $"\nLast error: {err}" : "");
-        }
-        else if (_client is not null)
-        {
-            var s = _client.LastSent;
-            StatusText.Text =
-                $"{_clientStatus}\n" +
-                $"Buttons: {s.Buttons}\nL: {s.LX},{s.LY}  R: {s.RX},{s.RY}  L2/R2: {s.L2}/{s.R2}\n" +
-                _streams?.Describe();
-        }
-    }
-
     protected override void OnClosed(EventArgs e)
     {
-        _statusTimer.Stop();
-        _streams?.Dispose();
-        _client?.Dispose();
-        _rawInput?.Dispose();
-        _host?.Dispose();
+        _closed = true;
+        _session?.Leave(); // tells the host now instead of after 5 s of silence
+        EndSession();
+        (Screen.Content as IDisposable)?.Dispose();
         base.OnClosed(e);
     }
 }

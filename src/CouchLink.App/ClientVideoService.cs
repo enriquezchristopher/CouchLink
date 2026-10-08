@@ -10,7 +10,7 @@ namespace CouchLink.App;
 /// player window (and, with --save-video=&lt;file&gt;, also saves the H.264). <c>leave</c> runs on the
 /// player thread when the player asks to leave (Ctrl+Alt+Q, Alt+F4). <c>audioLine</c> is the F2
 /// overlay's audio line. Dispose before the <see cref="InputSender"/> it sends keyframe requests
-/// and timing pings through.
+/// and timing pings through. <c>sessionStatus</c> replaces the picture status while it returns text ("Reconnecting...").
 /// </summary>
 internal sealed class ClientVideoService : IDisposable
 {
@@ -18,11 +18,12 @@ internal sealed class ClientVideoService : IDisposable
     private readonly VideoPlayer _player;
     private readonly FileStream? _save;
 
-    private ClientVideoService(InputSender sender, PlayerOptions options, string? savePath, Action leave, Func<string?> audioLine)
+    private ClientVideoService(InputSender sender, PlayerOptions options, string? savePath, Action leave, Func<string?> audioLine,
+        Func<string?> sessionStatus)
     {
         VideoClient? client = null;
         _player = new VideoPlayer(options, () => client?.Stats ?? default, () => client?.DecodeFailed(),
-            leave, message => AppServices.Log.Write(message), audioLine);
+            leave, message => AppServices.Log.Write(message), audioLine, sessionStatus);
         _save = savePath is null ? null : File.Create(savePath);
         client = new VideoClient(
             sender.SendKeyframeRequest, OnFrame, TimeProvider.System,
@@ -31,11 +32,11 @@ internal sealed class ClientVideoService : IDisposable
     }
 
     public static bool TryStart(InputSender sender, PlayerOptions options, string? savePath, Action leave,
-        Func<string?> audioLine, out ClientVideoService? service, out string? error)
+        Func<string?> audioLine, Func<string?> sessionStatus, out ClientVideoService? service, out string? error)
     {
         try
         {
-            service = new ClientVideoService(sender, options, savePath, leave, audioLine);
+            service = new ClientVideoService(sender, options, savePath, leave, audioLine, sessionStatus);
             error = null;
             return true;
         }

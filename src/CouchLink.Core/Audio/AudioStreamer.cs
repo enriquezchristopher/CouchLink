@@ -17,8 +17,8 @@ public readonly record struct AudioSendStats(long FramesCaptured, long PacketsSe
 
 /// <summary>
 /// Host side: on its own thread, reads 5 ms frames from the source, encodes each once and sends it,
-/// with the previous frame attached, to every current client. Clients are learned from their input
-/// packets (<see cref="ClientSeen"/>), as for video. After a discontinuity the packet carries no
+/// with the previous frame attached, to every current client. Clients are added and removed by the
+/// session (<see cref="AddTarget"/>), as for video. After a discontinuity the packet carries no
 /// previous frame and the sequence jumps by <see cref="SequenceJump"/>, so a client starts over
 /// instead of treating the new audio as late. While no client listens nothing is encoded or sent.
 /// Takes ownership of the source, the encoder and the sender.
@@ -31,8 +31,6 @@ public sealed class AudioStreamer : IDisposable
     private readonly IAudioSource _source;
     private readonly IAudioEncoder _encoder;
     private readonly IVideoPacketSender _sender;
-    private readonly TimeProvider _time;
-    private readonly long _start;
     private readonly Action<Exception>? _onError;
     private readonly StreamTargets _targets;
     private readonly Lock _gate = new();
@@ -50,14 +48,11 @@ public sealed class AudioStreamer : IDisposable
         IAudioEncoder encoder,
         IVideoPacketSender sender,
         int port,
-        TimeProvider time,
         Action<Exception>? onError = null)
     {
         _source = source;
         _encoder = encoder;
         _sender = sender;
-        _time = time;
-        _start = time.GetTimestamp();
         _onError = onError;
         _targets = new StreamTargets(port);
         // Random per stream, so clients can tell a restarted host from late packets.
@@ -77,13 +72,18 @@ public sealed class AudioStreamer : IDisposable
         Interlocked.Read(ref _bytesSent),
         Volatile.Read(ref _clients));
 
-    private TimeSpan Now => _time.GetElapsedTime(_start);
-
-    /// <summary>A client's input packet arrived; it gets audio from the next frame.</summary>
-    public void ClientSeen(byte slot, IPAddress address)
+    /// <summary>The session let a client in: it gets audio from the next frame.</summary>
+    public void AddTarget(byte slot, IPAddress address)
     {
         lock (_gate)
-            _targets.Seen(slot, address, Now);
+            _targets.Add(slot, address);
+    }
+
+    /// <summary>The client left, was kicked or went silent: no more audio for it.</summary>
+    public void RemoveTarget(byte slot)
+    {
+        lock (_gate)
+            _targets.Remove(slot);
     }
 
     private void Run()
@@ -116,7 +116,7 @@ public sealed class AudioStreamer : IDisposable
 
         IReadOnlyList<IPEndPoint> targets;
         lock (_gate)
-            targets = _targets.Current(Now);
+            targets = _targets.Current();
         Volatile.Write(ref _clients, targets.Count);
         if (targets.Count == 0)
         {

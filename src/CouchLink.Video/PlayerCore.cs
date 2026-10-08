@@ -25,6 +25,7 @@ public sealed class PlayerCore : IDisposable
     private readonly TimeProvider _time;
     private readonly Action<string>? _log;
     private readonly Func<string?>? _audioLine;
+    private readonly Func<string?>? _sessionStatus;
     private readonly long _start;
     private readonly Lock _queueLock = new();
     private readonly List<(AssembledFrame Frame, TimeSpan ReceivedAt)> _queue = [];
@@ -40,7 +41,7 @@ public sealed class PlayerCore : IDisposable
 
     public PlayerCore(Func<bool, IFrameDecoder> openDecoder, IFramePresenter presenter,
         Func<VideoClientStats> stats, Action decodeFailed, TimeProvider time, Action<string>? log = null,
-        Func<string?>? audioLine = null)
+        Func<string?>? audioLine = null, Func<string?>? sessionStatus = null)
     {
         _openDecoder = openDecoder;
         _presenter = presenter;
@@ -49,6 +50,7 @@ public sealed class PlayerCore : IDisposable
         _time = time;
         _log = log;
         _audioLine = audioLine;
+        _sessionStatus = sessionStatus;
         _start = time.GetTimestamp();
         _decoder = openDecoder(true);
     }
@@ -121,7 +123,8 @@ public sealed class PlayerCore : IDisposable
         }
 
         var sinceLastFrame = _lastArrival is { } arrived ? Now - arrived : TimeSpan.Zero;
-        string? status = OverlayText.Status(FramesShown > 0 || newest is not null, _stats().HostPaused, sinceLastFrame, QuietAfter);
+        string? status = OverlayText.Status(FramesShown > 0 || newest is not null, _stats().HostPaused, sinceLastFrame,
+            QuietAfter, _sessionStatus?.Invoke());
         if (newest is { } n)
         {
             _last = n.Picture;

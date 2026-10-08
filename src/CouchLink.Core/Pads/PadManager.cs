@@ -1,12 +1,15 @@
+using System.Net;
 using CouchLink.Core.Input;
 using CouchLink.Core.Protocol;
 
 namespace CouchLink.Core.Pads;
 
 /// <summary>
-/// Owns the host's virtual pads: one per slot (P2..P10), created on the first
-/// packet for that slot. A pad that stops receiving packets is released to
-/// Neutral so a crashed client can't leave a player running forever.
+/// Owns the host's virtual pads: one per slot (P2..P10), plugged in by the session when a client is
+/// let in and bound to that client's address. Input for a slot is applied only from its address. A
+/// held slot (client gone, waiting for it to rejoin) stays plugged in at neutral and ignores input,
+/// so the game keeps the player. A pad that stops receiving packets is released to Neutral so a
+/// crashed client can't leave a player running forever.
 /// </summary>
 public sealed class PadManager : IDisposable
 {
@@ -20,8 +23,9 @@ public sealed class PadManager : IDisposable
     private sealed class Entry(IVirtualPad pad)
     {
         public IVirtualPad Pad { get; } = pad;
+        public IPAddress? Address { get; set; } // null while held
         public long LastSeen { get; set; }
-        public bool IsNeutral { get; set; }
+        public bool IsNeutral { get; set; } = true;
     }
 
     private readonly IVirtualPadFactory _factory;
@@ -41,22 +45,61 @@ public sealed class PadManager : IDisposable
         get { lock (_gate) return _pads.Count; }
     }
 
-    /// <summary>Applies a packet. Returns false if it was ignored.</summary>
-    public bool Handle(InputPacket packet)
+    public bool IsPlugged(byte slot)
     {
-        if (packet.Slot is < FirstSlot or > LastSlot)
+        lock (_gate)
+            return _pads.ContainsKey(slot);
+    }
+
+    /// <summary>Plugs in a pad for the slot (or keeps its pad) and binds it to the client's address. False for a slot outside 2-10.</summary>
+    public bool Plug(byte slot, IPAddress address)
+    {
+        if (slot is < FirstSlot or > LastSlot)
             return false;
 
         lock (_gate)
         {
-            if (!_filter.Accept(packet.Slot, packet.Epoch, packet.Sequence))
-                return false;
-
-            if (!_pads.TryGetValue(packet.Slot, out var entry))
+            if (!_pads.TryGetValue(slot, out var entry))
             {
                 entry = new Entry(_factory.Create());
-                _pads[packet.Slot] = entry;
+                _pads[slot] = entry;
             }
+            entry.Address = address;
+            return true;
+        }
+    }
+
+    /// <summary>The client is gone for now: center the pad, keep it plugged in, ignore input until <see cref="Plug"/>.</summary>
+    public void Hold(byte slot)
+    {
+        lock (_gate)
+        {
+            if (!_pads.TryGetValue(slot, out var entry))
+                return;
+            entry.Address = null;
+            entry.Pad.Apply(PadState.Neutral);
+            entry.IsNeutral = true;
+        }
+    }
+
+    public void Unplug(byte slot)
+    {
+        lock (_gate)
+        {
+            if (_pads.Remove(slot, out var entry))
+                entry.Pad.Dispose();
+        }
+    }
+
+    /// <summary>Applies a packet from <paramref name="from"/>. Returns false if it was ignored.</summary>
+    public bool Handle(InputPacket packet, IPAddress from)
+    {
+        lock (_gate)
+        {
+            if (!_pads.TryGetValue(packet.Slot, out var entry) || entry.Address is null || !entry.Address.Equals(from))
+                return false;
+            if (!_filter.Accept(packet.Slot, packet.Epoch, packet.Sequence))
+                return false;
 
             entry.Pad.Apply(packet.State);
             entry.LastSeen = _time.GetTimestamp();

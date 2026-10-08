@@ -39,7 +39,7 @@ public class VideoStreamerTimingTests
     public async Task Host_delay_follows_the_frames_capture_age()
     {
         using var streamer = new VideoStreamer(new AgedSource(), new RecordingSender(), 47802, TimeProvider.System);
-        streamer.ClientSeen(2, IPAddress.Loopback);
+        streamer.AddTarget(2, IPAddress.Loopback);
 
         var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
         while (streamer.Stats.FramesSent < 60 && DateTime.UtcNow < deadline)

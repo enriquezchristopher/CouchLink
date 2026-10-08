@@ -19,7 +19,6 @@ public class VideoLoopbackTests
     /// <summary>A streamer sending a 100 fps test pattern to one client on localhost.</summary>
     private sealed class Rig : IDisposable
     {
-        private readonly Timer _keepAlive;
         private int _delivered, _corrupt, _firstWasKeyframe = -1;
 
         public Rig(Func<IVideoPacketSender, IVideoPacketSender>? wrap = null)
@@ -31,8 +30,7 @@ public class VideoLoopbackTests
             Streamer = new VideoStreamer(
                 new TestPatternSource(TimeSpan.FromMilliseconds(10)), sender, receiver.LocalPort, TimeProvider.System);
             Client = new VideoClient(receiver, Streamer.RequestKeyframe, OnFrame, TimeProvider.System);
-            // A real client's input packets keep it in the host's targets; do the same here.
-            _keepAlive = new Timer(_ => Streamer.ClientSeen(2, IPAddress.Loopback), null, 0, 100);
+            Streamer.AddTarget(2, IPAddress.Loopback); // the session would do this on Accept
         }
 
         public VideoStreamer Streamer { get; }
@@ -62,7 +60,6 @@ public class VideoLoopbackTests
 
         public void Dispose()
         {
-            _keepAlive.Dispose();
             Client.Dispose();
             Streamer.Dispose();
         }

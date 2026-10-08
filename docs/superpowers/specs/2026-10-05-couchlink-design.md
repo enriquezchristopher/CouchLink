@@ -93,17 +93,20 @@ controller state (UDP). Session control: TCP both ways.
 
 | Port | Use |
 |---|---|
-| UDP 47800 | Discovery broadcast |
-| TCP 47801 | Session control |
+| UDP 47800 | Discovery broadcast (`HostAnnounce`, wire type 7); only clients bind it |
+| TCP 47801 | Session control: join, approval, heartbeat, leave, kick (wire types 8-14) |
 | UDP 47802 | Video + audio; host -> client timing replies |
-| UDP 47803 | Input; client -> host keyframe requests and timing pings (until the v1.4 session channel) |
+| UDP 47803 | Input; client -> host keyframe requests and timing pings |
 
 ## 4. Session & UI
 
+Details: [lobby & sessions design](2026-10-07-couchlink-lobby-sessions-design.md).
+
 ### 4.1 Screens
 1. **Start:** two big buttons **Host** and **Join**, small ⚙ Controls.
-2. **Host lobby:** "Hosting on PC-03", player list (P2..P10) with **Kick**
-   per player, **Stop hosting**. Host minimizes it and plays.
+2. **Host lobby:** "Hosting on PC-03", stream resolution and frame rate,
+   **Allow everyone**, player list (P2..P10) with **Kick** per player,
+   **Stop hosting**. Host minimizes it and plays.
 3. **Join list:** hosts found on the LAN, e.g. "PC-03 · 4/10 players".
    Click to join.
 4. **Playing:** fullscreen stream. **Ctrl+Alt+Q** leaves, **F1** shows the
@@ -117,15 +120,17 @@ with no broadcast.
 ### 4.3 Join flow
 1. Client clicks a host -> join request over TCP with its PC name.
 2. Host shows topmost popup **"PC-07 wants to join. Allow / Deny"**;
-   auto-deny after **30 s** with no answer.
+   auto-deny after **30 s** with no answer. With **Allow everyone** ticked
+   in the host lobby, joins are accepted with no popup.
 3. **Allow:** host creates a virtual DS4, assigns the next free slot,
    forces a keyframe, starts sending media.
 4. **Deny / full:** client sees "Request denied" or "Host is full" and
    returns to the list.
 
 ### 4.4 During the session
-- Client heartbeat every 1 s. Host treats **5 s** silence as gone and
-  unplugs that pad.
+- Heartbeat every 1 s both ways. Host treats **5 s** silence as gone: the
+  pad stays plugged in at neutral for the 60 s rejoin window below, then
+  is unplugged (so the game keeps the player across a short drop).
 - Client that loses the host shows "Reconnecting..." for **10 s**, then
   returns to the list.
 - Leave or kick -> pad unplugged, slot freed.

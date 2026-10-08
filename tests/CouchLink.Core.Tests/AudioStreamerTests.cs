@@ -14,14 +14,14 @@ public class AudioStreamerTests
     private readonly AudioRecordingSender _sender = new();
 
     private AudioStreamer Streamer(Action<Exception>? onError = null) =>
-        new(_source, new TinyEncoder(), _sender, 47802, TimeProvider.System, onError);
+        new(_source, new TinyEncoder(), _sender, 47802, onError);
 
     [Fact]
     public async Task Each_frame_goes_to_every_client_with_the_previous_frame_attached()
     {
         using var streamer = Streamer();
-        streamer.ClientSeen(2, A);
-        streamer.ClientSeen(3, B);
+        streamer.AddTarget(2, A);
+        streamer.AddTarget(3, B);
         _source.Add(1);
         _source.Add(2);
         _source.Add(3);
@@ -46,7 +46,7 @@ public class AudioStreamerTests
     public async Task After_a_discontinuity_the_previous_frame_is_left_out_and_the_sequence_jumps()
     {
         using var streamer = Streamer();
-        streamer.ClientSeen(2, A);
+        streamer.AddTarget(2, A);
         _source.Add(1);
         _source.Add(2, discontinuity: true);
         _source.Add(3);
@@ -68,7 +68,7 @@ public class AudioStreamerTests
         await Until(() => streamer.Stats.FramesCaptured == 2);
         Assert.Equal(0, _sender.Count);
 
-        streamer.ClientSeen(2, A);
+        streamer.AddTarget(2, A);
         _source.Add(3);
         await Until(() => _sender.Count == 1);
 
@@ -82,7 +82,7 @@ public class AudioStreamerTests
     {
         var errors = new List<Exception>();
         using var streamer = Streamer(e => { lock (errors) errors.Add(e); });
-        streamer.ClientSeen(2, A);
+        streamer.AddTarget(2, A);
         _source.Add(1);
         _source.Add(99); // the encoder throws on this one
         _source.Add(3);
@@ -100,8 +100,8 @@ public class AudioStreamerTests
     public async Task Stats_count_frames_packets_bytes_and_clients()
     {
         using var streamer = Streamer();
-        streamer.ClientSeen(2, A);
-        streamer.ClientSeen(3, B);
+        streamer.AddTarget(2, A);
+        streamer.AddTarget(3, B);
         _source.Add(1);
 
         await Until(() => streamer.Stats.PacketsSent == 1);
@@ -111,5 +111,21 @@ public class AudioStreamerTests
         Assert.Equal(AudioPacket.HeaderSize + 2, s.BytesSent); // one packet, sent to both
         Assert.Equal(2, s.Clients);
         Assert.Equal("queue", streamer.SourceDescription);
+    }
+
+    [Fact]
+    public async Task A_removed_client_gets_nothing_more()
+    {
+        using var streamer = Streamer();
+        streamer.AddTarget(2, A);
+        streamer.AddTarget(3, B);
+        _source.Add(1);
+        await Until(() => _sender.Count == 2);
+
+        streamer.RemoveTarget(3);
+        _source.Add(2);
+        await Until(() => _sender.Count == 3);
+
+        Assert.Equal(A, _sender.Parsed()[^1].Target.Address);
     }
 }

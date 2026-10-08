@@ -8,8 +8,8 @@ public readonly record struct VideoSendStats(long FramesSent, long KeyframesSent
 
 /// <summary>
 /// Host side: on its own thread, pulls encoded frames from the source, packetizes each frame
-/// once and sends the packets to every current client. Clients are learned from their input
-/// packets (<see cref="ClientSeen"/>); a new client or a keyframe request forces a keyframe.
+/// once and sends the packets to every current client. Clients are added and removed by the
+/// session (<see cref="AddTarget"/>); a new client or a keyframe request forces a keyframe.
 /// Takes ownership of the source and the sender.
 /// </summary>
 public sealed class VideoStreamer : IDisposable
@@ -73,12 +73,21 @@ public sealed class VideoStreamer : IDisposable
         _sender.Send([reply], [new IPEndPoint(from, _videoPort)]);
     }
 
-    /// <summary>A client's input packet arrived; it gets video, and a keyframe if it is new.</summary>
-    public void ClientSeen(byte slot, IPAddress address)
+    /// <summary>The session let a client in (or back in): it gets video from the next frame, starting with a keyframe.</summary>
+    public void AddTarget(byte slot, IPAddress address)
     {
         lock (_gate)
-            if (_targets.Seen(slot, address, Now))
-                _keyframes.Request();
+        {
+            _targets.Add(slot, address);
+            _keyframes.Request();
+        }
+    }
+
+    /// <summary>The client left, was kicked or went silent: no more video for it.</summary>
+    public void RemoveTarget(byte slot)
+    {
+        lock (_gate)
+            _targets.Remove(slot);
     }
 
     public void RequestKeyframe()
@@ -117,7 +126,7 @@ public sealed class VideoStreamer : IDisposable
         {
             if (frame.Keyframe)
                 _keyframes.KeyframeSent(Now);
-            targets = _targets.Current(Now);
+            targets = _targets.Current();
         }
         Volatile.Write(ref _clients, targets.Count);
         if (targets.Count == 0)

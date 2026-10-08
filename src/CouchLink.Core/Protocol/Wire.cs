@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 
 namespace CouchLink.Core.Protocol;
 
-/// <summary>The first four bytes of every CouchLink datagram: magic "CL", version, packet type.</summary>
+/// <summary>The first four bytes of every CouchLink datagram and session frame: magic "CL", version, packet type.</summary>
 public static class Wire
 {
     public const ushort Magic = 0x4C43; // "CL"
@@ -14,6 +14,14 @@ public static class Wire
     public const byte TypeTimingPing = 4;
     public const byte TypeTimingReply = 5;
     public const byte TypeAudio = 6;
+    public const byte TypeHostAnnounce = 7;
+    public const byte TypeJoinRequest = 8;
+    public const byte TypeAccepted = 9;
+    public const byte TypeDenied = 10;
+    public const byte TypeHeartbeat = 11;
+    public const byte TypeLeave = 12;
+    public const byte TypeKicked = 13;
+    public const byte TypeHostEnded = 14;
 
     public static void WriteHeader(Span<byte> destination, byte type)
     {

@@ -62,4 +62,13 @@ public class OverlayTextTests
         Assert.Equal("Collecting stats...\nAudio x", OverlayText.Stats(null, "software", "Audio x"));
         Assert.Equal("Collecting stats...", OverlayText.Stats(null, "software"));
     }
+
+    [Fact]
+    public void A_session_line_overrides_the_picture_status()
+    {
+        var expected = $"{OverlayText.Reconnecting}\n{OverlayText.LeaveHint}";
+        Assert.Equal(expected, OverlayText.Status(true, false, TimeSpan.Zero, TimeSpan.FromSeconds(2), OverlayText.Reconnecting));
+        Assert.Equal(expected, OverlayText.Status(false, true, TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(2), OverlayText.Reconnecting));
+        Assert.Null(OverlayText.Status(true, false, TimeSpan.Zero, TimeSpan.FromSeconds(2), session: null));
+    }
 }

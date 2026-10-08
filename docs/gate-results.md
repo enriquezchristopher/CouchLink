@@ -44,3 +44,21 @@ Host / client PCs and sound devices: <fill in>
 | Two PCs, 30 minutes of a game: F2 audio buffer stays within 5 ms of where it started; no dropouts | <pass/fail> |
 | Unplug / switch the client's headphones mid-session: audio back within about 1 s | <pass/fail> |
 | Sound feels in time with the picture (no visible lag between a hit and its sound) | <pass/fail> |
+
+## Lobby & sessions (Plan 7)
+
+Date: <fill in>
+Host / client PCs: <fill in>
+
+| Check | Result |
+|---|---|
+| One PC, host + client (`--windowed-player`): host listed as "<PC> · 1/10 players", popup appears, Allow -> playing as P2 | <pass/fail> |
+| Two PCs: Deny -> "Request denied."; no answer for 30 s -> "The host didn't answer." | <pass/fail> |
+| Two PCs: Allow everyone -> joins with no popup | <pass/fail> |
+| Kick -> "You were removed by the host."; slot freed | <pass/fail> |
+| Stop hosting -> "Host ended the session." on every client | <pass/fail> |
+| Pull the client's cable for 5 s -> "Reconnecting...", then playing again on the same slot and the same 2K player without touching anything | <pass/fail> |
+| Pull the client's cable for 20 s -> "Reconnecting...", then "Lost the host." after 10 s; pick the host again within the minute -> same slot and the same 2K player, no popup | <pass/fail> |
+| Kill and restart the client -> same slot, no popup | <pass/fail> |
+| Change resolution mid-session -> clients' picture back within about 1 s | <pass/fail> |
+| Three or more clients join at once -> distinct slots | <pass/fail> |
