@@ -54,6 +54,11 @@ public static class ProfileFile
         {
             return ProfileResult.Failure(e.Message);
         }
+        catch (Exception e) when (e is InvalidOperationException or ArgumentException)
+        {
+            // Text the parser accepts but can't turn into a string, e.g. half an emoji escape ("\uD83D").
+            return ProfileResult.Failure($"Not a valid profile file: {e.Message}");
+        }
     }
 
     public static string Save(ControlProfile profile)

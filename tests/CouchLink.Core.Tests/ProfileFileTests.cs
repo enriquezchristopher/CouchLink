@@ -120,6 +120,19 @@ public class ProfileFileTests
         Assert.Equal("\"name\" must be 1-60 characters",
             ProfileFile.Load(J($"{{'format':1,'name':'{new string('x', 61)}','controls':{{}}}}")).Error);
 
+    [Theory]
+    [InlineData("{'format':1,'name':'Tir \\uD83D','controls':{}}")]
+    [InlineData("{'format':1,'name':'T','game':'2K \\uD83D','controls':{}}")]
+    [InlineData("{'format':1,'name':'T','controls':{'Square':{'label':'Shoot \\uD83D'}}}")]
+    [InlineData("{'format':1,'name':'T','controls':{'Square':{'keys':['\\uD83D']}}}")]
+    [InlineData("{'format':1,'name':'T','controls':{'Sq\\uD83D':{'keys':['J']}}}")]
+    public void Half_an_emoji_escape_is_refused_not_thrown(string json)
+    {
+        var error = ProfileFile.Load(J(json)).Error;
+        Assert.NotNull(error);
+        Assert.StartsWith("Not a valid profile file", error);
+    }
+
     [Fact]
     public void Broken_json_names_the_line()
     {
