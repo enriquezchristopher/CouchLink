@@ -28,4 +28,14 @@ public class VirtualKeysTests
     {
         Assert.Equal(vkey, VirtualKeys.FromRawKeyboard(vkey, makeCode, flags));
     }
+
+    [Theory]
+    [InlineData(0x12, 0x38, KeyDown, VirtualKeys.LMenu)]
+    [InlineData(0x12, 0x38, Extended, VirtualKeys.RMenu)]
+    [InlineData(0x12, 0x38, Extended | KeyUp, VirtualKeys.RMenu)]
+    public void Raw_Alt_becomes_left_or_right_alt(ushort vkey, ushort makeCode, ushort flags, ushort expected)
+    {
+        // WPF (the controls editor) reports 0xA4/0xA5; Raw Input (the game) reports 0x12.
+        Assert.Equal(expected, VirtualKeys.FromRawKeyboard(vkey, makeCode, flags));
+    }
 }
