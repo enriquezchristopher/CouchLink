@@ -8,11 +8,11 @@ public enum GpuSchedulingClass
 }
 
 /// <summary>
-/// How the host's capture and encode get ahead of the game on the GPU, as Sunshine does: the
-/// capture device's GPU thread priority goes to the maximum and the process's GPU scheduling class
-/// to realtime, or high if Windows refuses. A game that keeps the GPU busy otherwise starves the
-/// stream (an RX 550 under NBA 2K22 sent ~26 fps). NVIDIA gets high only: Sunshine avoids realtime
-/// there because it can misbehave with hardware-accelerated GPU scheduling.
+/// How the host's capture and encode get ahead of the game on the GPU: the capture device's GPU
+/// thread priority goes to the maximum and the process's GPU scheduling class to realtime, or high
+/// if Windows refuses. A game that keeps the GPU busy otherwise starves the stream (an RX 550 under
+/// NBA 2K22 sent ~26 fps). NVIDIA gets high only: realtime there can misbehave with
+/// hardware-accelerated GPU scheduling.
 /// </summary>
 public static class GpuPriorityPolicy
 {

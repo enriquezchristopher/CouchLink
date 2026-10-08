@@ -170,7 +170,7 @@ one shared stream.
   hardware encoder - may lag with heavy games." If the vendor's hardware
   encoder fails to open (e.g. a driver problem), the host falls back to
   x264 with the same warning.
-- **GPU priority** (as Sunshine does): the host raises its capture device's
+- **GPU priority:** the host raises its capture device's
   GPU thread priority and its process's GPU scheduling class (realtime,
   or high where Windows refuses; high only on NVIDIA), so a game that
   keeps the GPU busy can't starve capture and encoding. The host lobby's

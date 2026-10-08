@@ -7,7 +7,7 @@ public class GpuPriorityPolicyTests
     [Fact]
     public void Amd_hosts_ask_for_realtime_then_high()
     {
-        // Like Sunshine: the host's capture and encode jump the GPU queue ahead of the game, so a
+        // The host's capture and encode jump the GPU queue ahead of the game, so a
         // game that keeps the GPU busy can't starve the stream (the RX 550 fell to ~26 fps).
         Assert.Equal([GpuSchedulingClass.Realtime, GpuSchedulingClass.High],
             GpuPriorityPolicy.ClassesToTry(EncoderChoice.AmdVendorId));
@@ -16,7 +16,7 @@ public class GpuPriorityPolicyTests
     [Fact]
     public void Nvidia_hosts_ask_only_for_high()
     {
-        // Sunshine avoids realtime on NVIDIA: with hardware-accelerated GPU scheduling it can misbehave.
+        // Realtime on NVIDIA can misbehave with hardware-accelerated GPU scheduling.
         Assert.Equal([GpuSchedulingClass.High], GpuPriorityPolicy.ClassesToTry(EncoderChoice.NvidiaVendorId));
     }
 
