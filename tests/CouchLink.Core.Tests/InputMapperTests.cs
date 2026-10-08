@@ -248,4 +248,21 @@ public class InputMapperTests
         }
         await swapper;
     }
+
+    [Fact]
+    public void A_profile_loaded_while_a_key_is_held_presses_nothing()
+    {
+        var settings = new ControlSettings();
+        using var mapper = new InputMapper(settings);
+        mapper.KeyDown(K);
+        Assert.Equal(PadButtons.Cross, mapper.Tick(0.001).Buttons);
+
+        settings.Apply(new ControlProfile("P", null, 5, false,
+            new Dictionary<PadControl, IReadOnlyList<ushort>> { [PadControl.Circle] = [K] },
+            new Dictionary<PadControl, string>()));
+
+        Assert.Equal(PadState.Neutral, mapper.Tick(0.001)); // released, not Circle until pressed again
+        mapper.KeyDown(K);
+        Assert.Equal(PadButtons.Circle, mapper.Tick(0.001).Buttons);
+    }
 }
