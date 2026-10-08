@@ -23,13 +23,13 @@ internal sealed class ClientStreams : IDisposable
     }
 
     public static bool TryStart(IPAddress host, InputSender sender, PlayerOptions options, string? savePath,
-        Action leave, out ClientStreams? streams, out string? error)
+        Action leave, Func<string?> sessionStatus, out ClientStreams? streams, out string? error)
     {
         streams = null;
         if (!VideoReceiver.TryCreate(Ports.Video, out var receiver, out error))
             return false;
         var audio = new ClientAudioService(host);
-        if (!ClientVideoService.TryStart(sender, options, savePath, leave, audio.Describe, out var video, out error))
+        if (!ClientVideoService.TryStart(sender, options, savePath, leave, audio.Describe, sessionStatus, out var video, out error))
         {
             audio.Dispose();
             receiver!.Dispose();
