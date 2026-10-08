@@ -49,7 +49,9 @@ Settled in brainstorming (2026-10-08):
 - **Single instance**, except that a copy started with `--windowed-player`
   may run alongside, so one-PC testing still works.
 - **Approach A:** rules live in `CouchLink.Core` as plain tested code; the
-  hook runs on the player window's own thread, never the WPF UI thread.
+  hook is switched on and off by the player window and runs on a thread of
+  its own that only pumps messages, never the WPF UI thread or the player
+  thread (Windows silently drops a low-level hook whose thread is too slow).
 
 ### Success criteria
 - Mid-game, the Windows key, Alt+Tab, Alt+Esc and Ctrl+Esc do nothing;
@@ -156,7 +158,9 @@ Hidden early if F1 is pressed.
   - Esc with Alt down (Alt+Esc) or Ctrl down (Ctrl+Esc).
   - Everything else: no. Tab alone, Alt alone, Alt+F4, Ctrl+Alt+Q and Ctrl+Alt+C pass.
 - `KeyboardBlocker` (CouchLink.Video): `SetWindowsHookEx(WH_KEYBOARD_LL)` on
-  the player thread, which already pumps messages. The callback reads Alt
+  a dedicated thread that only pumps messages (the player thread decodes and
+  presents; a slow hook thread lags every keystroke and Windows silently
+  removes the hook). The callback reads Alt
   from `LLKHF_ALTDOWN` and Ctrl from `GetAsyncKeyState`, asks the filter,
   and returns 1 to swallow or calls `CallNextHookEx`. It catches every
   exception and passes the key on if anything goes wrong.
