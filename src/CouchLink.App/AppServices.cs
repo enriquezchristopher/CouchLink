@@ -1,6 +1,7 @@
 using System.IO;
 using CouchLink.Core;
 using CouchLink.Core.Diagnostics;
+using CouchLink.Core.Input;
 
 namespace CouchLink.App;
 
@@ -19,4 +20,7 @@ internal static class AppServices
 
     /// <summary>Command-line developer switches, read at startup.</summary>
     public static DevOptions Options { get; set; } = new(false, null);
+
+    /// <summary>The player's controls for this run: shared by the input mapper, the F1 panel and the editor.</summary>
+    public static ControlSettings Controls { get; } = new();
 }

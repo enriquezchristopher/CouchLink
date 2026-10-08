@@ -55,6 +55,7 @@ internal static class CrashHandler
         string? saveError = null;
         try
         {
+            Input.NativeMethods.ClipCursor(IntPtr.Zero); // never leave the pointer trapped in a dead player
             AppServices.Log.Write($"CRASH ({source}): {exception.GetType().FullName}: {exception.Message}");
             var context = SystemInfo.Collect(SafeMode());
             var report = CrashReportBuilder.Build(context, exception, AppServices.Log.Tail(), Redactor.ForThisMachine());

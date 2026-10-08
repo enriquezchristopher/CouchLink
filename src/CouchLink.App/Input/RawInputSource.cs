@@ -91,6 +91,8 @@ internal sealed class RawInputSource : IDisposable
         Button(m.ButtonFlags, RI_MOUSE_LEFT_DOWN, RI_MOUSE_LEFT_UP, VirtualKeys.LButton);
         Button(m.ButtonFlags, RI_MOUSE_RIGHT_DOWN, RI_MOUSE_RIGHT_UP, VirtualKeys.RButton);
         Button(m.ButtonFlags, RI_MOUSE_MIDDLE_DOWN, RI_MOUSE_MIDDLE_UP, VirtualKeys.MButton);
+        Button(m.ButtonFlags, RI_MOUSE_BUTTON_4_DOWN, RI_MOUSE_BUTTON_4_UP, VirtualKeys.XButton1);
+        Button(m.ButtonFlags, RI_MOUSE_BUTTON_5_DOWN, RI_MOUSE_BUTTON_5_UP, VirtualKeys.XButton2);
     }
 
     private void Button(ushort flags, ushort down, ushort up, ushort vk)

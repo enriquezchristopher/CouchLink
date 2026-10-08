@@ -14,6 +14,9 @@ internal static partial class NativeMethods
     public const ushort RI_MOUSE_LEFT_DOWN = 0x0001, RI_MOUSE_LEFT_UP = 0x0002;
     public const ushort RI_MOUSE_RIGHT_DOWN = 0x0004, RI_MOUSE_RIGHT_UP = 0x0008;
     public const ushort RI_MOUSE_MIDDLE_DOWN = 0x0010, RI_MOUSE_MIDDLE_UP = 0x0020;
+    public const ushort RI_MOUSE_BUTTON_4_DOWN = 0x0040, RI_MOUSE_BUTTON_4_UP = 0x0080;
+    public const ushort RI_MOUSE_BUTTON_5_DOWN = 0x0100, RI_MOUSE_BUTTON_5_UP = 0x0200;
+    public const int ASFW_ANY = -1;
 
     [StructLayout(LayoutKind.Sequential)]
     public struct RAWINPUTDEVICE
@@ -70,6 +73,19 @@ internal static partial class NativeMethods
 
     [LibraryImport("user32.dll")]
     public static partial IntPtr GetForegroundWindow();
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetForegroundWindow(IntPtr hwnd);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool AllowSetForegroundWindow(int processId);
+
+    /// <summary>With 0: lets the pointer go anywhere again.</summary>
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool ClipCursor(IntPtr rect);
 
     [LibraryImport("winmm.dll")]
     public static partial uint timeBeginPeriod(uint milliseconds);

@@ -6,6 +6,8 @@
         <TextBlock x:Name="Hint" Margin="0,8,0,0" Foreground="Gray" TextWrapping="Wrap"/>
         <!-- Not focusable: Raw Input keys still reach a focused control, so Space or Enter in the game must not press it. -->
         <Button x:Name="LeaveButton" Height="40" Margin="0,16,0,0" Focusable="False"/>
+        <Button x:Name="ControlsButton" Content="⚙ Controls" Height="32" Margin="0,8,0,0" Focusable="False"
+                HorizontalAlignment="Left" Padding="12,0"/>
         <Expander Header="Details" Margin="0,16,0,0" Focusable="False">
             <TextBlock x:Name="DetailsText" FontFamily="Consolas" TextWrapping="Wrap" Margin="0,4,0,0"/>
         </Expander>

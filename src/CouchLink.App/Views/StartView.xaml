@@ -8,8 +8,7 @@
             <Button x:Name="HostButton" Content="Host" Height="72" FontSize="24" Margin="0,32,0,0"/>
             <Button x:Name="JoinButton" Content="Join" Height="72" FontSize="24" Margin="0,12,0,0"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,24,0,0">
-                <Button x:Name="ControlsButton" Content="⚙ Controls" Padding="12,4" IsEnabled="False"
-                        ToolTip="Changing keys arrives in a later version" ToolTipService.ShowOnDisabled="True"/>
+                <Button x:Name="ControlsButton" Content="⚙ Controls" Padding="12,4"/>
                 <Button x:Name="CrashReportsButton" Content="Crash reports" Padding="12,4" Margin="8,0,0,0"/>
             </StackPanel>
         </StackPanel>

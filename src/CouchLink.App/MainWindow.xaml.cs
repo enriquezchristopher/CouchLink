@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using CouchLink.App.Input;
 using CouchLink.App.Views;
 
 namespace CouchLink.App;
@@ -44,6 +45,7 @@ public partial class MainWindow : Window, IClientUi
         var start = new StartView();
         start.HostClicked += ShowHost;
         start.JoinClicked += () => ShowJoinList(null);
+        start.ControlsClicked += () => ControlsWindow.Open(this);
         start.CrashReportsClicked += OpenCrashReports;
         Show(start);
         AppServices.DescribeMode = () => "Idle";
@@ -74,6 +76,7 @@ public partial class MainWindow : Window, IClientUi
     {
         _sessionView = new SessionView();
         _sessionView.LeaveClicked += LeaveSession;
+        _sessionView.ControlsClicked += () => ControlsWindow.Open(this);
         Show(_sessionView); // closes the join list, freeing UDP 47800
         _session = new ClientSessionService(host, hostName, Dispatcher, this);
         UpdateSessionView();
@@ -85,7 +88,7 @@ public partial class MainWindow : Window, IClientUi
         if (_session is not { } session || _closed)
             return;
         if (!ClientPlay.TryStart(this, session.Host, slot, () => Dispatcher.InvokeAsync(LeaveSession),
-                () => session.PlayerStatus, out _play, out var error))
+                () => session.PlayerStatus, () => Dispatcher.InvokeAsync(OpenControlsOverGame), out _play, out var error))
         {
             session.Fail(error!);
             return;
@@ -124,6 +127,20 @@ public partial class MainWindow : Window, IClientUi
         _sessionView = null;
         AppServices.DescribeMode = () => "Idle";
         Activate();
+    }
+
+    /// <summary>Ctrl+Alt+C in the player: the editor on top of the game, and back to the game when it closes.</summary>
+    private void OpenControlsOverGame()
+    {
+        if (_play is null || _closed)
+            return;
+        ControlsWindow.Open(this, overGame: true, closed: ReturnToGame);
+    }
+
+    private void ReturnToGame()
+    {
+        if (_play is { PlayerWindow: not 0 } play)
+            NativeMethods.SetForegroundWindow(play.PlayerWindow);
     }
 
     private void OpenCrashReports()
