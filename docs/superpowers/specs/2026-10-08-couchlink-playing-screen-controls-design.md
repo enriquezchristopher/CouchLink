@@ -1,6 +1,6 @@
 # CouchLink Playing Screen, Controls & Single Instance (v1.4 milestone, part 2: #24, #25, #26)
 
-Status: Draft for review
+Status: Approved; additions from planning (Ctrl+Alt+C opens the editor over the game; one control per line on the F1 panel; Raw Alt reported as Left/Right Alt)
 Date: 2026-10-08
 Author: Christopher Enriquez (@enriquezchristopher) (with Claude Code)
 
@@ -125,6 +125,9 @@ and the session screen; one at a time (a second click focuses it).
 - Sensitivity slider 1-10 with ticks, Invert Y checkbox, Reset to default.
 - While the editor has focus, the game gets no input, because input counts
   only while the main window or the player is in front (unchanged).
+- Also opened over the game with **Ctrl+Alt+C** in the player (topmost, no
+  owner), because Alt+Tab and the Windows key are blocked and the pointer
+  is held in the player; closing it returns to the game.
 
 ## 3. Playing screen
 
@@ -151,7 +154,7 @@ Hidden early if F1 is pressed.
   - LWin, RWin: always (down and up), which also stops every Win+ combo.
   - Tab with Alt down (Alt+Tab).
   - Esc with Alt down (Alt+Esc) or Ctrl down (Ctrl+Esc).
-  - Everything else: no. Tab alone, Alt alone, Alt+F4, Ctrl+Alt+Q pass.
+  - Everything else: no. Tab alone, Alt alone, Alt+F4, Ctrl+Alt+Q and Ctrl+Alt+C pass.
 - `KeyboardBlocker` (CouchLink.Video): `SetWindowsHookEx(WH_KEYBOARD_LL)` on
   the player thread, which already pumps messages. The callback reads Alt
   from `LLKHF_ALTDOWN` and Ctrl from `GetAsyncKeyState`, asks the filter,
