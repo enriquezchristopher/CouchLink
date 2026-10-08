@@ -50,18 +50,30 @@ public static class OverlayText
         : hostPaused ? Paused
         : null;
 
-    /// <summary>The F1 panel: every control and its keys, grouped as in the editor, read when drawn.</summary>
+    /// <summary>
+    /// The F1 panel: the loaded profile, then every control and its keys, grouped as in the editor and
+    /// led by its action label when it has one. Read when drawn.
+    /// </summary>
     public static string Controls(ControlSettings settings)
     {
-        var lines = new List<string> { "Controls (F1 hides, Ctrl+Alt+C changes keys)" };
+        const string Help = "(F1 hides, Ctrl+Alt+C changes keys)";
+        string title = settings.ProfileName is { } profile
+            ? $"Controls: {profile}{(settings.ProfileChanged ? " (changed)" : "")} {Help}"
+            : $"Controls {Help}";
+        var names = KeyNames.Groups
+            .SelectMany(g => g.Controls)
+            .ToDictionary(c => c, c => KeyNames.Labelled(c, settings.LabelFor(c)));
+        int width = Math.Max(18, names.Values.Max(n => n.Length) + 2);
+
+        var lines = new List<string> { title };
         foreach (var (_, controls) in KeyNames.Groups)
         {
             lines.Add("");
             foreach (var control in controls)
-                lines.Add($"{KeyNames.Of(control),-18}{KeyNames.Describe(settings.Layout, control)}");
+                lines.Add(names[control].PadRight(width) + KeyNames.Describe(settings.Layout, control));
         }
         lines.Add("");
-        lines.Add($"{"Right stick",-18}Mouse (sensitivity {settings.SensitivityStep}{(settings.InvertY ? ", inverted" : "")})");
+        lines.Add("Right stick".PadRight(width) + $"Mouse (sensitivity {settings.SensitivityStep}{(settings.InvertY ? ", inverted" : "")})");
         return string.Join('\n', lines);
     }
 

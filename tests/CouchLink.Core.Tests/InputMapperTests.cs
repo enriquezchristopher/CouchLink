@@ -219,4 +219,50 @@ public class InputMapperTests
         settings.SetInvertY(true); // would release K if still subscribed
         Assert.Equal(PadButtons.Cross, m.Tick(0.001).Buttons);
     }
+
+    [Fact]
+    public async Task A_tick_reads_one_layout_for_every_control()
+    {
+        var layout = KeyLayout.CreateDefault();
+        var onCross = new Dictionary<PadControl, IReadOnlyList<ushort>> { [PadControl.Cross] = [K] };
+        var onCircle = new Dictionary<PadControl, IReadOnlyList<ushort>> { [PadControl.Circle] = [K] };
+        layout.Replace(onCross);
+        var mapper = new InputMapper(layout, new MouseStick());
+        mapper.KeyDown(K);
+
+        using var stop = new CancellationTokenSource(TimeSpan.FromMilliseconds(300));
+        var swapper = Task.Run(() =>
+        {
+            while (!stop.IsCancellationRequested)
+            {
+                layout.Replace(onCircle);
+                layout.Replace(onCross);
+            }
+        });
+        int ticks = 0;
+        while (!stop.IsCancellationRequested)
+        {
+            var buttons = mapper.Tick(0.001).Buttons & (PadButtons.Cross | PadButtons.Circle);
+            Assert.True(buttons is PadButtons.Cross or PadButtons.Circle, $"tick {ticks}: {buttons}");
+            ticks++;
+        }
+        await swapper;
+    }
+
+    [Fact]
+    public void A_profile_loaded_while_a_key_is_held_presses_nothing()
+    {
+        var settings = new ControlSettings();
+        using var mapper = new InputMapper(settings);
+        mapper.KeyDown(K);
+        Assert.Equal(PadButtons.Cross, mapper.Tick(0.001).Buttons);
+
+        settings.Apply(new ControlProfile("P", null, 5, false,
+            new Dictionary<PadControl, IReadOnlyList<ushort>> { [PadControl.Circle] = [K] },
+            new Dictionary<PadControl, string>()));
+
+        Assert.Equal(PadState.Neutral, mapper.Tick(0.001)); // released, not Circle until pressed again
+        mapper.KeyDown(K);
+        Assert.Equal(PadButtons.Circle, mapper.Tick(0.001).Buttons);
+    }
 }

@@ -23,4 +23,9 @@
     <ProjectReference Include="..\..\src\CouchLink.Core\CouchLink.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The profiles shipped in the release zip, checked by ShippedProfilesTests. -->
+    <None Include="..\..\src\CouchLink.App\profiles\*.json" LinkBase="profiles" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -51,8 +51,10 @@ Goals:
   multiple game copies).
 - Internet / WAN play, Wi-Fi tuning, encryption of the stream.
 - Physical gamepads on clients, rumble/lightbar feedback.
-- Persisting custom key layouts (server share, profiles).
-- Per-game key presets; staff/admin control panel; session billing.
+- Saving the player's layout automatically between runs; sharing profiles
+  over the network (profile files are covered by the controller profiles
+  design).
+- Staff/admin control panel; session billing.
 - UDP multicast (possible later optimization, see section 4.6).
 - Intel host GPUs (QuickSync); clients may have any GPU.
 
@@ -284,6 +286,14 @@ default**, the mouse sensitivity slider (steps 1-10) and Invert Y. Edits
 apply at once and are kept in memory only, reset when CouchLink closes, by
 design. Details: [playing screen & controls
 design](2026-10-08-couchlink-playing-screen-controls-design.md).
+
+**Profiles:** a dropdown lists the profile files in a `profiles\` folder
+next to the exe; **Browse…** loads one from anywhere; **Save as…** writes
+the current controls as one. A profile can name each button for its game
+("Shoot"), shown in the editor and on the F1 panel. Loading a profile is a
+choice, not saved state: it resets with everything else when CouchLink
+closes. Details: [controller profiles
+design](2026-10-08-couchlink-controller-profiles-design.md).
 
 ## 7. Error Handling & Diagnostics
 
