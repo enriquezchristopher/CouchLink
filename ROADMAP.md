@@ -1,6 +1,6 @@
 # CouchLink Roadmap
 
-**Goal:** let customers on different PCs in a cafe or LAN room play couch
+**Goal:** let customers on different PCs in a café or LAN room play couch
 co-op games together. One PC hosts the game; every other PC streams its
 screen and sound and gets **its own virtual controller** on the host, so the
 game sees separate players. Up to 10 players, entirely on the local network,
@@ -45,35 +45,47 @@ Clients see the host's screen with ~20-35 ms latency.
 - [#17](https://github.com/enriquezchristopher/CouchLink/issues/17) Client hardware decode and low-latency display
 - [#18](https://github.com/enriquezchristopher/CouchLink/issues/18) F2 stats overlay
 
-## v1.3 — Audio (next)
+## ✅ v1.3 — Audio (released in 1.4.0)
 
-Clients hear the game. Likely to ship as 1.4.0.
+Clients hear the game.
 
 - [#19](https://github.com/enriquezchristopher/CouchLink/issues/19) Capture host audio and encode with Opus
 - [#20](https://github.com/enriquezchristopher/CouchLink/issues/20) Client playback with a ~15 ms jitter buffer
 
-## v1.4 — Lobby & sessions
+## ✅ v1.4 — Lobby & sessions (released in 1.5.0 and 1.6.0)
 
 The real app replaces the temporary dev window.
 
 - [#21](https://github.com/enriquezchristopher/CouchLink/issues/21) LAN discovery and the join list
 - [#22](https://github.com/enriquezchristopher/CouchLink/issues/22) Join request, host approval popup and slot assignment
 - [#23](https://github.com/enriquezchristopher/CouchLink/issues/23) Heartbeat, timeouts, rejoin and kick
-- [#24](https://github.com/enriquezchristopher/CouchLink/issues/24) Playing screen: fullscreen, Ctrl+Alt+Q, F1 help, Win-key/Alt+Tab block, mouse lock (fullscreen and Ctrl+Alt+Q shipped in 1.3.0)
+- [#24](https://github.com/enriquezchristopher/CouchLink/issues/24) Playing screen: fullscreen, Ctrl+Alt+Q, F1 help, Win-key/Alt+Tab block, mouse lock
 - [#25](https://github.com/enriquezchristopher/CouchLink/issues/25) Controls editor
 - [#26](https://github.com/enriquezchristopher/CouchLink/issues/26) Single instance
 
-## v1.5 — Café-ready install
+## ✅ Performance on older GPUs (released in 1.6.1; #53 ships in 1.6.2)
 
-Easy to deploy to every PC in a cafe.
+Found while testing on an AMD RX 550 host running NBA 2K22.
+
+- [#51](https://github.com/enriquezchristopher/CouchLink/pull/51) Older AMD GPUs encode on the GPU (AMF low-latency mode) instead of falling back to the CPU
+- [#53](https://github.com/enriquezchristopher/CouchLink/pull/53) The host's capture and encoding get GPU priority over the game, so a busy game can't starve the stream
+
+## v1.5 — Café-ready install (next)
+
+Easy to deploy to every PC in a café.
 
 - [#27](https://github.com/enriquezchristopher/CouchLink/issues/27) Installer: app, ViGEmBus driver and firewall rules
 - [#28](https://github.com/enriquezchristopher/CouchLink/issues/28) Ship FFmpeg with correct GPL notices
-- [#29](https://github.com/enriquezchristopher/CouchLink/issues/29) Setup guide for cafe owners
+- [#29](https://github.com/enriquezchristopher/CouchLink/issues/29) Setup guide for café owners (the [guide](docs/cafe-setup-guide.md) exists for the zip; the installer will update it)
 
 ## Game compatibility
 
 - [#30](https://github.com/enriquezchristopher/CouchLink/issues/30) Check whether NBA 2K14 works
+- [#49](https://github.com/enriquezchristopher/CouchLink/issues/49) Host option: virtual controller type (DualShock 4 or Xbox 360), for games like NBA 2K14 that don't read a DualShock 4's sticks
+
+## Later
+
+- [#50](https://github.com/enriquezchristopher/CouchLink/issues/50) Self-serve diagnostics: everything we ask a reporter for, from inside the app
 
 ## Not planned
 
