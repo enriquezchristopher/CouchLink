@@ -9,7 +9,10 @@
             <TextBlock Text="Stream" VerticalAlignment="Center"/>
             <ComboBox x:Name="ResolutionBox" Width="90" Margin="8,0"/>
             <ComboBox x:Name="FrameRateBox" Width="80"/>
+            <ComboBox x:Name="QualityBox" Width="100" Margin="8,0,0,0"/>
         </StackPanel>
+        <TextBlock x:Name="BudgetWarning" DockPanel.Dock="Top" Margin="0,6,0,0" TextWrapping="Wrap"
+                   Foreground="DarkOrange" Visibility="Collapsed"/>
         <CheckBox x:Name="AllowEveryoneBox" DockPanel.Dock="Top" Margin="0,12,0,0"
                   Content="Allow everyone (no popup when someone joins)"/>
         <Button x:Name="StopButton" DockPanel.Dock="Bottom" Content="Stop hosting" Height="40" Margin="0,12,0,0"/>
