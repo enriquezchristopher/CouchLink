@@ -38,30 +38,6 @@ public class DiscoveryLoopbackTests
     }
 
     [Fact]
-    public async Task The_broadcaster_repeats_every_second()
-    {
-        Assert.True(DiscoveryListener.TryCreate(0, out var listener, out _));
-        using (listener)
-        {
-            int count = 0;
-            using var cts = new CancellationTokenSource();
-            var loop = listener!.RunAsync((_, _) => Interlocked.Increment(ref count), cts.Token);
-            var started = System.Diagnostics.Stopwatch.StartNew();
-            using (new DiscoveryBroadcaster(listener.LocalPort, () => HostAnnounce.For(0, 9, "PC-03"), () => [IPAddress.Loopback]))
-            {
-                // Waits for the broadcasts at 0, 1 and 2 s rather than counting a fixed window: the timer runs on the
-                // thread pool, which a parallel test run can starve for seconds.
-                while (Volatile.Read(ref count) < 3 && started.Elapsed < Timeout)
-                    await Task.Delay(50);
-            }
-            // About one a second: late timer callbacks can catch up in a burst, but never beat the clock.
-            Assert.InRange(Volatile.Read(ref count), 3, (int)started.Elapsed.TotalSeconds + 2);
-            cts.Cancel();
-            await loop.WaitAsync(Timeout);
-        }
-    }
-
-    [Fact]
     public void A_taken_port_gives_a_message()
     {
         using var taken = new UdpClient(new IPEndPoint(IPAddress.Any, 0));

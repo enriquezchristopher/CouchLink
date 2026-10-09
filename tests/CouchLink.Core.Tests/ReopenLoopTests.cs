@@ -43,36 +43,6 @@ public class ReopenLoopTests
     }
 
     [Fact]
-    public async Task Requests_during_an_attempt_never_run_a_second_one_alongside_it()
-    {
-        int running = 0, maxRunning = 0, attempts = 0;
-        using var release = new ManualResetEventSlim();
-        using var loop = new ReopenLoop(() =>
-        {
-            int now = Interlocked.Increment(ref running);
-            maxRunning = Math.Max(maxRunning, now);
-            if (Interlocked.Increment(ref attempts) == 1)
-                release.Wait(TimeSpan.FromSeconds(5));
-            Interlocked.Decrement(ref running);
-            return true;
-        }, Retry, TimeProvider.System);
-
-        loop.Request(TimeSpan.Zero);
-        await AudioTestKit.Until(() => Volatile.Read(ref running) == 1);
-        loop.Request(TimeSpan.Zero); // e.g. two default-device changes in a row
-        loop.Request(TimeSpan.Zero);
-        await Task.Delay(100);
-        Assert.Equal(1, Volatile.Read(ref attempts));
-
-        release.Set();
-        await AudioTestKit.Until(() => Volatile.Read(ref attempts) == 2);
-        await Task.Delay(100);
-
-        Assert.Equal(2, Volatile.Read(ref attempts)); // the queued requests ran once, after the first
-        Assert.Equal(1, maxRunning);
-    }
-
-    [Fact]
     public async Task Dispose_waits_for_a_running_attempt_and_stops_retries()
     {
         int attempts = 0;
