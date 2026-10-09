@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.11.0...v1.12.0) (2026-10-09)
+
+
+### Features
+
+* add the app icon and a GitHub social preview ([bd12763](https://github.com/enriquezchristopher/CouchLink/commit/bd12763e496650edfbc2add7c485fa410b758385))
+
 ## [1.11.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.10.2...v1.11.0) (2026-10-09)
 
 
