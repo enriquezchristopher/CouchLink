@@ -61,7 +61,7 @@ internal sealed partial class ApprovalPopup : Window
     {
         var countdown = AskCountdown.For(elapsed, HostSession.AskTimeout);
         Remaining.Text = countdown.Text;
-        CountdownBar.Width = Math.Max(0, CountdownTrack.ActualWidth * countdown.Remaining);
+        CountdownScale.ScaleX = countdown.Remaining;
     }
 
     private void Answer(Action answer)
