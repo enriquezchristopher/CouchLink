@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.9.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.8.0...v1.9.0) (2026-10-09)
+
+
+### Features
+
+* **app:** the controls editor binds keys to the right stick ([0516e28](https://github.com/enriquezchristopher/CouchLink/commit/0516e2802b468dd1e7af3ee224de7517f7da683b))
+* **app:** the NBA 2K22 profile puts the pro stick on Num 8/2/4/6 ([0a5484d](https://github.com/enriquezchristopher/CouchLink/commit/0a5484d9498640f3a7cef99e5fc9324d7357a402))
+* bind keys to the right stick, alongside the mouse ([563ba75](https://github.com/enriquezchristopher/CouchLink/commit/563ba7548aebef155d7c0547f71cc42d83f238d4))
+* **input:** held right-stick keys set the stick, the mouse takes over when they're released ([392e540](https://github.com/enriquezchristopher/CouchLink/commit/392e540150160739e754b0cb475a1686f09123d2))
+* **input:** right-stick directions as bindable controls; F1 lists them once one is bound ([a5d774a](https://github.com/enriquezchristopher/CouchLink/commit/a5d774a517784974aa8e79d6d88f5c4a10ffd9e9))
+
+
+### Bug Fixes
+
+* **input:** mouse movement while a right-stick key is held can't slip through on release ([734e7db](https://github.com/enriquezchristopher/CouchLink/commit/734e7db34f38eb870d4d07f9fcddef5607553dab))
+* **video:** overlay text taller than the player window shrinks to fit ([f86b450](https://github.com/enriquezchristopher/CouchLink/commit/f86b450e3ba913c845e69bf016933b52bc2a6b31))
+
 ## [1.8.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.7.0...v1.8.0) (2026-10-09)
 
 
