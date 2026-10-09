@@ -1,7 +1,7 @@
 {
   // NBA 2K22's own PC keyboard keys, each on the DualShock 4 button that does
-  // the same thing in the game. The pro stick (Num 8/4/2/6 in the game) stays
-  // on the mouse: CouchLink's right stick is always the mouse.
+  // the same thing in the game. The pro stick is on Num 8/2/4/6 as in the
+  // game; the mouse still moves it while none of those keys is held.
   // Keep Num Lock on so the number pad keys work.
   "format": 1,
   "name": "NBA 2K22",
@@ -13,6 +13,10 @@
     "LeftDown":  { "keys": ["S"] },
     "LeftLeft":  { "keys": ["A"] },
     "LeftRight": { "keys": ["D"] },
+    "RightUp":    { "keys": ["Num8"], "label": "Pro stick up" },
+    "RightDown":  { "keys": ["Num2"], "label": "Pro stick down" },
+    "RightLeft":  { "keys": ["Num4"], "label": "Pro stick left" },
+    "RightRight": { "keys": ["Num6"], "label": "Pro stick right" },
     "DpadUp":    { "keys": ["Up"], "label": "Double team" },
     "DpadDown":  { "keys": ["Down"], "label": "Substitutions" },
     "DpadLeft":  { "keys": ["Left"], "label": "Quick plays" },
