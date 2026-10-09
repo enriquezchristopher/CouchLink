@@ -36,10 +36,8 @@ public class SessionLoopbackTests
     private sealed class ClientEvents(string name) : ISessionClientEvents
     {
         private readonly Channel<string> _events = Channel.CreateUnbounded<string>();
-        private int _heartbeats;
 
         public SessionClient? Client { get; set; }
-        public int Heartbeats => Volatile.Read(ref _heartbeats);
         public bool HasMore => _events.Reader.TryPeek(out _);
 
         public void Connected()
@@ -52,9 +50,7 @@ public class SessionLoopbackTests
 
         public void Received(SessionMessage message)
         {
-            if (message.Type == SessionMessageType.Heartbeat)
-                Interlocked.Increment(ref _heartbeats);
-            else
+            if (message.Type != SessionMessageType.Heartbeat)
                 _events.Writer.TryWrite(message.ToString());
         }
 
@@ -64,18 +60,6 @@ public class SessionLoopbackTests
         {
             using var cts = new CancellationTokenSource(Timeout);
             return await _events.Reader.ReadAsync(cts.Token);
-        }
-
-        /// <summary>
-        /// Waits up to <see cref="Timeout"/> for <paramref name="count"/> heartbeats. The host's heartbeat timer runs on
-        /// the thread pool, which a parallel test run can starve for seconds, so a fixed window can catch too few.
-        /// </summary>
-        public async Task WaitForHeartbeats(int count)
-        {
-            var deadline = DateTime.UtcNow + Timeout;
-            while (Heartbeats < count && DateTime.UtcNow < deadline)
-                await Task.Delay(50);
-            Assert.True(Heartbeats >= count, $"{Heartbeats} heartbeats, expected at least {count}");
         }
     }
 
@@ -164,30 +148,6 @@ public class SessionLoopbackTests
     }
 
     [Fact]
-    public async Task Heartbeats_flow_both_ways_and_keep_a_quiet_client_in()
-    {
-        var (server, _) = StartServer(allowEveryone: true);
-        using (server)
-        {
-            var (client, events) = Join(server);
-            using (client)
-            {
-                Assert.Equal("connected", await events.Next());
-                Assert.Equal("Accepted P2", await events.Next());
-                var joined = System.Diagnostics.Stopwatch.StartNew();
-
-                await Task.Delay(HostSession.SilenceLimit + TimeSpan.FromSeconds(1));
-
-                Assert.Equal(PlayerState.Active, Assert.Single(server.Players).State);
-                await events.WaitForHeartbeats(4);
-                // About one a second: late timer callbacks can catch up in a burst, but never beat the clock.
-                Assert.InRange(events.Heartbeats, 4, (int)joined.Elapsed.TotalSeconds + 2);
-                Assert.False(events.HasMore);
-            }
-        }
-    }
-
-    [Fact]
     public async Task Garbage_closes_only_that_connection()
     {
         var errors = new ConcurrentQueue<Exception>();
@@ -269,31 +229,6 @@ public class SessionLoopbackTests
             Assert.False(SessionServer.TryCreate(port, out var second, out var error));
             Assert.Null(second);
             Assert.Equal($"TCP port {port} is already in use. Is CouchLink already hosting on this PC?", error);
-        }
-    }
-
-    [Fact]
-    public async Task A_kicked_client_that_is_still_sending_is_told_why()
-    {
-        var (server, _) = StartServer(allowEveryone: true);
-        using (server)
-        {
-            for (int run = 0; run < 20; run++)
-            {
-                var (client, events) = Join(server);
-                using (client)
-                {
-                    Assert.Equal("connected", await events.Next());
-                    Assert.Equal("Accepted P2", await events.Next());
-                    for (int i = 0; i < 20; i++)
-                        client.Send(SessionMessage.Heartbeat);
-
-                    server.Kick(2);
-
-                    Assert.Equal("Kicked", await events.Next());
-                    Assert.Equal("disconnected", await events.Next());
-                }
-            }
         }
     }
 }

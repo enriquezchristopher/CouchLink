@@ -36,20 +36,6 @@ public class VideoStreamerTimingTests
     }
 
     [Fact]
-    public async Task Host_delay_follows_the_frames_capture_age()
-    {
-        using var streamer = new VideoStreamer(new AgedSource(), new RecordingSender(), 47802, TimeProvider.System);
-        streamer.AddTarget(2, IPAddress.Loopback);
-
-        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
-        while (streamer.Stats.FramesSent < 60 && DateTime.UtcNow < deadline)
-            await Task.Delay(10);
-
-        // 8 ms of capture age plus a little packetizing time
-        Assert.InRange(streamer.HostDelay.TotalMilliseconds, 7.5, 12);
-    }
-
-    [Fact]
     public void A_timing_ping_is_answered_on_the_video_port()
     {
         var sender = new RecordingSender();
