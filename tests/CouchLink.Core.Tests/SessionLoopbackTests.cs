@@ -256,4 +256,55 @@ public class SessionLoopbackTests
             Assert.Equal($"TCP port {port} is already in use. Is CouchLink already hosting on this PC?", error);
         }
     }
+
+    /// <summary>
+    /// Closing a socket that still has unread data sends a TCP reset, and a reset can throw away what the peer
+    /// hasn't read yet, so the last message has to survive a client that is still sending.
+    /// </summary>
+    [Fact]
+    public async Task Stopping_the_server_tells_a_client_that_is_still_sending()
+    {
+        for (int run = 0; run < 20; run++)
+        {
+            var (server, _) = StartServer(allowEveryone: true);
+            var (client, events) = Join(server);
+            using (client)
+            {
+                Assert.Equal("connected", await events.Next());
+                Assert.Equal("Accepted P2", await events.Next());
+                for (int i = 0; i < 20; i++)
+                    client.Send(SessionMessage.Heartbeat);
+
+                server.Dispose();
+
+                Assert.Equal("HostEnded", await events.Next());
+                Assert.Equal("disconnected", await events.Next());
+            }
+        }
+    }
+
+    [Fact]
+    public async Task A_kicked_client_that_is_still_sending_is_told_why()
+    {
+        var (server, _) = StartServer(allowEveryone: true);
+        using (server)
+        {
+            for (int run = 0; run < 20; run++)
+            {
+                var (client, events) = Join(server);
+                using (client)
+                {
+                    Assert.Equal("connected", await events.Next());
+                    Assert.Equal("Accepted P2", await events.Next());
+                    for (int i = 0; i < 20; i++)
+                        client.Send(SessionMessage.Heartbeat);
+
+                    server.Kick(2);
+
+                    Assert.Equal("Kicked", await events.Next());
+                    Assert.Equal("disconnected", await events.Next());
+                }
+            }
+        }
+    }
 }
