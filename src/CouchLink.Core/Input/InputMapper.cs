@@ -76,7 +76,17 @@ public sealed class InputMapper : IDisposable
 
     public void KeyUp(ushort vk) { lock (_gate) _held.Remove(vk); }
 
-    public void MouseMove(int dx, int dy) { lock (_gate) _mouse.AddDelta(dx, dy); }
+    public void MouseMove(int dx, int dy)
+    {
+        lock (_gate)
+        {
+            // Dropped here, not only on the next tick: a key released before that tick would let the move through.
+            var layout = _layout.Current;
+            if (!IsDown(layout, PadControl.RightUp) && !IsDown(layout, PadControl.RightDown)
+                && !IsDown(layout, PadControl.RightLeft) && !IsDown(layout, PadControl.RightRight))
+                _mouse.AddDelta(dx, dy);
+        }
+    }
 
     /// <summary>Releases everything, e.g. when the window loses focus.</summary>
     public void ReleaseAll()

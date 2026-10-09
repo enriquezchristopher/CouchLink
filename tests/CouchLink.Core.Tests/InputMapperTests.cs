@@ -343,6 +343,19 @@ public class InputMapperTests
     }
 
     [Fact]
+    public void Mouse_movement_while_a_key_is_held_never_reaches_the_pad_even_if_the_key_is_released_before_the_next_tick()
+    {
+        var m = RightKeysMapper();
+        m.KeyDown(Num8);
+        m.Tick(0.001);
+        m.MouseMove(40, 0); // bumped while the key is held...
+        m.KeyUp(Num8);      // ...and released before the send loop ticks again
+
+        var s = m.Tick(0.001);
+        Assert.Equal((PadState.Center, PadState.Center), (s.RX, s.RY));
+    }
+
+    [Fact]
     public void Without_right_stick_keys_the_mouse_drives_the_stick()
     {
         var m = NewMapper(); // default layout: no right-stick keys
