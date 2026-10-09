@@ -44,6 +44,8 @@ RestartApplications=no
 SetupLogging=yes
 UninstallDisplayName=CouchLink
 UninstallDisplayIcon={app}\CouchLink.App.exe
+; The setup program's own icon; the installed exe carries the same one.
+SetupIconFile={#SourcePath}\..\assets\couchlink.ico
 
 [Messages]
 WindowsVersionNotSupported=CouchLink needs 64-bit Windows 10 or later.

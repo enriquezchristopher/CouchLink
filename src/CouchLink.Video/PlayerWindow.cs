@@ -223,6 +223,10 @@ public sealed unsafe partial class PlayerWindow : IDisposable
         {
             if (_registered)
                 return;
+            // The window shows the app's own icon (the exe's) in the taskbar and Alt+Tab.
+            nint largeIcon = 0, smallIcon = 0;
+            if (Environment.ProcessPath is { } exe)
+                ExtractIconExW(exe, 0, &largeIcon, &smallIcon, 1);
             fixed (char* name = ClassName)
             {
                 var wc = new WndClassEx
@@ -230,6 +234,8 @@ public sealed unsafe partial class PlayerWindow : IDisposable
                     Size = (uint)sizeof(WndClassEx),
                     WndProc = (nint)(delegate* unmanaged[Stdcall]<nint, uint, nint, nint, nint>)&WndProc,
                     Instance = GetModuleHandleW(null),
+                    Icon = largeIcon,
+                    IconSmall = smallIcon,
                     ClassName = name,
                 };
                 if (RegisterClassExW(in wc) == 0)
@@ -267,6 +273,9 @@ public sealed unsafe partial class PlayerWindow : IDisposable
         public char* MenuName, ClassName;
         public nint IconSmall;
     }
+
+    [LibraryImport("shell32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    private static partial uint ExtractIconExW(string file, int index, nint* large, nint* small, uint count);
 
     [LibraryImport("user32.dll", SetLastError = true)]
     private static partial ushort RegisterClassExW(in WndClassEx wc);
