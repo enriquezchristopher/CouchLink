@@ -60,9 +60,10 @@ keyboard.
 
 ## 3. Design tokens
 
-All tokens live in `Theme/Tokens.xaml` as `Color` resources plus a
-`SolidColorBrush` for each (brushes frozen). Components refer to brushes by
-key, never to raw hex values.
+All colors live in `Theme/Tokens.xaml` as brushes named after the token
+(`Card` is `CardBrush`). Components refer to brushes by key, never to raw
+hex values. The player colors (3.2) are the one exception: they are fixed
+identity colors in `PlayerColors`.
 
 ### 3.1 Colors
 
@@ -79,8 +80,11 @@ key, never to raw hex values.
 | `TextMuted` | `#94A3B8` | Secondary text, captions |
 | `TextHint` | `#64748B` | Placeholder text only (not for information) |
 | `Primary` | `#7C3AED` | Primary buttons, selected segment, toggles on, progress |
-| `PrimaryHover` | `#6D28D9` | Primary button hover and pressed |
+| `PrimaryGradient` | `#7C3AED` → `#5B21B6` | Host a game hero button |
+| `OnPrimary` | `#FFFFFF` | Text and icons on Primary and DangerFill |
 | `PrimaryText` | `#A78BFA` | Ghost buttons, links, focus ring, icons on dark |
+| `Logo` | `#7C3AED` → `#F43F5E` | The logo mark in the header |
+| `HoverOverlay` | `#FFFFFF` | Laid over any button at 8% on hover and 8% more on press, so every button variant gets the same hover without its own hover color |
 | `ListeningFill` | `#2A1D4F` | Controls editor row while listening |
 | `Danger` | `#FB7185` | Danger text and outline |
 | `DangerFill` | `#F43F5E` | Filled danger button (white text) |
@@ -117,8 +121,8 @@ dots and the session screen. Text on a player color is `Background`
 | P4 | `#6EE7B7` | P9 | `#5EEAD4` |
 | P5 | `#7DD3FC` | P10 | `#A5B4FC` |
 
-`PlayerColors.For(byte slot)` returns the brush; slots outside 1 to 10 get
-`Raised`.
+`PlayerColors.BrushFor(byte slot)` returns the brush; slots outside 1 to 10
+get `Raised` (`#27273B`).
 
 ### 3.3 Type
 
@@ -184,7 +188,7 @@ existing markup picks up the theme without changes:
 - **CheckBox** as a toggle switch (`ToggleSwitch` style) for on/off settings,
   and as a plain check box elsewhere.
 - **ComboBox**, **TextBox** (with a placeholder attached property),
-  **Slider**, **ScrollBar** (thin, appears on hover), **Expander**
+  **Slider**, **ScrollBar** (8 px, rounded thumb), **Expander**
   (chevron, used for stats sections), **ToolTip**, **ContextMenu/MenuItem**
   (the Help menu).
 
@@ -199,7 +203,7 @@ Small reusable controls in `Ui/`:
 | `Banner` | Info, warning or error message with an icon; optional close button. |
 | `StepTracker` | Connect → Host lets you in → Play, with done, current and upcoming steps. |
 | `Card` | Border with Card fill, radius 10 and an optional overline heading. |
-| `ThemedDialog` | Modal window with a title, a message and one or two buttons. `ThemedDialog.Alert(owner, title, message)` and `ThemedDialog.Confirm(owner, title, message, confirmText, cancelText, danger)` return a bool. Replaces every `MessageBox.Show` in CouchLink.App. |
+| `ThemedDialog` | Modal window with a title, a message and one or two buttons. `ThemedDialog.Alert(owner, title, message)` and `ThemedDialog.Confirm(owner, title, message, confirmText, cancelText, danger)` return a bool. Replaces every `MessageBox.Show` in CouchLink.App. With `danger: true`, Enter and the initial focus are on the cancel button, so a stray Enter never confirms. |
 
 Icons are `Geometry` resources in `Theme/Icons.xaml` drawn with `Path`:
 monitor (host), arrow (join), gamepad (controls), help, alert, check,
@@ -267,7 +271,8 @@ screen shows `AppHeader` at the top; the content below changes.
 - **Join by address card**, always visible at the bottom: text box with
   placeholder "192.168.1.23", a Join button, and the validation error
   "Enter an IP address like 192.168.1.23." under the field in Danger. Enter
-  in the box joins. If discovery can't start, the scanning row is replaced by
+  in the box joins. The address must be four dot-separated numbers: today
+  "192.168" is accepted and silently becomes 192.0.0.168, which this fixes. If discovery can't start, the scanning row is replaced by
   a warning banner with the error and "Join by address still works."
 
 ### 5.4 Session
@@ -319,7 +324,8 @@ list scrolls.
 - **Moved key:** when `BindResult.MovedFrom` is set, the row that lost the
   key gets a warning tint for 4 s, the list scrolls it into view if it is
   off screen, and a warning banner says "Num 5 moved here from Circle.
-  Circle has no key now."
+  Circle has no key now." A control can have several keys, so the second
+  sentence appears only when Circle has none left.
 - **Mouse card:** overline "Mouse (right stick)", the sensitivity slider with
   its value shown at the end, and the Invert Y toggle with "mouse toward you
   pushes the stick up".
@@ -331,8 +337,9 @@ list scrolls.
 ### 5.6 Approval toast
 
 `ApprovalPopup` keeps its behavior: topmost, `ShowActivated = false`,
-bottom-right of the work area, stacks upward, flashes the taskbar button,
-closing it denies, `CloseByHost` closes without denying.
+bottom-right of the work area, stacks upward, closing it denies,
+`CloseByHost` closes without denying. The toast has no taskbar button of its
+own, so it flashes the main window's taskbar button instead.
 
 - Borderless window (`WindowStyle.None`, no taskbar entry), Card fill,
   Border outline, radius 10, a soft shadow.
@@ -354,8 +361,9 @@ closing it denies, `CloseByHost` closes without denying.
   unchanged. It must still show if the theme failed to load, so it uses only
   implicit styles and `DynamicResource`, which fall back to stock WPF
   instead of throwing.
-- **About CouchLink** (new, from the Help menu): name, version, "Licensed
-  under the GNU GPL v3", and Close. No network access.
+- **About CouchLink** (new, from the Help menu): a `ThemedDialog.Alert`
+  with the version, "Couch co-op over the LAN. No accounts, no cloud." and
+  "Licensed under the GNU GPL v3." No network access.
 
 ## 6. Code layout
 
@@ -363,18 +371,22 @@ All changes are in `src/CouchLink.App` plus one new test project.
 
 ```
 src/CouchLink.App/
-  App.xaml                 merges the Theme dictionaries
+  App.xaml.cs              calls ThemeManager.Install at startup
   Theme/
-    Tokens.xaml            colors, brushes, sizes, type
-    HighContrast.xaml      brush overrides from SystemColors
-    Controls.xaml          implicit and named styles, templates
+    Tokens.xaml            brushes (the dark palette)
+    HighContrast.xaml      the same keys, from SystemColors
+    Controls.xaml          fonts, sizes, text styles, implicit and named
+                           styles and templates; merges Icons.xaml
     Icons.xaml             Geometry resources
-    ThemeManager.cs        loads the dictionaries, follows High Contrast
-    WindowTheme.cs         dark title bar through DWM
+    ThemeManager.cs        merges the dictionaries in code (so animation
+                           durations can be set first), follows High Contrast
+    WindowTheme.cs         window background, font, dark title bar (DWM)
+    Motion.cs              the screen and toast enter animation
   Ui/
-    AppHeader.xaml(.cs)  PlayerChip  KeyCap  StatusPill  Banner
-    StepTracker  ThemedDialog.xaml(.cs)  AboutDialog.xaml(.cs)
+    ThemeProps.cs  Glyph  PlayerChip  KeyCap  StatusPill  Banner
+    StepTracker  Spinner  AppHeader.xaml(.cs)  ThemedDialog.xaml(.cs)
     PlayerColors.cs
+  Presentation/            the logic classes below
   Views/                   Start, HostLobby, JoinList, Session (rewritten XAML)
   ControlsWindow.xaml(.cs) was built in C#
   ApprovalPopup.xaml(.cs)  was built in C#
@@ -389,9 +401,11 @@ src/CouchLink.App/
 - Logic that decides what to show moves into plain classes the tests can
   reach without a window. They live in CouchLink.App and are `internal`, with
   `InternalsVisibleTo` for the test project:
-  - `PlayerColors.For(slot)`
+  - `PlayerColors.ColorFor(slot)` / `BrushFor(slot)`
+  - `AppInfo.Version` and `AppInfo.AboutText`
   - `SessionText.For(ClientState, hostName, slot)`: heading, hint, step,
     button text
+  - `BindMessage.Moved(key, movedFrom, keysLeft)` and `BindMessage.Reserved(key)`
   - `StopHostingPrompt.For(players)`: null when no prompt is needed, else the
     message
   - `ControlFilter.Matches(control, group, label, query)`
@@ -401,7 +415,7 @@ src/CouchLink.App/
 ## 7. Testing
 
 - New `tests/CouchLink.App.Tests` (xunit 2.9.3, net10.0-windows, references
-  CouchLink.App) covering the six classes in section 6: every
+  CouchLink.App) covering the classes in section 6: every
   `ClientState`, slots 0, 1, 10 and 11, the one/two/three/four-player Stop
   messages, filter matches on name, group and label and a non-match,
   countdown at 0, half and past the timeout, and good and bad addresses
