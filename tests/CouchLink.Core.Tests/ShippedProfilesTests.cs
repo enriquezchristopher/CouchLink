@@ -25,6 +25,10 @@ public class ShippedProfilesTests
     [InlineData(PadControl.LeftDown, "S")]
     [InlineData(PadControl.LeftLeft, "A")]
     [InlineData(PadControl.LeftRight, "D")]
+    [InlineData(PadControl.RightUp, "Num8")]       // pro stick
+    [InlineData(PadControl.RightDown, "Num2")]
+    [InlineData(PadControl.RightLeft, "Num4")]
+    [InlineData(PadControl.RightRight, "Num6")]
     [InlineData(PadControl.Cross, "Space")]        // pass / swap player
     [InlineData(PadControl.Circle, "Num1")]        // bounce pass / take charge
     [InlineData(PadControl.Triangle, "Num3")]      // lob pass / block, rebound
@@ -89,5 +93,20 @@ public class ShippedProfilesTests
 
         Assert.Empty(skipped);
         Assert.NotEmpty(entries);
+    }
+
+    [Fact]
+    public void The_NBA_2K22_profile_labels_the_pro_stick_and_F1_lists_it()
+    {
+        var profile = Nba2K22();
+        Assert.Equal("Pro stick up", profile.Labels[PadControl.RightUp]);
+        Assert.Equal("Pro stick down", profile.Labels[PadControl.RightDown]);
+        Assert.Equal("Pro stick left", profile.Labels[PadControl.RightLeft]);
+        Assert.Equal("Pro stick right", profile.Labels[PadControl.RightRight]);
+
+        var settings = new ControlSettings();
+        settings.Apply(profile);
+        var lines = OverlayText.Controls(settings).Split('\n');
+        Assert.Contains(lines, l => l.StartsWith("Pro stick up (Right stick up)", StringComparison.Ordinal) && l.EndsWith("Num 8", StringComparison.Ordinal));
     }
 }

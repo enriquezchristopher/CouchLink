@@ -1,7 +1,7 @@
 namespace CouchLink.Core.Input;
 
 /// <summary>
-/// Tracks held keys and mouse movement and turns them into a DS4 state.
+/// Tracks held keys and mouse movement and turns them into a DS4 state. Right-stick keys, while held, override the mouse.
 /// Thread-safe: input events arrive on the UI thread, Tick runs on the send loop, edits come from the editor.
 /// </summary>
 public sealed class InputMapper : IDisposable
@@ -76,7 +76,17 @@ public sealed class InputMapper : IDisposable
 
     public void KeyUp(ushort vk) { lock (_gate) _held.Remove(vk); }
 
-    public void MouseMove(int dx, int dy) { lock (_gate) _mouse.AddDelta(dx, dy); }
+    public void MouseMove(int dx, int dy)
+    {
+        lock (_gate)
+        {
+            // Dropped here, not only on the next tick: a key released before that tick would let the move through.
+            var layout = _layout.Current;
+            if (!IsDown(layout, PadControl.RightUp) && !IsDown(layout, PadControl.RightDown)
+                && !IsDown(layout, PadControl.RightLeft) && !IsDown(layout, PadControl.RightRight))
+                _mouse.AddDelta(dx, dy);
+        }
+    }
 
     /// <summary>Releases everything, e.g. when the window loses focus.</summary>
     public void ReleaseAll()
@@ -111,7 +121,20 @@ public sealed class InputMapper : IDisposable
             var (lx, ly) = StickMath.FromDirections(
                 IsDown(layout, PadControl.LeftUp), IsDown(layout, PadControl.LeftDown),
                 IsDown(layout, PadControl.LeftLeft), IsDown(layout, PadControl.LeftRight));
-            var (rx, ry) = _mouse.Update(dtSeconds);
+            bool rightUp = IsDown(layout, PadControl.RightUp), rightDown = IsDown(layout, PadControl.RightDown);
+            bool rightLeft = IsDown(layout, PadControl.RightLeft), rightRight = IsDown(layout, PadControl.RightRight);
+            byte rx, ry;
+            if (rightUp || rightDown || rightLeft || rightRight)
+            {
+                // Keys win: a key move always does the same thing, even if the mouse gets bumped. Dropping the
+                // mouse's movement means releasing the keys centres the stick instead of replaying a flick.
+                (rx, ry) = StickMath.FromDirections(rightUp, rightDown, rightLeft, rightRight);
+                _mouse.Reset();
+            }
+            else
+            {
+                (rx, ry) = _mouse.Update(dtSeconds);
+            }
             byte l2 = buttons.HasFlag(PadButtons.L2) ? (byte)255 : (byte)0;
             byte r2 = buttons.HasFlag(PadButtons.R2) ? (byte)255 : (byte)0;
             return new PadState(buttons, lx, ly, rx, ry, l2, r2);

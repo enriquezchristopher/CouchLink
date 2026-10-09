@@ -211,4 +211,59 @@ public class ProfileFileTests
         Assert.Contains("\"0xE2\"", json);
         ProfileAssert.Same(profile, Loaded(json));
     }
+
+    /// <summary>Profile files name controls by these; renaming one breaks every profile that uses it.</summary>
+    [Fact]
+    public void Control_names_are_pinned()
+    {
+        string[] expected =
+        [
+            "LeftUp", "LeftDown", "LeftLeft", "LeftRight",
+            "RightUp", "RightDown", "RightLeft", "RightRight",
+            "DpadUp", "DpadDown", "DpadLeft", "DpadRight",
+            "Cross", "Circle", "Square", "Triangle",
+            "L1", "R1", "L2", "R2", "L3", "R3",
+            "Options", "Share", "Touchpad",
+        ];
+        Assert.Equal(expected, Enum.GetNames<PadControl>());
+    }
+
+    [Fact]
+    public void Right_stick_controls_load_with_keys_and_labels()
+    {
+        var p = Loaded(WithControls("'RightUp':{'keys':['Num8'],'label':'Pro stick up'},'RightRight':{'keys':['Num6']}"));
+        Assert.Equal([(ushort)0x68], p.Keys[PadControl.RightUp]);
+        Assert.Equal([(ushort)0x66], p.Keys[PadControl.RightRight]);
+        Assert.Equal("Pro stick up", p.Labels[PadControl.RightUp]);
+    }
+
+    [Fact]
+    public void A_file_without_right_stick_controls_gives_the_right_stick_no_keys()
+    {
+        var settings = new ControlSettings();
+        settings.Apply(Loaded(SpecExample));
+        foreach (var control in KeyNames.RightStick)
+            Assert.Empty(settings.Layout.KeysFor(control));
+    }
+
+    [Fact]
+    public void Right_stick_controls_save_after_the_left_stick_and_load_back()
+    {
+        var keys = new Dictionary<PadControl, IReadOnlyList<ushort>>
+        {
+            [PadControl.LeftUp] = [VirtualKeys.Letter('W')],
+            [PadControl.RightUp] = [0x68],
+            [PadControl.DpadUp] = [VirtualKeys.Up],
+        };
+        var profile = new ControlProfile("T", null, 5, false, keys,
+            new Dictionary<PadControl, string> { [PadControl.RightUp] = "Pro stick up" });
+
+        string json = ProfileFile.Save(profile);
+
+        Assert.True(json.IndexOf("\"LeftUp\"", StringComparison.Ordinal) < json.IndexOf("\"RightUp\"", StringComparison.Ordinal));
+        Assert.True(json.IndexOf("\"RightUp\"", StringComparison.Ordinal) < json.IndexOf("\"DpadUp\"", StringComparison.Ordinal));
+        Assert.Contains("\"Num8\"", json);
+        Assert.DoesNotContain("\"RightDown\"", json); // no keys, no label: left out
+        ProfileAssert.Same(profile, Loaded(json));
+    }
 }

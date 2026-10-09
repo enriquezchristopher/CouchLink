@@ -19,10 +19,15 @@ public static class KeyNames
         [0xDB] = "[", [0xDC] = "\\", [0xDD] = "]", [0xDE] = "'",
     };
 
+    /// <summary>The right stick's four directions. They have no keys by default: the mouse drives the stick.</summary>
+    public static PadControl[] RightStick { get; } =
+        [PadControl.RightUp, PadControl.RightDown, PadControl.RightLeft, PadControl.RightRight];
+
     /// <summary>The controls in the order the editor and the F1 panel list them (spec 6.1).</summary>
     public static IReadOnlyList<(string Name, PadControl[] Controls)> Groups { get; } =
     [
         ("Left stick", [PadControl.LeftUp, PadControl.LeftDown, PadControl.LeftLeft, PadControl.LeftRight]),
+        ("Right stick", RightStick),
         ("D-pad", [PadControl.DpadUp, PadControl.DpadDown, PadControl.DpadLeft, PadControl.DpadRight]),
         ("Buttons", [PadControl.Cross, PadControl.Circle, PadControl.Square, PadControl.Triangle]),
         ("Shoulders", [PadControl.L1, PadControl.R1, PadControl.L2, PadControl.R2]),
@@ -47,6 +52,10 @@ public static class KeyNames
         PadControl.LeftDown => "Left stick down",
         PadControl.LeftLeft => "Left stick left",
         PadControl.LeftRight => "Left stick right",
+        PadControl.RightUp => "Right stick up",
+        PadControl.RightDown => "Right stick down",
+        PadControl.RightLeft => "Right stick left",
+        PadControl.RightRight => "Right stick right",
         PadControl.DpadUp => "D-pad up",
         PadControl.DpadDown => "D-pad down",
         PadControl.DpadLeft => "D-pad left",

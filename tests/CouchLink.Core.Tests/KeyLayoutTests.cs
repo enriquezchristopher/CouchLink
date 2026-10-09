@@ -103,4 +103,14 @@ public class KeyLayoutTests
         keys[0] = K;
         Assert.Equal([VirtualKeys.Space], layout.KeysFor(PadControl.Cross));
     }
+
+    [Fact]
+    public void Binding_a_right_stick_direction_takes_the_key_off_a_button()
+    {
+        var layout = KeyLayout.CreateDefault();
+        var result = layout.Bind(PadControl.RightUp, VirtualKeys.Letter('K'));
+        Assert.Equal(new BindResult(true, PadControl.Cross), result);
+        Assert.Equal([VirtualKeys.Letter('K')], layout.KeysFor(PadControl.RightUp));
+        Assert.Empty(layout.KeysFor(PadControl.Cross));
+    }
 }

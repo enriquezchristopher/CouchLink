@@ -239,10 +239,16 @@ public sealed unsafe class FramePresenter : IFramePresenter
         _d2d.Target = null;
     }
 
-    /// <summary>Text on a dark panel; (x, y) is where <paramref name="alignX"/>/<paramref name="alignY"/> of the text sits (0 = left/top, 1 = right/bottom).</summary>
+    /// <summary>
+    /// Text on a dark panel; (x, y) is where <paramref name="alignX"/>/<paramref name="alignY"/> of the text sits
+    /// (0 = left/top, 1 = right/bottom). Text taller than the window is shrunk to fit.
+    /// </summary>
     private void Panel(string text, IDWriteTextFormat font, float x, float y, float alignX, float alignY)
     {
         using var layout = _dwrite.CreateTextLayout(text, font, _window.Width, _window.Height);
+        float scale = OverlayFit.Scale(layout.Metrics.Height, _window.Height);
+        if (scale < 1f)
+            layout.SetFontSize(font.FontSize * scale, new TextRange(0, (uint)text.Length));
         var size = layout.Metrics;
         x -= size.Width * alignX;
         y -= size.Height * alignY;

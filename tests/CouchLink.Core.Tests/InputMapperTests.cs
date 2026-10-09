@@ -265,4 +265,103 @@ public class InputMapperTests
         mapper.KeyDown(K);
         Assert.Equal(PadButtons.Circle, mapper.Tick(0.001).Buttons);
     }
+
+    private const ushort Num8 = 0x68, Num2 = 0x62, Num4 = 0x64, Num6 = 0x66;
+
+    /// <summary>The default layout plus the NBA 2K22 pro stick: Num 8/2/4/6 on the right stick.</summary>
+    private static InputMapper RightKeysMapper()
+    {
+        var layout = KeyLayout.CreateDefault();
+        layout.Bind(PadControl.RightUp, Num8);
+        layout.Bind(PadControl.RightDown, Num2);
+        layout.Bind(PadControl.RightLeft, Num4);
+        layout.Bind(PadControl.RightRight, Num6);
+        return new InputMapper(layout, new MouseStick());
+    }
+
+    [Theory]
+    [InlineData(Num8, 128, 1)]
+    [InlineData(Num2, 128, 255)]
+    [InlineData(Num4, 1, 128)]
+    [InlineData(Num6, 255, 128)]
+    public void A_right_stick_key_gives_full_tilt(ushort key, int rx, int ry)
+    {
+        var m = RightKeysMapper();
+        m.KeyDown(key);
+        var s = m.Tick(0.001);
+        Assert.Equal(((byte)rx, (byte)ry), (s.RX, s.RY));
+        Assert.Equal((PadState.Center, PadState.Center), (s.LX, s.LY));
+    }
+
+    [Fact]
+    public void Two_right_stick_keys_give_a_diagonal()
+    {
+        var m = RightKeysMapper();
+        m.KeyDown(Num8);
+        m.KeyDown(Num6);
+        var s = m.Tick(0.001);
+        Assert.Equal(((byte)218, (byte)38), (s.RX, s.RY));
+    }
+
+    [Fact]
+    public void Held_right_stick_keys_win_over_the_mouse()
+    {
+        var m = RightKeysMapper();
+        m.KeyDown(Num8);
+        m.MouseMove(40, 0);
+        var s = m.Tick(0.001);
+        Assert.Equal(((byte)128, (byte)1), (s.RX, s.RY));
+    }
+
+    [Fact]
+    public void Opposite_right_stick_keys_cancel_and_still_hold_off_the_mouse()
+    {
+        var m = RightKeysMapper();
+        m.KeyDown(Num8);
+        m.KeyDown(Num2);
+        m.MouseMove(25, 0);
+        var s = m.Tick(0.001);
+        Assert.Equal((PadState.Center, PadState.Center), (s.RX, s.RY));
+    }
+
+    [Fact]
+    public void Releasing_the_keys_centres_the_stick_and_the_mouse_takes_over()
+    {
+        var m = RightKeysMapper();
+        m.MouseMove(25, 0); // a flick already in progress
+        m.KeyDown(Num8);
+        m.MouseMove(40, 0); // bumped while the key is held
+        m.Tick(0.001);
+        m.KeyUp(Num8);
+
+        var released = m.Tick(0.001);
+        Assert.Equal((PadState.Center, PadState.Center), (released.RX, released.RY));
+
+        m.MouseMove(25, 0);
+        var mouse = m.Tick(0.001);
+        Assert.Equal(((byte)192, (byte)128), (mouse.RX, mouse.RY));
+    }
+
+    [Fact]
+    public void Mouse_movement_while_a_key_is_held_never_reaches_the_pad_even_if_the_key_is_released_before_the_next_tick()
+    {
+        var m = RightKeysMapper();
+        m.KeyDown(Num8);
+        m.Tick(0.001);
+        m.MouseMove(40, 0); // bumped while the key is held...
+        m.KeyUp(Num8);      // ...and released before the send loop ticks again
+
+        var s = m.Tick(0.001);
+        Assert.Equal((PadState.Center, PadState.Center), (s.RX, s.RY));
+    }
+
+    [Fact]
+    public void Without_right_stick_keys_the_mouse_drives_the_stick()
+    {
+        var m = NewMapper(); // default layout: no right-stick keys
+        m.KeyDown(Num8);
+        m.MouseMove(25, 0);
+        var s = m.Tick(0.001);
+        Assert.Equal(((byte)192, (byte)128), (s.RX, s.RY));
+    }
 }

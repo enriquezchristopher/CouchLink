@@ -67,4 +67,31 @@ public class KeyNamesTests
         Assert.Equal("Shoot (Square)", KeyNames.Labelled(PadControl.Square, "Shoot"));
         Assert.Equal("D-pad up", KeyNames.Labelled(PadControl.DpadUp, null));
     }
+
+    [Theory]
+    [InlineData(PadControl.RightUp, "Right stick up")]
+    [InlineData(PadControl.RightDown, "Right stick down")]
+    [InlineData(PadControl.RightLeft, "Right stick left")]
+    [InlineData(PadControl.RightRight, "Right stick right")]
+    public void Right_stick_directions_have_names(PadControl control, string name)
+    {
+        Assert.Equal(name, KeyNames.Of(control));
+    }
+
+    [Fact]
+    public void The_right_stick_group_follows_the_left_stick()
+    {
+        Assert.Equal(["Left stick", "Right stick", "D-pad", "Buttons", "Shoulders", "Stick clicks", "Menu"],
+            KeyNames.Groups.Select(g => g.Name));
+        Assert.Same(KeyNames.RightStick, KeyNames.Groups[1].Controls);
+        Assert.Equal([PadControl.RightUp, PadControl.RightDown, PadControl.RightLeft, PadControl.RightRight], KeyNames.RightStick);
+    }
+
+    [Fact]
+    public void The_default_layout_has_no_right_stick_keys()
+    {
+        var layout = KeyLayout.CreateDefault();
+        foreach (var control in KeyNames.RightStick)
+            Assert.Empty(layout.KeysFor(control));
+    }
 }
