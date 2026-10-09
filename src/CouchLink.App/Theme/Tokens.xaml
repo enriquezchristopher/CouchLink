@@ -38,6 +38,8 @@
     <SolidColorBrush x:Key="ErrorBannerFillBrush" Color="#2A0F18"/>
     <SolidColorBrush x:Key="ErrorBannerBorderBrush" Color="#7F1D35"/>
     <SolidColorBrush x:Key="ErrorBannerTextBrush" Color="#FECDD3"/>
+    <SolidColorBrush x:Key="CaptionCloseHoverBrush" Color="#E81123"/>
+    <SolidColorBrush x:Key="CaptionCloseGlyphHoverBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="LivePillFillBrush" Color="#14532D"/>
     <SolidColorBrush x:Key="ReconnectingPillFillBrush" Color="#422006"/>
 </ResourceDictionary>

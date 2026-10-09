@@ -11,6 +11,7 @@ internal sealed partial class SaveProfileDialog : Window
     {
         InitializeComponent();
         WindowTheme.Apply(this);
+        WindowTheme.UseCustomChrome(this, 32);
         NameBox.MaxLength = ProfileFile.MaxNameLength;
         GameBox.MaxLength = ProfileFile.MaxGameLength;
         NameBox.Text = name ?? "";

@@ -28,6 +28,7 @@ public partial class MainWindow : Window, IClientUi
     {
         InitializeComponent();
         WindowTheme.Apply(this);
+        WindowTheme.UseCustomChrome(this, 48);
         Header.ControlsClicked += () => ControlsWindow.Open(this);
         Header.CrashReportsClicked += OpenCrashReports;
         Header.AboutClicked += () => ThemedDialog.Alert(this, "About CouchLink", AppInfo.AboutText);

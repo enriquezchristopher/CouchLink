@@ -78,6 +78,7 @@ internal sealed partial class ControlsWindow : Window
     {
         InitializeComponent();
         WindowTheme.Apply(this);
+        WindowTheme.UseCustomChrome(this, 32);
         MaxHeight = SystemParameters.WorkArea.Height * 0.85;
         BuildRows();
 

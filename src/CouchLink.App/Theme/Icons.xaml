@@ -13,4 +13,9 @@
     <Geometry x:Key="IconClose">M18,6 L6,18 M6,6 L18,18</Geometry>
     <Geometry x:Key="IconSearch">M3,11 A8,8 0 1 0 19,11 A8,8 0 1 0 3,11 Z M21,21 L16.65,16.65</Geometry>
     <Geometry x:Key="IconUser">M20,21 V19 A4,4 0 0 0 16,15 H8 A4,4 0 0 0 4,19 V21 M8,7 A4,4 0 1 0 16,7 A4,4 0 1 0 8,7 Z</Geometry>
+    <!-- Caption button glyphs: a 10x10 box, drawn with a 1 px stroke -->
+    <Geometry x:Key="CaptionMinimizeGlyph">M0,5.5 H10</Geometry>
+    <Geometry x:Key="CaptionMaximizeGlyph">M0.5,0.5 H9.5 V9.5 H0.5 Z</Geometry>
+    <Geometry x:Key="CaptionRestoreGlyph">M0.5,2.5 H7.5 V9.5 H0.5 Z M2.5,2.5 V0.5 H9.5 V7.5 H7.5</Geometry>
+    <Geometry x:Key="CaptionCloseGlyph">M0,0 L10,10 M10,0 L0,10</Geometry>
 </ResourceDictionary>

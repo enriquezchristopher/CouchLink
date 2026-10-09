@@ -32,6 +32,8 @@
     <x:Static x:Key="ErrorBannerFillBrush" Member="SystemColors.WindowBrush"/>
     <x:Static x:Key="ErrorBannerBorderBrush" Member="SystemColors.WindowTextBrush"/>
     <x:Static x:Key="ErrorBannerTextBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="CaptionCloseHoverBrush" Member="SystemColors.HighlightBrush"/>
+    <x:Static x:Key="CaptionCloseGlyphHoverBrush" Member="SystemColors.HighlightTextBrush"/>
     <x:Static x:Key="LivePillFillBrush" Member="SystemColors.WindowBrush"/>
     <x:Static x:Key="ReconnectingPillFillBrush" Member="SystemColors.WindowBrush"/>
 </ResourceDictionary>

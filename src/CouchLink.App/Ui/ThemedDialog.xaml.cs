@@ -11,6 +11,7 @@ internal sealed partial class ThemedDialog : Window
     {
         InitializeComponent();
         WindowTheme.Apply(this);
+        WindowTheme.UseCustomChrome(this, 32);
         TitleText.Text = title;
         MessageText.Text = message;
         OkButton.Content = okText;
