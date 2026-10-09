@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.10.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.9.1...v1.10.0) (2026-10-09)
+
+
+### Features
+
+* **app:** approval toast with countdown, themed save and crash dialogs ([b56f7bf](https://github.com/enriquezchristopher/CouchLink/commit/b56f7bf79a158893bcd73298ea4e6fa58b7310a3))
+* **app:** controls editor with grouped cards, find and moved-key highlight ([1a8a0df](https://github.com/enriquezchristopher/CouchLink/commit/1a8a0dfc416f1ef8947abc6dc9dfa07894c52535))
+* **app:** custom title bar with themed caption buttons ([3ec8ecb](https://github.com/enriquezchristopher/CouchLink/commit/3ec8ecb216872dd540774f33c1bcfd709f7a18e0))
+* **app:** dark theme, reworked screens and a custom title bar ([a53d782](https://github.com/enriquezchristopher/CouchLink/commit/a53d782c934c08ff313d49049132d865c33146c4))
+* **app:** header on every screen and the new Start screen ([65277f8](https://github.com/enriquezchristopher/CouchLink/commit/65277f8a30c7db9eecfba9c7c8cdf4087286533f))
+* **app:** header, dialog, player chip, key cap, pills, banners and steps ([90b6ba6](https://github.com/enriquezchristopher/CouchLink/commit/90b6ba648aeead0df3b45964a793c70ea6e041f0))
+* **app:** host lobby with stream card, player chips and stop confirm ([f2cb2ef](https://github.com/enriquezchristopher/CouchLink/commit/f2cb2efa4d5d10b041bfcda6ea4d25e3db042308))
+* **app:** join list with host cards, scanning row and address check ([7556150](https://github.com/enriquezchristopher/CouchLink/commit/755615030517e93498709b939eddae7770995d5b))
+* **app:** motion across the app, with Help → Reduce motion ([c61bd59](https://github.com/enriquezchristopher/CouchLink/commit/c61bd59479de2ccc89532438f8600e5139cc47ad))
+* **app:** session screen with steps, player chip and shortcuts ([cd0857c](https://github.com/enriquezchristopher/CouchLink/commit/cd0857c068c21fb94aba674e18b161874f0f1855))
+* **app:** theme palette, icons and theme manager ([30b7fba](https://github.com/enriquezchristopher/CouchLink/commit/30b7fba520ab23d0a56709bc78ac1151b0f876f3))
+* **app:** themed styles for buttons, inputs, menus and scroll bars ([abe0d33](https://github.com/enriquezchristopher/CouchLink/commit/abe0d33cad79a7b106e59404e546051175ae808d))
+
+
+### Bug Fixes
+
+* **app:** read every octet of a typed address as decimal ([c24a7e3](https://github.com/enriquezchristopher/CouchLink/commit/c24a7e3a37b230b3bb504af5c057f62aa1f90fde))
+* **app:** scale the toast countdown bar so it needs no layout pass ([05badbd](https://github.com/enriquezchristopher/CouchLink/commit/05badbd89a3ce5dad7204490aca0544516b0afe5))
+* **app:** search icon in the Find box, disable incompatible host cards ([4132efd](https://github.com/enriquezchristopher/CouchLink/commit/4132efdb528ff8c9cc634a16768138da5dadcbb5))
+* **app:** spinners always turn and the join countdown bar glides ([2f69aba](https://github.com/enriquezchristopher/CouchLink/commit/2f69abaa51bba302f0946731350fda0b40571b2a))
+* **app:** status pills draw round ends instead of an oval ([9e6888d](https://github.com/enriquezchristopher/CouchLink/commit/9e6888d5e6ce8400f7b8d0b766d1aae8483d9d5f))
+* **app:** touch targets at least 32 px, hero buttons 72 px ([0d75e38](https://github.com/enriquezchristopher/CouchLink/commit/0d75e38f299090cf42314aad734efb5f0c14e3e4))
+* **app:** widen the crash dialog so its four buttons stay on one row ([127ce5b](https://github.com/enriquezchristopher/CouchLink/commit/127ce5b9b385c3cd73a6fd9b269e8d26207dfdec))
+
 ## [1.9.1](https://github.com/enriquezchristopher/CouchLink/compare/v1.9.0...v1.9.1) (2026-10-09)
 
 
