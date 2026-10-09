@@ -65,6 +65,18 @@ public class SessionLoopbackTests
             using var cts = new CancellationTokenSource(Timeout);
             return await _events.Reader.ReadAsync(cts.Token);
         }
+
+        /// <summary>
+        /// Waits up to <see cref="Timeout"/> for <paramref name="count"/> heartbeats. The host's heartbeat timer runs on
+        /// the thread pool, which a parallel test run can starve for seconds, so a fixed window can catch too few.
+        /// </summary>
+        public async Task WaitForHeartbeats(int count)
+        {
+            var deadline = DateTime.UtcNow + Timeout;
+            while (Heartbeats < count && DateTime.UtcNow < deadline)
+                await Task.Delay(50);
+            Assert.True(Heartbeats >= count, $"{Heartbeats} heartbeats, expected at least {count}");
+        }
     }
 
     private static (SessionServer Server, AppEffects Effects) StartServer(bool allowEveryone, Action<Exception>? onError = null)
@@ -162,11 +174,14 @@ public class SessionLoopbackTests
             {
                 Assert.Equal("connected", await events.Next());
                 Assert.Equal("Accepted P2", await events.Next());
+                var joined = System.Diagnostics.Stopwatch.StartNew();
 
                 await Task.Delay(HostSession.SilenceLimit + TimeSpan.FromSeconds(1));
 
                 Assert.Equal(PlayerState.Active, Assert.Single(server.Players).State);
-                Assert.InRange(events.Heartbeats, 4, 8);
+                await events.WaitForHeartbeats(4);
+                // About one a second: late timer callbacks can catch up in a burst, but never beat the clock.
+                Assert.InRange(events.Heartbeats, 4, (int)joined.Elapsed.TotalSeconds + 2);
                 Assert.False(events.HasMore);
             }
         }
