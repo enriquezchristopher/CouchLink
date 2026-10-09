@@ -1,0 +1,36 @@
+<UserControl x:Class="CouchLink.App.Ui.AppHeader" x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:CouchLink.App.Ui">
+    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="16,10">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button x:Name="ControlsButton" Style="{StaticResource HeaderButton}"
+                        AutomationProperties.Name="Controls" AutomationProperties.AutomationId="HeaderControls">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:Glyph Data="{StaticResource IconGamepad}" Brush="{DynamicResource PrimaryTextBrush}" Width="16" Height="16"/>
+                        <TextBlock Text="Controls" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button x:Name="HelpButton" Style="{StaticResource HeaderButton}" Margin="6,0,0,0"
+                        AutomationProperties.Name="Help" AutomationProperties.AutomationId="HeaderHelp">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:Glyph Data="{StaticResource IconHelp}" Brush="{DynamicResource TextMutedBrush}" Width="16" Height="16"/>
+                        <TextBlock Text="Help" Margin="6,0,4,0" VerticalAlignment="Center"/>
+                        <ui:Glyph Data="{StaticResource IconChevronDown}" Brush="{DynamicResource TextMutedBrush}" Width="12" Height="12"/>
+                    </StackPanel>
+                    <Button.ContextMenu>
+                        <ContextMenu x:Name="HelpMenu">
+                            <MenuItem x:Name="CrashReportsItem" Header="Crash reports" AutomationProperties.AutomationId="HelpCrashReports"/>
+                            <MenuItem x:Name="AboutItem" Header="About CouchLink" AutomationProperties.AutomationId="HelpAbout"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="22" Height="22" CornerRadius="6" Background="{DynamicResource LogoBrush}"/>
+                <TextBlock Text="CouchLink" FontWeight="Bold" FontSize="15" Margin="8,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</UserControl>
