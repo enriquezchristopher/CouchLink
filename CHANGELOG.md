@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.1](https://github.com/enriquezchristopher/CouchLink/compare/v1.9.0...v1.9.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* **session:** HostEnded and Kicked reach a client that is still sending ([b8d09fd](https://github.com/enriquezchristopher/CouchLink/commit/b8d09fd58684366cdcdcaaff4781950b3805ac20))
+* **session:** HostEnded and Kicked reach a client that is still sending ([af0b8f2](https://github.com/enriquezchristopher/CouchLink/commit/af0b8f20accab2c070ab7edc657a80acb5a5f83d))
+
 ## [1.9.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.8.0...v1.9.0) (2026-10-09)
 
 
