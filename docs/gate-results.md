@@ -99,6 +99,7 @@ Client PC: <fill in>
 | Shipped NBA 2K22 profile in 2K22 (Num Lock on): Space passes, Num 5 shoots, Num 1 bounce pass, Num 3 lob, Enter sprints, Left Shift posts up, Tab calls a play, Page Down pauses, the mouse also moves the pro stick | <pass/fail> |
 | Bind Num 8 to Right stick up in the editor; in a gamepad tester (joy.cpl) holding Num 8 pushes the right stick up; moving the mouse while holding changes nothing; after release the mouse moves the stick again | <pass/fail> |
 | Shipped NBA 2K22 profile in 2K22: Num 8/2/4/6 work the pro stick; F1 lists "Pro stick up (Right stick up)  Num 8" | <pass/fail> |
+| F1 with the NBA 2K22 profile on a 1366x768 (or 720p) client screen: the whole panel fits, down to the "Right stick  Mouse" line | <pass/fail> |
 
 ## Stream quality (Plan 10)
 
