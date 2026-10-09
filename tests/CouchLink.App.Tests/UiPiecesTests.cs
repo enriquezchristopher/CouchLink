@@ -53,6 +53,25 @@ public class UiPiecesTests
     }
 
     [Fact]
+    public void Status_pill_has_round_ends_not_an_oval()
+    {
+        Wpf.Run(() =>
+        {
+            ThemeManager.Install(Application.Current);
+            var pill = new StatusPill { Kind = PillKind.Live, Text = "● Live" };
+            var host = new Border { Child = pill };
+            host.Measure(new Size(400, 100));
+            host.Arrange(new Rect(0, 0, 400, 100));
+            host.UpdateLayout();
+            // WPF shrinks oversized radii in proportion to both sides, so a huge radius draws an ellipse.
+            // A capsule needs every corner at exactly half the height.
+            double half = pill.ActualHeight / 2;
+            Assert.True(pill.ActualHeight > 0);
+            Assert.Equal(new CornerRadius(half), pill.CornerRadius);
+        });
+    }
+
+    [Fact]
     public void Banner_close_button_shows_only_when_closable_and_raises_its_event()
     {
         Wpf.Run(() =>

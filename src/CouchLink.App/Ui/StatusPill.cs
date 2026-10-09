@@ -14,10 +14,12 @@ internal sealed class StatusPill : Border
     public StatusPill()
     {
         Child = _text;
-        CornerRadius = new CornerRadius(999);
         Padding = new Thickness(9, 3, 9, 3);
         VerticalAlignment = VerticalAlignment.Center;
         Kind = PillKind.Neutral;
+        // Round ends need a radius of exactly half the height: WPF shrinks a larger radius in proportion
+        // to both sides, which turns a wide pill into an ellipse.
+        SizeChanged += (_, e) => CornerRadius = new CornerRadius(e.NewSize.Height / 2);
     }
 
     public string Text
