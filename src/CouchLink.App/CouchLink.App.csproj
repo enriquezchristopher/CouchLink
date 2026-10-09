@@ -18,6 +18,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="CouchLink.App.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Controller profiles shipped next to the exe; the controls editor lists them. -->
     <Content Include="profiles\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>

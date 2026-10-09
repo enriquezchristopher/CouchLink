@@ -9,6 +9,7 @@
     <Project Path="src/CouchLink.VideoTest/CouchLink.VideoTest.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/CouchLink.App.Tests/CouchLink.App.Tests.csproj" />
     <Project Path="tests/CouchLink.Audio.Tests/CouchLink.Audio.Tests.csproj" />
     <Project Path="tests/CouchLink.Core.Tests/CouchLink.Core.Tests.csproj" />
     <Project Path="tests/CouchLink.Video.Tests/CouchLink.Video.Tests.csproj" />
