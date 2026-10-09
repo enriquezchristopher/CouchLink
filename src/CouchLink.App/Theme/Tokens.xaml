@@ -19,9 +19,10 @@
     </LinearGradientBrush>
     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#A78BFA"/>
     <SolidColorBrush x:Key="ListeningFillBrush" Color="#2A1D4F"/>
+    <!-- The tile of the app icon (assets/couchlink.svg). -->
     <LinearGradientBrush x:Key="LogoBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#7C3AED" Offset="0"/>
-        <GradientStop Color="#F43F5E" Offset="1"/>
+        <GradientStop Color="#8B5CF6" Offset="0"/>
+        <GradientStop Color="#5B21B6" Offset="1"/>
     </LinearGradientBrush>
     <SolidColorBrush x:Key="HoverOverlayBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="HeroTileBrush" Color="#1FFFFFFF"/>
