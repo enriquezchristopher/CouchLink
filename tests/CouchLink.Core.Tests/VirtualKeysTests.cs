@@ -59,6 +59,62 @@ public class VirtualKeysTests
         Assert.Equal(vkey, VirtualKeys.FromRawKeyboard(vkey, makeCode, flags, numLockOn));
     }
 
+    // From a real keyboard with Num Lock on, Left Shift held, Num8 then Num5 tapped: the Shift events around the
+    // key carry the numpad key's make code (0x48, 0x4C), not Shift's own (0x2A, 0x36), and have no E0 flag.
+    [Theory]
+    [InlineData(0x10, 0x48, KeyDown, true)]
+    [InlineData(0x10, 0x48, KeyUp, true)]
+    [InlineData(0x10, 0x4C, KeyDown, true)]
+    [InlineData(0x10, 0x4C, KeyUp, true)]
+    [InlineData(0x10, 0x53, KeyUp, true)] // the numpad decimal key
+    [InlineData(0x10, 0x00, KeyDown, false)] // Shift injected without a make code (remote desktop, on-screen keyboard)
+    [InlineData(0x10, 0x1E, KeyDown, false)] // not a numpad make code
+    [InlineData(0x11, 0x48, KeyDown, false)] // only Shift is ever faked
+    public void The_Shift_event_around_a_numpad_key_is_recognised_by_that_keys_make_code(ushort vkey, ushort makeCode, ushort flags, bool expected)
+    {
+        Assert.Equal(expected, VirtualKeys.IsFakeShift(vkey, makeCode, flags));
+    }
+
+    [Theory]
+    [InlineData(VirtualKeys.LShift)]
+    [InlineData(VirtualKeys.RShift)]
+    [InlineData(0x10)]
+    public void Shift_is_held_while_Windows_reports_a_shifted_numpad_key_down(ushort shift)
+    {
+        // While Shift+Num8 is down Windows reports Shift itself as up and VK_UP as down.
+        var down = new HashSet<ushort> { 0x26 };
+        Assert.True(VirtualKeys.IsHeld(shift, down.Contains));
+    }
+
+    [Fact]
+    public void Shift_is_not_held_when_nothing_is_down()
+    {
+        Assert.False(VirtualKeys.IsHeld(VirtualKeys.LShift, new HashSet<ushort>().Contains));
+    }
+
+    [Fact]
+    public void Ctrl_is_not_held_just_because_a_navigation_key_is()
+    {
+        var down = new HashSet<ushort> { 0x26 };
+        Assert.False(VirtualKeys.IsHeld(VirtualKeys.LControl, down.Contains));
+    }
+
+    [Theory]
+    [InlineData(0x10, 0x48, KeyDown)] // fake Shift before Num8
+    [InlineData(0x10, 0x48, KeyUp)] // fake Shift after Num8
+    [InlineData(0x10, 0x4C, KeyDown)]
+    public void A_fake_Shift_event_gives_no_key(ushort vkey, ushort makeCode, ushort flags)
+    {
+        Assert.Equal(0, VirtualKeys.FromRawEvent(vkey, makeCode, flags, numLockOn: true));
+    }
+
+    [Fact]
+    public void The_real_Shift_and_a_numpad_key_still_give_keys()
+    {
+        Assert.Equal(VirtualKeys.LShift, VirtualKeys.FromRawEvent(0x10, 0x2A, KeyDown, numLockOn: true));
+        Assert.Equal(0x68, VirtualKeys.FromRawEvent(0x26, 0x48, KeyDown, numLockOn: true));
+    }
+
     [Theory]
     [InlineData(0x10, 0x2A, Extended, true)] // the fake Shift
     [InlineData(0x10, 0x2A, Extended | KeyUp, true)]
