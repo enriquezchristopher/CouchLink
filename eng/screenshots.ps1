@@ -144,6 +144,18 @@ try {
     $stats = Id $main 'StreamStats'
     $stats.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand()
     Start-Sleep -Seconds 1
+    # Scroll the lobby to the bottom so the expanded stats are fully in view.
+    $walker = [System.Windows.Automation.TreeWalker]::ControlViewWalker
+    for ($p = $walker.GetParent($stats); $p; $p = $walker.GetParent($p)) {
+        if ($p.GetSupportedPatterns() -contains [System.Windows.Automation.ScrollPattern]::Pattern) {
+            $scroll = $p.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern)
+            if ($scroll.Current.VerticallyScrollable) {
+                $scroll.SetScrollPercent([System.Windows.Automation.ScrollPattern]::NoScroll, 100)
+                break
+            }
+        }
+    }
+    Start-Sleep -Milliseconds 600
     Save-Shot $main 'host-lobby-details'
 
     $stop = Id $main 'StopHosting'
