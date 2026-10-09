@@ -1,0 +1,43 @@
+<!-- The dark palette (spec 3.1). HighContrast.xaml has the same keys; ThemeManager swaps them. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="ChromeBrush" Color="#0B0B1A"/>
+    <SolidColorBrush x:Key="BackgroundBrush" Color="#0F0F23"/>
+    <SolidColorBrush x:Key="InputBrush" Color="#16152B"/>
+    <SolidColorBrush x:Key="CardBrush" Color="#1E1C35"/>
+    <SolidColorBrush x:Key="RaisedBrush" Color="#27273B"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#2E2B4F"/>
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="#3B3858"/>
+    <SolidColorBrush x:Key="TextBrush" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8"/>
+    <SolidColorBrush x:Key="TextHintBrush" Color="#64748B"/>
+    <SolidColorBrush x:Key="OnPrimaryBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#7C3AED"/>
+    <LinearGradientBrush x:Key="PrimaryGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#7C3AED" Offset="0"/>
+        <GradientStop Color="#5B21B6" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#A78BFA"/>
+    <SolidColorBrush x:Key="ListeningFillBrush" Color="#2A1D4F"/>
+    <LinearGradientBrush x:Key="LogoBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#7C3AED" Offset="0"/>
+        <GradientStop Color="#F43F5E" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="HoverOverlayBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="HeroTileBrush" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="DangerBrush" Color="#FB7185"/>
+    <SolidColorBrush x:Key="DangerFillBrush" Color="#F43F5E"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#FBBF24"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#4ADE80"/>
+    <SolidColorBrush x:Key="InfoBannerFillBrush" Color="#1E1C35"/>
+    <SolidColorBrush x:Key="InfoBannerBorderBrush" Color="#2E2B4F"/>
+    <SolidColorBrush x:Key="InfoBannerTextBrush" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="WarningBannerFillBrush" Color="#2A1F05"/>
+    <SolidColorBrush x:Key="WarningBannerBorderBrush" Color="#6B4F0A"/>
+    <SolidColorBrush x:Key="WarningBannerTextBrush" Color="#FDE68A"/>
+    <SolidColorBrush x:Key="ErrorBannerFillBrush" Color="#2A0F18"/>
+    <SolidColorBrush x:Key="ErrorBannerBorderBrush" Color="#7F1D35"/>
+    <SolidColorBrush x:Key="ErrorBannerTextBrush" Color="#FECDD3"/>
+    <SolidColorBrush x:Key="LivePillFillBrush" Color="#14532D"/>
+    <SolidColorBrush x:Key="ReconnectingPillFillBrush" Color="#422006"/>
+</ResourceDictionary>

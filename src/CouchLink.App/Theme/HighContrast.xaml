@@ -1,0 +1,37 @@
+<!-- Windows High Contrast (spec 3.6): every Tokens.xaml key, from the user's system colors. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <x:Static x:Key="ChromeBrush" Member="SystemColors.WindowBrush"/>
+    <x:Static x:Key="BackgroundBrush" Member="SystemColors.WindowBrush"/>
+    <x:Static x:Key="InputBrush" Member="SystemColors.WindowBrush"/>
+    <x:Static x:Key="CardBrush" Member="SystemColors.WindowBrush"/>
+    <x:Static x:Key="RaisedBrush" Member="SystemColors.WindowBrush"/>
+    <x:Static x:Key="BorderBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="BorderStrongBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="TextBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="TextMutedBrush" Member="SystemColors.GrayTextBrush"/>
+    <x:Static x:Key="TextHintBrush" Member="SystemColors.GrayTextBrush"/>
+    <x:Static x:Key="OnPrimaryBrush" Member="SystemColors.HighlightTextBrush"/>
+    <x:Static x:Key="PrimaryBrush" Member="SystemColors.HighlightBrush"/>
+    <x:Static x:Key="PrimaryGradientBrush" Member="SystemColors.HighlightBrush"/>
+    <x:Static x:Key="PrimaryTextBrush" Member="SystemColors.HotTrackBrush"/>
+    <x:Static x:Key="ListeningFillBrush" Member="SystemColors.HighlightBrush"/>
+    <x:Static x:Key="LogoBrush" Member="SystemColors.HighlightBrush"/>
+    <x:Static x:Key="HoverOverlayBrush" Member="SystemColors.HighlightBrush"/>
+    <x:Static x:Key="HeroTileBrush" Member="SystemColors.WindowBrush"/>
+    <x:Static x:Key="DangerBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="DangerFillBrush" Member="SystemColors.HighlightBrush"/>
+    <x:Static x:Key="WarningBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="SuccessBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="InfoBannerFillBrush" Member="SystemColors.WindowBrush"/>
+    <x:Static x:Key="InfoBannerBorderBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="InfoBannerTextBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="WarningBannerFillBrush" Member="SystemColors.WindowBrush"/>
+    <x:Static x:Key="WarningBannerBorderBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="WarningBannerTextBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="ErrorBannerFillBrush" Member="SystemColors.WindowBrush"/>
+    <x:Static x:Key="ErrorBannerBorderBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="ErrorBannerTextBrush" Member="SystemColors.WindowTextBrush"/>
+    <x:Static x:Key="LivePillFillBrush" Member="SystemColors.WindowBrush"/>
+    <x:Static x:Key="ReconnectingPillFillBrush" Member="SystemColors.WindowBrush"/>
+</ResourceDictionary>
