@@ -61,15 +61,23 @@ jobs:
           path: TestResults
           if-no-files-found: ignore
 
-      - name: Trial release package
+      - name: Trial release package (zip and installer)
         if: steps.code.outputs.present == 'true'
         shell: pwsh
         run: ./eng/package.ps1 -OutDir artifacts
+
+      # Installs, repairs and uninstalls the setup on this runner and checks the files and the four firewall rules.
+      - name: Test the installer
+        if: steps.code.outputs.present == 'true'
+        shell: pwsh
+        run: ./eng/test-installer.ps1 -Setup (Get-ChildItem artifacts/CouchLink-Setup-v*.exe).FullName
 
       - name: Upload package
         if: steps.code.outputs.present == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: package
-          path: artifacts/*.zip
+          path: |
+            artifacts/*.zip
+            artifacts/CouchLink-Setup-v*.exe
           retention-days: 7

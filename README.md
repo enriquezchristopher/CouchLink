@@ -68,7 +68,8 @@ network, with **no accounts, no cloud and no internet** required.
   CouchLink.
 - **Recovers by itself**: brief network drops reconnect automatically, and a
   dropped player gets the same controller back.
-- **No install needed** on joining PCs: unzip and run. No .NET to install.
+- **Easy to deploy**: one installer per PC (with a silent mode for many PCs),
+  or a portable zip. No .NET to install.
 
 ## How it works
 
@@ -98,16 +99,18 @@ details.
 
 ## Quick start
 
-1. Download `CouchLink-vX.Y.Z-win-x64.zip` from
+1. Download `CouchLink-Setup-vX.Y.Z.exe` from
    [Releases](https://github.com/enriquezchristopher/CouchLink/releases/latest)
-   and unzip it on every PC.
-2. On the host, install the
-   [ViGEmBus driver](https://github.com/nefarius/ViGEmBus/releases).
-3. Start `CouchLink.App.exe` on every PC. When Windows Firewall asks, allow
-   it on **both** private and public networks.
-4. On the host, click **Host**, then start the game in borderless windowed
+   and run it on every PC. It installs CouchLink, the ViGEmBus driver if the PC
+   doesn't have it, and the firewall rules. (Prefer no install? Download
+   `CouchLink-vX.Y.Z-win-x64.zip` instead, unzip it, install the
+   [ViGEmBus driver](https://github.com/nefarius/ViGEmBus/releases) on the
+   host, and allow CouchLink through the firewall on **both** private and
+   public networks when Windows asks.)
+2. Start CouchLink from the Start menu on every PC.
+3. On the host, click **Host**, then start the game in borderless windowed
    mode.
-5. On each other PC, click **Join** and pick the host. The host clicks
+4. On each other PC, click **Join** and pick the host. The host clicks
    **Allow**, and the player is in.
 
 The **[setup guide](docs/cafe-setup-guide.md)** covers everything in more
@@ -189,7 +192,7 @@ Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 ./eng/get-ffmpeg.ps1       # once: FFmpeg 9 for host video, into third_party/ffmpeg
 dotnet build               # warnings are errors
 dotnet test
-./eng/package.ps1          # builds artifacts/CouchLink-v<version>-win-x64.zip
+./eng/package.ps1          # builds artifacts/CouchLink-v<version>-win-x64.zip and CouchLink-Setup-v<version>.exe
 ```
 
 `CouchLink.PadTest.exe check 9` checks, without any game, that a PC

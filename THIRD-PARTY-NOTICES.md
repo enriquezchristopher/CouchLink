@@ -16,12 +16,14 @@ license.
 | Vortice.Windows (Direct3D11, DXGI, Direct2D1) | CouchLink.App, VideoTest | MIT | https://github.com/amerkoleci/Vortice.Windows |
 | NAudio (NAudio.Wasapi, NAudio.Core) 3.1.0 | CouchLink.App (host capture, client playback) | MIT | https://github.com/naudio/NAudio |
 | Concentus 2.2.2 (managed Opus) | CouchLink.App (audio codec) | BSD-3-Clause (the Opus license) | https://github.com/lostromb/concentus |
+| ViGEmBus driver 1.22.0 (its installer, unchanged) | CouchLink-Setup only: creates the virtual controllers on the host | BSD-3-Clause | https://github.com/nefarius/ViGEmBus |
+| Inno Setup (setup program) | CouchLink-Setup only | Inno Setup License | https://jrsoftware.org/isinfo.php |
 
 ## Required separately (not included)
 
 | Component | Purpose | License | Source |
 |---|---|---|---|
-| ViGEmBus driver | Creates the virtual controllers on the host | BSD-3-Clause | https://github.com/nefarius/ViGEmBus |
+| ViGEmBus driver | Creates the virtual controllers on the host. The portable zip does not include it; the installer does. | BSD-3-Clause | https://github.com/nefarius/ViGEmBus |
 
 ## Development only (not included in releases)
 

@@ -1,16 +1,21 @@
 <#
 .SYNOPSIS
-    Builds the release package: CouchLink-v<version>-win-x64.zip
+    Builds the release files: the portable CouchLink-v<version>-win-x64.zip and the
+    CouchLink-Setup-v<version>.exe installer.
 .DESCRIPTION
     Publishes the app, PadTest and VideoTest as self-contained win-x64 builds
     (no .NET install needed on the target PC), with FFmpeg 9 in ffmpeg\, and
     zips them with the license files. All three go into one folder so they
     share one copy of the .NET runtime and of FFmpeg.
+    The setup (installer/CouchLink.iss) is built from that same folder, so the zip
+    and the setup hold identical files. It also bundles the ViGEmBus driver installer;
+    Inno Setup and ViGEmBus are fetched on first use. Pass -SkipInstaller to build
+    only the zip.
     The version comes from eng/version.props.
 .EXAMPLE
     ./eng/package.ps1 -OutDir artifacts
 #>
-param([string]$OutDir = 'artifacts')
+param([string]$OutDir = 'artifacts', [switch]$SkipInstaller)
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -47,3 +52,14 @@ $zip = Join-Path $out "$name.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
 Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zip
 Write-Host "Package: $zip"
+
+if (-not $SkipInstaller) {
+    & (Join-Path $PSScriptRoot 'get-vigembus.ps1')
+    & (Join-Path $PSScriptRoot 'get-inno-setup.ps1')
+    $iscc = Join-Path $root 'third_party/innosetup/ISCC.exe'
+    $vigembus = Join-Path $root 'third_party/vigembus/ViGEmBus_1.22.0_x64_x86_arm64.exe'
+    & $iscc /Qp "/DAppVersion=$version" "/DStageDir=$stage" "/DViGEmBusSetup=$vigembus" "/DOutputDir=$out" `
+        (Join-Path $root 'installer/CouchLink.iss')
+    if ($LASTEXITCODE -ne 0) { throw 'Inno Setup failed to build the installer.' }
+    Write-Host "Installer: $(Join-Path $out "CouchLink-Setup-v$version.exe")"
+}
