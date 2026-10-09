@@ -169,11 +169,9 @@ public sealed class SessionServer : IDisposable
         bool known;
         lock (_gate)
             known = _connections.Remove(id);
+        connection.Dispose(); // also after we closed it: the peer has now read everything and closed its end
         if (known)
-        {
-            connection.Dispose();
             Guard(s => s.Disconnected(id));
-        }
     }
 
     private void OnTimer()
@@ -217,7 +215,8 @@ public sealed class SessionServer : IDisposable
             _stopped = true;
         }
         _timer?.Dispose();
-        Task.WhenAll(closing.Select(c => c.Writer)).Wait(TimeSpan.FromSeconds(1));
+        // Each client reads HostEnded, sees the end and closes; forcing the socket shut sooner could lose HostEnded.
+        Task.WhenAll(closing.Select(c => c.Closed)).Wait(TimeSpan.FromSeconds(1));
         _cts.Cancel();
         _listener.Stop();
         foreach (var connection in closing)
