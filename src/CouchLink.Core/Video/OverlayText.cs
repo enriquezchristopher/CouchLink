@@ -52,7 +52,8 @@ public static class OverlayText
 
     /// <summary>
     /// The F1 panel: the loaded profile, then every control and its keys, grouped as in the editor and
-    /// led by its action label when it has one. Read when drawn.
+    /// led by its action label when it has one. The right stick's direction rows appear only once one has a key.
+    /// Read when drawn.
     /// </summary>
     public static string Controls(ControlSettings settings)
     {
@@ -60,13 +61,19 @@ public static class OverlayText
         string title = settings.ProfileName is { } profile
             ? $"Controls: {profile}{(settings.ProfileChanged ? " (changed)" : "")} {Help}"
             : $"Controls {Help}";
-        var names = KeyNames.Groups
+        // The right stick's keys are listed only once one has a key: by default the mouse is the right stick,
+        // and four "(none)" rows would crowd the panel (and widen its first column).
+        bool rightStickKeys = KeyNames.RightStick.Any(c => settings.Layout.KeysFor(c).Count > 0);
+        var groups = KeyNames.Groups
+            .Where(g => rightStickKeys || !ReferenceEquals(g.Controls, KeyNames.RightStick))
+            .ToList();
+        var names = groups
             .SelectMany(g => g.Controls)
             .ToDictionary(c => c, c => KeyNames.Labelled(c, settings.LabelFor(c)));
         int width = Math.Max(18, names.Values.Max(n => n.Length) + 2);
 
         var lines = new List<string> { title };
-        foreach (var (_, controls) in KeyNames.Groups)
+        foreach (var (_, controls) in groups)
         {
             lines.Add("");
             foreach (var control in controls)

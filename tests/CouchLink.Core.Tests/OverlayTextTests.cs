@@ -82,7 +82,7 @@ public class OverlayTextTests
 
         var text = OverlayText.Controls(settings);
 
-        foreach (var control in Enum.GetValues<PadControl>())
+        foreach (var control in Enum.GetValues<PadControl>().Except(KeyNames.RightStick))
             Assert.Contains(KeyNames.Of(control), text);
         Assert.Contains($"{"Cross",-18}Space", text);
         Assert.Contains($"{"Square",-18}J / Left click", text);
@@ -121,5 +121,44 @@ public class OverlayTextTests
         Assert.Contains("Shoot from range (Square)".PadRight(width) + "J / Left click", text);
         Assert.Contains("Cross".PadRight(width) + "K", text);
         Assert.Contains("Right stick".PadRight(width) + "Mouse", text);
+    }
+
+    [Fact]
+    public void The_default_panel_hides_the_right_stick_keys_and_keeps_its_width()
+    {
+        var text = OverlayText.Controls(new ControlSettings());
+
+        Assert.DoesNotContain("Right stick up", text);
+        Assert.Contains($"{"Cross",-18}K\n", text);
+        Assert.EndsWith($"{"Right stick",-18}Mouse (sensitivity {ControlSettings.DefaultStep})", text);
+    }
+
+    [Fact]
+    public void One_right_stick_key_lists_all_four_directions()
+    {
+        var settings = new ControlSettings();
+        settings.Bind(PadControl.RightUp, 0x68);
+        settings.SetLabel(PadControl.RightUp, "Pro stick up");
+
+        var text = OverlayText.Controls(settings);
+
+        int width = "Pro stick up (Right stick up)".Length + 2;
+        Assert.Contains("Pro stick up (Right stick up)".PadRight(width) + "Num 8", text);
+        Assert.Contains("Right stick down".PadRight(width) + "(none)", text);
+        Assert.Contains("Right stick left".PadRight(width) + "(none)", text);
+        Assert.Contains("Right stick right".PadRight(width) + "(none)", text);
+        Assert.Contains("Right stick".PadRight(width) + "Mouse", text); // the mouse still works when no key is held
+    }
+
+    [Fact]
+    public void A_right_stick_label_without_a_key_stays_hidden()
+    {
+        var settings = new ControlSettings();
+        settings.SetLabel(PadControl.RightUp, "Pro stick up");
+
+        var text = OverlayText.Controls(settings);
+
+        Assert.DoesNotContain("Pro stick up", text);
+        Assert.Contains($"{"Cross",-18}K\n", text);
     }
 }
