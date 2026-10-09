@@ -1,16 +1,23 @@
 <UserControl x:Class="CouchLink.App.Views.StartView" x:ClassModifier="internal"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid Margin="24">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:CouchLink.App.Ui">
+    <DockPanel Margin="24,16">
+        <DockPanel DockPanel.Dock="Bottom">
+            <TextBlock x:Name="VersionText" DockPanel.Dock="Right" Style="{StaticResource CaptionText}"/>
+            <TextBlock x:Name="PcText" Style="{StaticResource CaptionText}" TextTrimming="CharacterEllipsis"/>
+        </DockPanel>
         <StackPanel VerticalAlignment="Center">
-            <TextBlock Text="CouchLink" FontSize="32" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-            <TextBlock Text="Couch co-op over the LAN" Foreground="Gray" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-            <Button x:Name="HostButton" Content="Host" Height="72" FontSize="24" Margin="0,32,0,0"/>
-            <Button x:Name="JoinButton" Content="Join" Height="72" FontSize="24" Margin="0,12,0,0"/>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,24,0,0">
-                <Button x:Name="ControlsButton" Content="⚙ Controls" Padding="12,4"/>
-                <Button x:Name="CrashReportsButton" Content="Crash reports" Padding="12,4" Margin="8,0,0,0"/>
-            </StackPanel>
+            <TextBlock Text="Ready to play?" Style="{StaticResource DisplayText}"/>
+            <TextBlock Text="Couch co-op across the PCs on this network." Style="{StaticResource BodyMutedText}" Margin="0,4,0,24"/>
+            <Button x:Name="HostButton" Style="{StaticResource HeroPrimaryButton}" Content="Host a game"
+                    ui:ThemeProps.Icon="{StaticResource IconMonitor}"
+                    ui:ThemeProps.Description="Run the game here. Each friend gets their own controller."
+                    AutomationProperties.AutomationId="HostButton"/>
+            <Button x:Name="JoinButton" Style="{StaticResource HeroButton}" Content="Join a game" Margin="0,12,0,0"
+                    ui:ThemeProps.Icon="{StaticResource IconArrowRight}"
+                    ui:ThemeProps.Description="Play a game running on another PC."
+                    AutomationProperties.AutomationId="JoinButton"/>
         </StackPanel>
-    </Grid>
+    </DockPanel>
 </UserControl>
