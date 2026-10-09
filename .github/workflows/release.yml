@@ -46,8 +46,9 @@ jobs:
         shell: pwsh
         run: ./eng/package.ps1 -OutDir artifacts
 
-      - name: Attach package to the release
+      # Two downloads per release: the portable zip and the installer.
+      - name: Attach the zip and the installer to the release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ needs.release-please.outputs.tag_name }}" (Get-ChildItem artifacts/*.zip).FullName --clobber
+        run: gh release upload "${{ needs.release-please.outputs.tag_name }}" (Get-ChildItem artifacts/*.zip, artifacts/CouchLink-Setup-v*.exe).FullName --clobber

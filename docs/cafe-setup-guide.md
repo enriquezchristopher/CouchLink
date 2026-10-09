@@ -36,7 +36,7 @@ per joining PC, so the game sees separate players.
 | Windows | 10 or 11, 64-bit | 10 or 11, 64-bit |
 | Network | Wired, same switch or subnet as the others | Wired, same switch or subnet |
 | Graphics | AMD or NVIDIA GPU with a hardware video encoder (most cards from the last ten years) | Any GPU that decodes H.264 video (almost all) |
-| Extra software | The game, and the [ViGEmBus driver](https://github.com/nefarius/ViGEmBus/releases) | None |
+| Extra software | The game, and the [ViGEmBus driver](https://github.com/nefarius/ViGEmBus/releases) (the installer adds it for you) | None |
 
 A gigabit wired network is recommended. Wi-Fi works badly for game streaming:
 expect stutter and lag.
@@ -46,19 +46,59 @@ everything.
 
 ## 3. Install
 
-### On every PC
+Each release has two downloads under **Assets**:
 
-1. Download `CouchLink-vX.Y.Z-win-x64.zip` from
-   [Releases](https://github.com/enriquezchristopher/CouchLink/releases)
-   (under **Assets** of the latest release).
-2. Unzip it to a folder that stays put, for example `C:\CouchLink`.
-3. Start `CouchLink.App.exe`. Pin it to the taskbar or make a desktop
-   shortcut if you like.
+- `CouchLink-Setup-vX.Y.Z.exe`, the installer. It sets up everything on a PC
+  in one go. Use this for a café.
+- `CouchLink-vX.Y.Z-win-x64.zip`, the portable version. It needs no
+  installing, but you add the driver and the firewall rules yourself.
 
 Windows may warn "Windows protected your PC" because CouchLink isn't
 code-signed. Click **More info**, then **Run anyway**.
 
-### On PCs that will host: the ViGEmBus driver
+### With the installer (recommended)
+
+Run `CouchLink-Setup-vX.Y.Z.exe` on every PC and accept the defaults. It needs
+administrator rights. It:
+
+- puts CouchLink in `C:\Program Files\CouchLink` and adds a Start menu
+  shortcut (and a desktop shortcut if you leave that box ticked),
+- installs the ViGEmBus driver if the PC doesn't have it, and
+- adds the four Windows Firewall rules described below, limited to your local
+  network.
+
+Every PC gets the driver and all four rules, so any PC can host or join.
+
+**Installing on many PCs without clicking through.** Run this from a Command
+Prompt or a remote tool as administrator:
+
+```
+CouchLink-Setup-vX.Y.Z.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /LOG="C:\Temp\couchlink-setup.log"
+```
+
+The same command updates an older CouchLink. It closes a running CouchLink
+first. The exit code tells you how it went:
+
+| Code | Meaning |
+|---|---|
+| 0 | Installed. |
+| 10 | CouchLink is installed, but the ViGEmBus driver didn't install. This PC can join, but it can't host with controllers. |
+| 11 | CouchLink is installed, but a firewall rule wasn't added. Other PCs may not find this one. |
+| 12 | A newer CouchLink is already installed, so nothing changed. |
+| 1 to 8 | Setup itself failed. The log file says why. |
+
+### With the portable zip
+
+#### On every PC
+
+1. Unzip `CouchLink-vX.Y.Z-win-x64.zip` to a folder that stays put, for example
+   `C:\CouchLink`.
+2. Start `CouchLink.App.exe`. Pin it to the taskbar or make a desktop
+   shortcut if you like.
+
+#### On PCs that will host: the ViGEmBus driver
+
+The installer does this step for you. With the zip, do it yourself.
 
 The host needs the free ViGEmBus driver to create the virtual controllers.
 
@@ -69,9 +109,10 @@ The host needs the free ViGEmBus driver to create the virtual controllers.
 If the driver is missing, hosting fails with "ViGEmBus driver not installed".
 It's safe to install it on every PC, so any PC can host.
 
-### Windows Firewall
+#### Windows Firewall
 
-The PCs talk to each other on these ports:
+The installer adds these rules for you. With the zip, or to check them, here is
+what the PCs use. They talk to each other on these ports:
 
 | Port | What it carries |
 |---|---|
@@ -362,19 +403,39 @@ problems that aren't crashes.
 
 ## 10. Updating and removing
 
-**Updating:** close CouchLink on the PC, delete the old folder's contents, and
-unzip the new version into the same folder. Keep the same folder so the
-firewall rules still match. All PCs should run the same version.
+All PCs should run the same version.
 
-**Removing:** delete the CouchLink folder. To remove the firewall rules, run
-in PowerShell as administrator:
+**With the installer**
 
-```powershell
-Remove-NetFirewallRule -DisplayName 'CouchLink (*'
-```
+- *Updating:* run the new `CouchLink-Setup-vX.Y.Z.exe` over the old one. It
+  keeps the same folder, closes a running CouchLink, and refreshes the
+  firewall rules without doubling them. Running an older setup over a newer
+  CouchLink is refused.
+- *Removing:* use Settings > Apps > CouchLink > Uninstall, or run this from a
+  Command Prompt as administrator:
 
-ViGEmBus can stay (other programs use it too) or be removed from Settings >
-Apps.
+  ```
+  "C:\Program Files\CouchLink\unins000.exe" /VERYSILENT /SUPPRESSMSGBOXES
+  ```
+
+  It removes the program, the shortcuts and the four firewall rules. It
+  keeps ViGEmBus (other programs use it too) and your logs and crash reports
+  in `%LOCALAPPDATA%\CouchLink`.
+
+**With the portable zip**
+
+- *Updating:* close CouchLink on the PC, delete the old folder's contents, and
+  unzip the new version into the same folder. Keep the same folder so the
+  firewall rules still match.
+- *Removing:* delete the CouchLink folder. To remove the firewall rules, run
+  in PowerShell as administrator:
+
+  ```powershell
+  Remove-NetFirewallRule -DisplayName 'CouchLink (*'
+  ```
+
+  ViGEmBus can stay (other programs use it too) or be removed from Settings >
+  Apps.
 
 ## 11. Advanced: command-line options
 
