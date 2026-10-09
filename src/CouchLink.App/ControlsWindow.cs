@@ -122,14 +122,6 @@ internal sealed class ControlsWindow : Window
                 list.Children.Add(line);
             }
         }
-        list.Children.Add(new TextBlock { Text = "Right stick", FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 8, 0, 2) });
-        list.Children.Add(new Button
-        {
-            Content = Row("Right stick", "Mouse"),
-            IsEnabled = false,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            Padding = new Thickness(8, 4, 8, 4),
-        });
 
         _sensitivity = new Slider
         {
