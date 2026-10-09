@@ -40,7 +40,7 @@ internal sealed class ClientInputLoop : IDisposable
                 var now = clock.Elapsed;
                 if (now - lastSync >= SyncInterval)
                 {
-                    _mapper.SyncHeld(vk => (GetAsyncKeyState(vk) & 0x8000) != 0);
+                    _mapper.SyncHeld(vk => VirtualKeys.IsHeld(vk, key => (GetAsyncKeyState(key) & 0x8000) != 0));
                     lastSync = now;
                 }
                 var state = _mapper.Tick((now - lastTick).TotalSeconds);

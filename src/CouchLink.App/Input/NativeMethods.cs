@@ -72,6 +72,9 @@ internal static partial class NativeMethods
     public static partial short GetAsyncKeyState(int virtualKey);
 
     [LibraryImport("user32.dll")]
+    public static partial short GetKeyState(int virtualKey);
+
+    [LibraryImport("user32.dll")]
     public static partial IntPtr GetForegroundWindow();
 
     [LibraryImport("user32.dll")]
