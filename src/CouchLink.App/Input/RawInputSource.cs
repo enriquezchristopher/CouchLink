@@ -78,10 +78,10 @@ internal sealed class RawInputSource : IDisposable
     {
         if (kb.VKey is 0 or 0xFF)
             return; // fake/overrun keys
-        if (VirtualKeys.IsFakeShift(kb.VKey, kb.MakeCode, kb.Flags))
-            return; // Windows' Shift release/press around a numpad key; the real Shift is still down
         bool numLockOn = (GetKeyState(VK_NUMLOCK) & 1) != 0;
-        var vk = VirtualKeys.FromRawKeyboard(kb.VKey, kb.MakeCode, kb.Flags, numLockOn);
+        var vk = VirtualKeys.FromRawEvent(kb.VKey, kb.MakeCode, kb.Flags, numLockOn);
+        if (vk == 0)
+            return; // Windows' Shift event around a numpad key; the real Shift is still down
         if ((kb.Flags & RI_KEY_BREAK) != 0)
             KeyUp?.Invoke(vk);
         else

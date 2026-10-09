@@ -53,24 +53,44 @@ public static class VirtualKeys
         _ => vkey,
     };
 
+    /// <summary>The key code for one Raw Input keyboard event, or 0 when the event is not a real key and must be ignored.</summary>
+    public static ushort FromRawEvent(ushort vkey, ushort makeCode, ushort flags, bool numLockOn) =>
+        IsFakeShift(vkey, makeCode, flags) ? (ushort)0 : FromRawKeyboard(vkey, makeCode, flags, numLockOn);
+
     /// <summary>
-    /// Windows' fake Shift event (Shift's make code with the E0 flag). With Num Lock on and Shift held, Windows
-    /// wraps each numpad key in a fake Shift release and press; the real Shift never went up.
+    /// A Shift event Windows adds around a key, not a press of the Shift key. With Num Lock on and Shift held,
+    /// a numpad key is wrapped in a Shift event (VK_SHIFT) that carries the numpad key's make code, and the real
+    /// Shift never went up. The keyboard's own fake Shift (Shift's make code with the E0 flag) is the same thing.
+    /// A Shift event with any other make code, such as 0 from a remote desktop, is real.
     /// </summary>
-    public static bool IsFakeShift(ushort vkey, ushort makeCode, ushort flags) =>
-        vkey == Shift && makeCode == LeftShiftMakeCode && (flags & ExtendedKeyFlag) != 0;
+    public static bool IsFakeShift(ushort vkey, ushort makeCode, ushort flags)
+    {
+        if (vkey != Shift)
+            return false;
+        if (makeCode == LeftShiftMakeCode)
+            return (flags & ExtendedKeyFlag) != 0;
+        foreach (var (code, _, _) in ShiftedNumpad)
+            if (code == makeCode)
+                return true;
+        return false;
+    }
 
     /// <summary>
     /// Whether a key counts as physically down. With Num Lock on and Shift held, Windows reports a numpad key as
-    /// its navigation key (Num8 as Up), so a Num key also counts when that key is down.
+    /// its navigation key (Num8 as Up), so a Num key also counts when that key is down. Windows reports Shift
+    /// itself as up while such a key is down, so Shift counts too.
     /// </summary>
     public static bool IsHeld(ushort vk, Func<ushort, bool> isPhysicallyDown)
     {
         if (isPhysicallyDown(vk))
             return true;
         foreach (var (_, nav, num) in ShiftedNumpad)
+        {
             if (num == vk)
                 return isPhysicallyDown(nav);
+            if ((vk is LShift or RShift or Shift) && isPhysicallyDown(nav))
+                return true;
+        }
         return false;
     }
 
