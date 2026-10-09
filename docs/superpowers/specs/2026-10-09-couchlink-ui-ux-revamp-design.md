@@ -153,11 +153,36 @@ Windows, so nothing is bundled.
 
 ### 3.5 Motion
 
-Hover and pressed color changes take 120 ms. Screen changes in the main
-window and toasts fade and slide 8 px in 180 ms. Nothing else animates
-except the scanning spinner and the toast countdown bar. When Windows
-"Show animations" is off (`SystemParameters.ClientAreaAnimation` is false)
-all transitions are instant and the spinner is replaced by a static icon.
+Motion is short and eases out, so it never makes anyone wait. Every
+duration, distance and easing is in `Theme/Motion.cs`. Only `Opacity` and
+render transforms animate, never layout.
+
+| What | Motion |
+|---|---|
+| Hover on buttons, menu and combo items | the highlight fades in and out, 150 ms |
+| Press | the button dips to 97% in 90 ms and springs back in 160 ms |
+| Toggle switch, Expander chevron | the knob or chevron moves in 180 ms |
+| Expander opening | the content fades in and rises 6 px, 180 ms |
+| Segmented control | the purple fill (`SegmentIndicator`) glides to the checked item, 220 ms |
+| Screen change in the main window | a picture of the old screen fades out (120 ms), then the new screen fades in and rises 12 px (240 ms) |
+| Host cards, player rows, the Controls editor's group cards | each fades in and rises 8 px (220 ms), 30 ms after the one before; items past the 10th come with the 10th |
+| Dialogs (`ThemedDialog`, Save profile, Controls editor) | the content fades in and grows from 96% (200 ms), and fades out in 120 ms on close |
+| Approval toast | slides in 40 px from the right and fades in (280 ms), slides back out in 160 ms |
+| Banner | drops 6 px and fades in, 200 ms |
+
+The scanning spinner and the toast countdown bar always move, because they
+tell the player something is still happening.
+
+**Reduce motion.** Help → Reduce motion stops the movement. It is saved per
+PC in `%LOCALAPPDATA%\CouchLink\settings.json` as `{ "reduceMotion": true }`
+and takes effect at once. It is off by default; a missing or unreadable file
+reads as off and is logged, and other keys in the file are kept when it is
+saved. With it on, nothing moves or scales: entrances are a plain 100 ms
+fade or nothing, presses and slides are instant, and windows close without
+waiting for an animation. `MotionSettings` holds the setting.
+`ThemeManager.Follow` swaps the motion resources and reloads `Controls.xaml`
+when it changes, so the templates pick up the new values. The app does not
+read Windows "Show animations"; Reduce motion is the only switch.
 
 ### 3.6 High Contrast
 
@@ -235,7 +260,8 @@ existing markup picks up the theme without changes:
   Disabled is 40% opacity. Keyboard focus shows a 2 px `PrimaryText` ring
   offset 2 px; mouse clicks do not show it.
 - **Segmented control:** RadioButtons with the `SegmentedItem` style inside
-  a Border with the `Segmented` style, for stream quality.
+  a Border with the `Segmented` style, for stream quality. A
+  `SegmentIndicator` behind the items draws the checked fill and slides it.
 - **CheckBox** as a toggle switch (`ToggleSwitch` style) for on/off settings,
   and as a plain check box elsewhere.
 - **ComboBox**, **TextBox** (with a placeholder attached property),
@@ -247,7 +273,7 @@ Small reusable controls in `Ui/`:
 
 | Control | What it shows |
 |---|---|
-| `AppHeader` | Logo mark and "CouchLink", Controls button, Help menu (Crash reports, About CouchLink). Raises `ControlsClicked`, `CrashReportsClicked`, `AboutClicked`. |
+| `AppHeader` | Logo mark and "CouchLink", Controls button, Help menu (Reduce motion, Crash reports, About CouchLink). Raises `ControlsClicked`, `CrashReportsClicked`, `AboutClicked`. |
 | `PlayerChip` | Rounded square in the player's color with "P3". Sizes: small (row), large (session). |
 | `KeyCap` | A key name in a key-shaped box; a dashed "No key" variant. |
 | `StatusPill` | Live, Reconnecting or neutral text in a pill. |
@@ -429,13 +455,14 @@ src/CouchLink.App/
     Controls.xaml          fonts, sizes, text styles, implicit and named
                            styles and templates; merges Icons.xaml
     Icons.xaml             Geometry resources
-    ThemeManager.cs        merges the dictionaries in code (so animation
-                           durations can be set first), follows High Contrast
+    ThemeManager.cs        merges the dictionaries in code (so the motion
+                           values go in first), follows High Contrast
+                           and Reduce motion
     WindowTheme.cs         window background, font, custom chrome (WindowChrome, DWM)
-    Motion.cs              the screen and toast enter animation
+    Motion.cs              durations, easings and the code-driven transitions
   Ui/
     ThemeProps.cs  Glyph  PlayerChip  KeyCap  StatusPill  Banner
-    StepTracker  Spinner  AppHeader.xaml(.cs)  ThemedDialog.xaml(.cs)
+    StepTracker  Spinner  SegmentIndicator  AppHeader.xaml(.cs)  ThemedDialog.xaml(.cs)
     CaptionButtons.xaml(.cs)  TitleBar.xaml(.cs)
     PlayerColors.cs
   Presentation/            the logic classes below
@@ -463,6 +490,7 @@ src/CouchLink.App/
   - `ControlFilter.Matches(control, group, label, query)`
   - `AskCountdown.For(elapsed, timeout)`: fraction and seconds-left text
   - `AddressInput.TryParse(text, out address, out error)`
+  - `MotionSettings.ReduceMotion`: read from and saved to settings.json
 
 ## 7. Testing
 
@@ -478,7 +506,7 @@ src/CouchLink.App/
   drives each screen through UI Automation and saves PNGs, which replace the
   ones in `docs/images/`.
 - Manual check on Windows 10 and 11: custom title bar, High Contrast on and off,
-  animations off, keyboard-only navigation through Start, Join and the
+  Reduce motion on, keyboard-only navigation through Start, Join and the
   Controls editor, Ctrl+Alt+C over the game, two approval toasts stacked,
   and keys typed in the game never pressing a button on the Session screen.
 

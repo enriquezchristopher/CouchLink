@@ -347,6 +347,7 @@ Latency ~22 ms (host 9 + network 1 + client 3)
 | Stutter or low fps | F2 on the joining PC: high **host** latency means the host GPU is overloaded (lower the Stream resolution); packet loss means the network. Check the host's **Stream stats** for "(software)". |
 | No sound on the joining PC | Check the joining PC's speakers or headphones. If both PCs are the same machine (testing), the client mutes itself on purpose. |
 | Keys don't work in the game | Click inside the game window once so it has the keyboard. F1 shows the current layout. |
+| Screen changes and buttons move too much for someone | Click **Help → Reduce motion** in the header. Things then appear with a short fade and nothing slides or bounces. The setting is saved on that PC. |
 | CouchLink crashed | See below. |
 
 ### Crash reports

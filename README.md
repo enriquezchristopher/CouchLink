@@ -127,6 +127,10 @@ which every café PC has.
 **Is my key layout saved?** No, on purpose: in a café the next customer
 should start with the default layout. Changes last until CouchLink closes.
 
+**Can I turn the animations off?** Yes: **Help → Reduce motion** in the
+header. Screens and dialogs then appear with a short fade and nothing slides
+or bounces. Unlike the key layout, this is saved on the PC.
+
 **Which GPUs work for hosting?** AMD and NVIDIA GPUs with a hardware encoder.
 Without one (for example a GT 710 or GT 1030), the host encodes on the CPU,
 which lags with heavy games.

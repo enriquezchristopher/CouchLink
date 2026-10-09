@@ -124,7 +124,10 @@ PCs / Windows builds: <fill in>
 |---|---|
 | Windows 10 and 11: every window has the dark custom title bar: Minimize, Maximize and Close where it can resize, Close alone on the dialogs; Close turns red on hover | <pass/fail> |
 | Windows High Contrast on while CouchLink runs: every screen switches to system colors at once and stays readable; off again: back to the dark theme | <pass/fail> |
-| "Show animations in Windows" off: screen changes, toasts and button hovers are instant; the spinners stand still | <pass/fail> |
+| Help → Reduce motion on: screen changes, dialogs, toasts, banners and list items appear with a short fade and nothing slides or scales; the quality selector jumps; button presses don't dip; the spinners and the toast countdown bar still move | <pass/fail> |
+| Reduce motion stays on after closing and reopening CouchLink, and turning it off brings the motion back at once, without a restart | <pass/fail> |
+| Reduce motion off: switching screens fades the old one out and the new one in with no flash or blank frame; host cards and player rows come in one after another; the quality fill glides between Low, Balanced, High and Max | <pass/fail> |
+| Closing a dialog with OK, Cancel, Esc, Alt+F4 and the close button: it fades out and the answer still counts (Stop hosting really stops, Cancel doesn't) | <pass/fail> |
 | Keyboard only: Tab reaches Host a game, Join a game, Controls, Help; the purple focus ring shows; Enter presses; the Help menu opens and works with arrows | <pass/fail> |
 | Keyboard only in the Controls editor: Find, Labels, each row, the slider (arrows), Invert Y, Reset, Done | <pass/fail> |
 | While playing, Space and Enter in the game never press Leave, Controls or a header button on the client's main window | <pass/fail> |
