@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.8.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.7.0...v1.8.0) (2026-10-09)
+
+
+### Features
+
+* **app:** stream quality setting in the host lobby, with a network link warning ([8f9534e](https://github.com/enriquezchristopher/CouchLink/commit/8f9534e864d10a21d294b874f6d2ee3f9f303007))
+* **core:** slower NVENC and AMF settings for high stream quality ([8f9534e](https://github.com/enriquezchristopher/CouchLink/commit/8f9534e864d10a21d294b874f6d2ee3f9f303007))
+* **core:** stream quality presets scale the bitrate up to 100 Mbps ([8f9534e](https://github.com/enriquezchristopher/CouchLink/commit/8f9534e864d10a21d294b874f6d2ee3f9f303007))
+* **core:** warn when the stream would outgrow the host's network link ([8f9534e](https://github.com/enriquezchristopher/CouchLink/commit/8f9534e864d10a21d294b874f6d2ee3f9f303007))
+
+
+### Bug Fixes
+
+* **video:** turn off driver auto-processing in the host converter ([8f9534e](https://github.com/enriquezchristopher/CouchLink/commit/8f9534e864d10a21d294b874f6d2ee3f9f303007))
+
 ## [1.7.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.6.2...v1.7.0) (2026-10-08)
 
 
