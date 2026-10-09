@@ -15,6 +15,8 @@
     <UseWPF>true</UseWPF>
     <PlatformTarget>x64</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The icon of the exe, the taskbar and Alt+Tab. Rebuild it from the SVGs in assets with eng/icon. -->
+    <ApplicationIcon>..\..\assets\couchlink.ico</ApplicationIcon>
     <!-- The app's text is English only. Without this, a self-contained publish copies WPF's translated
          strings for 13 other languages (about 8 MB) next to the exe. -->
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>

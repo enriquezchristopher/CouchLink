@@ -26,6 +26,8 @@
   <ItemGroup>
     <!-- The profiles shipped in the release zip, checked by ShippedProfilesTests. -->
     <None Include="..\..\src\CouchLink.App\profiles\*.json" LinkBase="profiles" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The icon and the GitHub social preview, checked by BrandAssetsTests. -->
+    <None Include="..\..\assets\couchlink.ico;..\..\assets\social-preview.png" LinkBase="assets" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

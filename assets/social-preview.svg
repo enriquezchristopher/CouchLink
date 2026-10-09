@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640">
+  <title>CouchLink social preview</title>
+  <!-- GitHub shows this at 1280x640. Keep everything about 40 px inside the edges. Fonts: Segoe UI, falling back to Arial. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#5B21B6"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="250" cy="320" r="460" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7C3AED" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#7C3AED" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="640" fill="#0F0F23"/>
+  <rect width="1280" height="640" fill="url(#glow)"/>
+
+  <!-- the app icon -->
+  <g transform="translate(90,160) scale(1.25)">
+    <rect width="256" height="256" rx="56" fill="url(#tile)"/>
+    <path fill="#FFFFFF" fill-rule="evenodd" transform="translate(48,40)" d="
+      M 40 6 L 120 6 C 134 6 144 14 148 30 L 158 76 C 160 90 150 98 138 98
+      C 128 98 122 94 117 86 L 110 74 C 107 69 102 66 96 66 L 64 66
+      C 58 66 53 69 50 74 L 43 86 C 38 94 32 98 22 98 C 10 98 0 90 2 76
+      L 12 30 C 16 14 26 6 40 6 Z
+      M 37 27 L 47 27 L 47 33 L 53 33 L 53 43 L 47 43 L 47 49 L 37 49 L 37 43 L 31 43 L 31 33 L 37 33 Z
+      M 104 40 a 6 6 0 1 0 12 0 a 6 6 0 1 0 -12 0 Z
+      M 118 28 a 6 6 0 1 0 12 0 a 6 6 0 1 0 -12 0 Z"/>
+    <g fill="none" stroke="#FFFFFF" stroke-width="9">
+      <rect x="76" y="168" width="58" height="34" rx="17"/>
+      <rect x="122" y="168" width="58" height="34" rx="17"/>
+    </g>
+  </g>
+
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="470" y="296" font-size="116" font-weight="700" fill="#FFFFFF">CouchLink</text>
+    <text x="474" y="360" font-size="38" font-weight="600" fill="#C4B5FD">Couch co-op over your local network.</text>
+    <text x="474" y="420" font-size="28" fill="#94A3B8">One PC hosts the game. Every other PC streams it</text>
+    <text x="474" y="458" font-size="28" fill="#94A3B8">and gets its own virtual controller.</text>
+
+    <!-- facts from the README -->
+    <g font-size="24" font-weight="600" fill="#A78BFA">
+      <rect x="474" y="504" width="232" height="52" rx="26" fill="#1E1C35" stroke="#3B3858" stroke-width="2"/>
+      <text x="504" y="539">Up to 10 players</text>
+      <rect x="724" y="504" width="156" height="52" rx="26" fill="#1E1C35" stroke="#3B3858" stroke-width="2"/>
+      <text x="754" y="539">LAN only</text>
+      <rect x="898" y="504" width="200" height="52" rx="26" fill="#1E1C35" stroke="#3B3858" stroke-width="2"/>
+      <text x="928" y="539">No accounts</text>
+    </g>
+  </g>
+</svg>
