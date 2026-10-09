@@ -17,8 +17,8 @@ internal static class PlayerColors
     private static readonly Brush[] Brushes = Slots.Select(c => (Brush)Frozen(c)).ToArray();
     private static readonly Brush Unknown = Frozen(Rgb(0x27273B));
 
-    /// <summary>Dark text that reads on every player color (9.5:1 or better). #0A0A1A, not #0F0F23: P10 is only 9.47:1 on #0F0F23.</summary>
-    public static Brush TextOnPlayer { get; } = Frozen(Rgb(0x0A0A1A));
+    /// <summary>Text on a player color is Background (#0F0F23). Worst case is P10 at 9.47:1.</summary>
+    public static Brush TextOnPlayer { get; } = Frozen(Rgb(0x0F0F23));
 
     public static Color? ColorFor(byte slot) => slot is >= 1 and <= 10 ? Slots[slot - 1] : null;
 

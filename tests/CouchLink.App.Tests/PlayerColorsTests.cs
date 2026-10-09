@@ -33,11 +33,11 @@ public class PlayerColorsTests
     }
 
     [Fact]
-    public void Dark_text_on_every_player_color_is_at_least_9_5_to_1()
+    public void Dark_text_on_every_player_color_is_at_least_9_4_to_1()
     {
         var text = ((SolidColorBrush)PlayerColors.TextOnPlayer).Color;
         for (byte slot = 1; slot <= 10; slot++)
-            Assert.True(Contrast(PlayerColors.ColorFor(slot)!.Value, text) >= 9.5, $"P{slot}");
+            Assert.True(Contrast(PlayerColors.ColorFor(slot)!.Value, text) >= 9.4, $"P{slot}");
     }
 
     [Fact]

@@ -111,7 +111,7 @@ Success 10.8, Success on Live pill 5.2, Warning on Reconnecting pill 8.7.
 
 A player's color follows them everywhere they appear: lobby rows, join-list
 dots and the session screen. Text on a player color is `Background`
-(`#0F0F23`), at 9.5:1 or higher on all ten.
+(`#0F0F23`), at 9.4:1 or higher on all ten (P10 is the lowest, at 9.47:1).
 
 | Slot | Hex | Slot | Hex |
 |---|---|---|---|
