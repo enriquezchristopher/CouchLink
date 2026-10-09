@@ -1,7 +1,9 @@
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Threading;
+using CouchLink.App.Presentation;
+using CouchLink.App.Ui;
 using CouchLink.Core.Protocol;
 using CouchLink.Core.Session;
 using CouchLink.Core.Video;
@@ -11,8 +13,8 @@ namespace CouchLink.App.Views;
 
 /// <summary>
 /// "Hosting on PC-03": stream settings (resolution, frame rate, quality) with a warning when the
-/// network link is too slow, Allow everyone, the players with Kick, Stop hosting, and a
-/// Details section with the dev stats. Owns the <see cref="HostService"/> and the approval popups.
+/// network link is too slow, Let everyone in, the players with Kick, Stop hosting (which asks first
+/// when players are in), and Stream stats. Owns the <see cref="HostService"/> and the approval popups.
 /// </summary>
 internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
 {
@@ -31,8 +33,18 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
             FrameRateBox.Items.Add(new ComboBoxItem { Content = $"{rate} fps", Tag = rate });
         FrameRateBox.SelectedIndex = 0; // 60
         foreach (var quality in StreamQualities.All)
-            QualityBox.Items.Add(new ComboBoxItem { Content = StreamQualities.Label(quality), Tag = quality });
-        QualityBox.SelectedIndex = StreamQualities.All.ToList().IndexOf(StreamSettings.Default.Quality);
+        {
+            var item = new RadioButton
+            {
+                Content = StreamQualities.Label(quality),
+                Tag = quality,
+                GroupName = "Quality",
+                Style = (Style)FindResource("SegmentedItem"),
+                IsChecked = quality == StreamSettings.Default.Quality,
+            };
+            AutomationProperties.SetAutomationId(item, $"Quality{quality}");
+            QualityGroup.Children.Add(item);
+        }
         _details.Tick += (_, _) => UpdateDetails();
     }
 
@@ -45,17 +57,14 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
             return false;
         ResolutionBox.SelectionChanged += (_, _) => _host?.ChangeSettings(CurrentSettings());
         FrameRateBox.SelectionChanged += (_, _) => _host?.ChangeSettings(CurrentSettings());
-        QualityBox.SelectionChanged += (_, _) => _host?.ChangeSettings(CurrentSettings());
+        foreach (var item in QualityGroup.Children.OfType<RadioButton>())
+            item.Checked += (_, _) => _host?.ChangeSettings(CurrentSettings());
         AllowEveryoneBox.Click += (_, _) =>
         {
             if (_host is not null)
                 _host.AllowEveryone = AllowEveryoneBox.IsChecked == true;
         };
-        StopButton.Click += (_, _) =>
-        {
-            Dispose();
-            Stopped?.Invoke();
-        };
+        StopButton.Click += (_, _) => Stop();
         AppServices.DescribeMode = () => $"Host (virtual pads: {_host?.PadCount ?? 0})";
         AppServices.Log.Write("Hosting started");
         RefreshPlayers();
@@ -64,10 +73,20 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
         return true;
     }
 
-    private StreamSettings CurrentSettings() => new(
+    internal StreamSettings CurrentSettings() => new(
         (StreamResolution)((ComboBoxItem)ResolutionBox.SelectedItem).Tag,
         (int)((ComboBoxItem)FrameRateBox.SelectedItem).Tag,
-        (StreamQuality)((ComboBoxItem)QualityBox.SelectedItem).Tag);
+        (StreamQuality)QualityGroup.Children.OfType<RadioButton>().First(r => r.IsChecked == true).Tag);
+
+    private void Stop()
+    {
+        var names = _host?.Players.Select(p => p.Name).ToList() ?? [];
+        if (StopHostingPrompt.For(names) is { } message
+            && !ThemedDialog.Confirm(Window.GetWindow(this), "Stop hosting?", message, "Stop hosting", "Keep hosting", danger: true))
+            return;
+        Dispose();
+        Stopped?.Invoke();
+    }
 
     void IHostUi.PlayersChanged() => Dispatcher.InvokeAsync(RefreshPlayers);
 
@@ -91,35 +110,58 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
 
     private void RefreshPlayers()
     {
-        if (_host is null)
-            return;
-        var players = _host.Players;
-        PlayersHeading.Text = $"Players: {players.Count + 1}/{HostSession.Capacity + 1} (you are P1)";
+        if (_host is not null)
+            ShowPlayers(_host.Players);
+    }
+
+    internal void ShowPlayers(IReadOnlyList<PlayerInfo> players)
+    {
+        PlayersHeading.Text = $"PLAYERS {players.Count + 1} / {HostSession.Capacity + 1}";
         PlayerList.Children.Clear();
+        PlayerList.Children.Add(PlayerRow(1, "You (host)", reconnecting: false, kickable: false));
         if (players.Count == 0)
         {
             PlayerList.Children.Add(new TextBlock
             {
-                Text = "No one has joined yet.",
-                Foreground = Brushes.Gray,
+                Text = "No one has joined yet. Players appear here when they join.",
+                Style = (Style)FindResource("CaptionText"),
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 6, 0, 0),
             });
         }
         foreach (var player in players)
+            PlayerList.Children.Add(PlayerRow(player.Slot, player.Name, player.State == PlayerState.Reserved, kickable: true));
+    }
+
+    private DockPanel PlayerRow(byte slot, string name, bool reconnecting, bool kickable)
+    {
+        var row = new DockPanel { Margin = new Thickness(0, 4, 0, 4) };
+        if (kickable)
         {
-            var row = new DockPanel { Margin = new Thickness(0, 4, 0, 0) };
-            var kick = new Button { Content = "Kick", Padding = new Thickness(12, 2, 12, 2) };
-            byte slot = player.Slot;
+            var kick = new Button { Content = "Kick", Style = (Style)FindResource("GhostButton") };
+            AutomationProperties.SetName(kick, $"Kick {name}");
+            AutomationProperties.SetAutomationId(kick, $"Kick{slot}");
             kick.Click += (_, _) => _host?.Kick(slot);
             DockPanel.SetDock(kick, Dock.Right);
             row.Children.Add(kick);
-            row.Children.Add(new TextBlock
-            {
-                Text = $"P{player.Slot}   {player.Name}" + (player.State == PlayerState.Reserved ? "   (reconnecting)" : ""),
-                FontSize = 16,
-                VerticalAlignment = VerticalAlignment.Center,
-            });
-            PlayerList.Children.Add(row);
         }
+        if (reconnecting)
+        {
+            var pill = new StatusPill { Kind = PillKind.Reconnecting, Text = "Reconnecting", Margin = new Thickness(8, 0, 4, 0) };
+            DockPanel.SetDock(pill, Dock.Right);
+            row.Children.Add(pill);
+        }
+        var chip = new PlayerChip { Slot = slot };
+        DockPanel.SetDock(chip, Dock.Left);
+        row.Children.Add(chip);
+        row.Children.Add(new TextBlock
+        {
+            Text = name,
+            Margin = new Thickness(10, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+        });
+        return row;
     }
 
     private void UpdateDetails()

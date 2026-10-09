@@ -1,27 +1,61 @@
 <UserControl x:Class="CouchLink.App.Views.HostLobbyView" x:ClassModifier="internal"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <DockPanel Margin="16">
-        <TextBlock x:Name="Heading" DockPanel.Dock="Top" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap"/>
-        <TextBlock DockPanel.Dock="Top" Foreground="Gray" Margin="0,4,0,0" TextWrapping="Wrap"
-                   Text="Minimize this window and start the game. Friends pick this PC under Join."/>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,12,0,0">
-            <TextBlock Text="Stream" VerticalAlignment="Center"/>
-            <ComboBox x:Name="ResolutionBox" Width="90" Margin="8,0"/>
-            <ComboBox x:Name="FrameRateBox" Width="80"/>
-            <ComboBox x:Name="QualityBox" Width="100" Margin="8,0,0,0"/>
-        </StackPanel>
-        <TextBlock x:Name="BudgetWarning" DockPanel.Dock="Top" Margin="0,6,0,0" TextWrapping="Wrap"
-                   Foreground="DarkOrange" Visibility="Collapsed"/>
-        <CheckBox x:Name="AllowEveryoneBox" DockPanel.Dock="Top" Margin="0,12,0,0"
-                  Content="Allow everyone (no popup when someone joins)"/>
-        <Button x:Name="StopButton" DockPanel.Dock="Bottom" Content="Stop hosting" Height="40" Margin="0,12,0,0"/>
-        <Expander DockPanel.Dock="Bottom" Header="Details" Margin="0,12,0,0">
-            <TextBlock x:Name="DetailsText" FontFamily="Consolas" TextWrapping="Wrap" Margin="0,4,0,0"/>
-        </Expander>
-        <TextBlock x:Name="PlayersHeading" DockPanel.Dock="Top" Margin="0,16,0,4" FontWeight="SemiBold"/>
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel x:Name="PlayerList"/>
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:CouchLink.App.Ui">
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="16,12">
+            <Button x:Name="StopButton" Style="{StaticResource DangerButton}" Content="Stop hosting" MinHeight="40"
+                    AutomationProperties.AutomationId="StopHosting"/>
+        </Border>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+            <StackPanel Margin="16">
+                <DockPanel>
+                    <ui:StatusPill DockPanel.Dock="Right" Kind="Live" Text="● Live" Margin="8,0,0,0"/>
+                    <TextBlock x:Name="Heading" Style="{StaticResource TitleText}" TextTrimming="CharacterEllipsis"/>
+                </DockPanel>
+                <TextBlock Style="{StaticResource BodyMutedText}" Margin="0,4,0,0"
+                           Text="Minimize this and start the game. Friends pick this PC under Join."/>
+
+                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                    <StackPanel>
+                        <TextBlock Text="STREAM" Style="{StaticResource OverlineText}"/>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox x:Name="ResolutionBox" AutomationProperties.Name="Resolution" AutomationProperties.AutomationId="Resolution"/>
+                            <ComboBox x:Name="FrameRateBox" Grid.Column="2" AutomationProperties.Name="Frame rate" AutomationProperties.AutomationId="FrameRate"/>
+                        </Grid>
+                        <Border Style="{StaticResource Segmented}" Margin="0,8,0,0">
+                            <UniformGrid x:Name="QualityGroup" Rows="1" AutomationProperties.Name="Quality"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+                <ui:Banner x:Name="BudgetWarning" Kind="Warning" Margin="0,12,0,0" Visibility="Collapsed"
+                           AutomationProperties.AutomationId="LinkWarning"/>
+
+                <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock x:Name="PlayersHeading" Style="{StaticResource OverlineText}"/>
+                        <StackPanel x:Name="PlayerList" Margin="0,8,0,0"/>
+                        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="0,10,0,0">
+                            <CheckBox x:Name="AllowEveryoneBox" Style="{StaticResource ToggleSwitch}"
+                                      AutomationProperties.Name="Let everyone in" AutomationProperties.AutomationId="LetEveryoneIn">
+                                <StackPanel>
+                                    <TextBlock Text="Let everyone in"/>
+                                    <TextBlock Text="No popup when someone joins" Style="{StaticResource CaptionText}"/>
+                                </StackPanel>
+                            </CheckBox>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <Expander Header="Stream stats" Margin="0,12,0,0" AutomationProperties.AutomationId="StreamStats">
+                    <TextBlock x:Name="DetailsText" Style="{StaticResource MonoText}" TextWrapping="Wrap"/>
+                </Expander>
+            </StackPanel>
         </ScrollViewer>
     </DockPanel>
 </UserControl>
