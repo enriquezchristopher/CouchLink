@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.2](https://github.com/enriquezchristopher/CouchLink/compare/v1.10.1...v1.10.2) (2026-10-09)
+
+
+### Bug Fixes
+
+* Shift stays held while a numpad key is tapped ([0f5be40](https://github.com/enriquezchristopher/CouchLink/commit/0f5be40d4f0f11cab1e78830cfb75c05e36a0468))
+* Shift stays held while a numpad key is tapped ([6e58165](https://github.com/enriquezchristopher/CouchLink/commit/6e581651a64af230088cf4a9831238896e736168))
+
 ## [1.10.1](https://github.com/enriquezchristopher/CouchLink/compare/v1.10.0...v1.10.1) (2026-10-09)
 
 
