@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.10.2...v1.11.0) (2026-10-09)
+
+
+### Features
+
+* add an installer alongside the portable zip ([3a78be4](https://github.com/enriquezchristopher/CouchLink/commit/3a78be48c59097e3e1466749643d70839adc46fc))
+* add an installer alongside the portable zip ([e975a43](https://github.com/enriquezchristopher/CouchLink/commit/e975a43ca2bf35698421f09626272ec1a95a3316))
+
 ## [1.10.2](https://github.com/enriquezchristopher/CouchLink/compare/v1.10.1...v1.10.2) (2026-10-09)
 
 
