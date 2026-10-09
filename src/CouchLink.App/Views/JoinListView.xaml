@@ -1,25 +1,46 @@
 <UserControl x:Class="CouchLink.App.Views.JoinListView" x:ClassModifier="internal"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <DockPanel Margin="16">
-        <DockPanel DockPanel.Dock="Top">
-            <Button x:Name="BackButton" Content="Back" DockPanel.Dock="Left" Padding="12,2"/>
-            <TextBlock Text="Join a game" FontSize="22" FontWeight="SemiBold" Margin="12,0,0,0"/>
-        </DockPanel>
-        <Border x:Name="MessageBar" DockPanel.Dock="Top" Background="#FFF4E5" BorderBrush="#F0B060" BorderThickness="1"
-                Padding="8" Margin="0,12,0,0" Visibility="Collapsed">
-            <TextBlock x:Name="MessageText" TextWrapping="Wrap"/>
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:CouchLink.App.Ui">
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Padding="16,0,16,16">
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="JOIN BY ADDRESS" Style="{StaticResource OverlineText}"/>
+                    <DockPanel Margin="0,8,0,0">
+                        <Button x:Name="AddressJoinButton" DockPanel.Dock="Right" Content="Join" Style="{StaticResource PrimaryButton}"
+                                Margin="8,0,0,0" AutomationProperties.AutomationId="AddressJoin"/>
+                        <TextBox x:Name="AddressBox" ui:ThemeProps.Placeholder="192.168.1.23"
+                                 AutomationProperties.Name="Host address" AutomationProperties.AutomationId="AddressBox"/>
+                    </DockPanel>
+                    <TextBlock x:Name="AddressError" Foreground="{DynamicResource DangerBrush}" FontSize="12" Margin="0,6,0,0"
+                               TextWrapping="Wrap" Visibility="Collapsed" AutomationProperties.AutomationId="AddressError"/>
+                </StackPanel>
+            </Border>
         </Border>
-        <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
-            <TextBlock><Hyperlink x:Name="ByAddressLink">Join by address...</Hyperlink></TextBlock>
-            <StackPanel x:Name="ByAddressPanel" Orientation="Horizontal" Margin="0,8,0,0" Visibility="Collapsed">
-                <TextBox x:Name="AddressBox" Width="160" VerticalContentAlignment="Center"/>
-                <Button x:Name="AddressJoinButton" Content="Join" Padding="16,2" Margin="8,0,0,0"/>
+        <StackPanel DockPanel.Dock="Top" Margin="16,16,16,0">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="BackButton" Style="{StaticResource GhostButton}" Padding="6,0"
+                        AutomationProperties.Name="Back" AutomationProperties.AutomationId="Back">
+                    <ui:Glyph Data="{StaticResource IconArrowLeft}" Brush="{DynamicResource PrimaryTextBrush}"/>
+                </Button>
+                <TextBlock Text="Join a game" Style="{StaticResource TitleText}" Margin="6,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
+            <ui:Banner x:Name="MessageBar" Kind="Error" CanClose="True" Margin="0,12,0,0" Visibility="Collapsed"
+                       AutomationProperties.AutomationId="EndMessage"/>
+            <ui:Banner x:Name="DiscoveryError" Kind="Warning" Margin="0,12,0,0" Visibility="Collapsed"
+                       AutomationProperties.AutomationId="DiscoveryError"/>
+            <StackPanel x:Name="ScanningRow" Orientation="Horizontal" Margin="2,14,0,0">
+                <ui:Spinner/>
+                <TextBlock Text="Looking for hosts on this network…" Style="{StaticResource BodyMutedText}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+            <Border x:Name="HelpCard" Style="{StaticResource Card}" Margin="0,12,0,0" Visibility="Collapsed"
+                    AutomationProperties.AutomationId="NoHostsHelp">
+                <TextBlock Style="{StaticResource BodyMutedText}"
+                           Text="No hosts yet. Check that the host clicked Host a game, that both PCs are on the same network, and that the firewall allows CouchLink. You can also join by address below."/>
+            </Border>
         </StackPanel>
-        <TextBlock x:Name="EmptyText" DockPanel.Dock="Top" Margin="0,12,0,0" Foreground="Gray" TextWrapping="Wrap"
-                   Text="Looking for hosts on this network..."/>
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="16,12,16,12" Focusable="False">
             <StackPanel x:Name="HostButtons"/>
         </ScrollViewer>
     </DockPanel>
