@@ -43,7 +43,8 @@ Settled in brainstorming (2026-10-08):
   sources give Enter or Num Enter, which Windows reports as the same key),
   Page Up timeout (Touchpad), Page Down pause (Options), arrows on-the-fly
   coaching (D-pad), WASD movement. The game's pro stick keys (Num 8/4/2/6)
-  have no equivalent: CouchLink's right stick is always the mouse. L3, R3
+  are on the right stick since #59 (see the
+  [right-stick keys design](2026-10-09-couchlink-right-stick-keys-design.md)). L3, R3
   and Share keep CouchLink's keys. Labels name the game's actions. A test
   pins every binding. The file lives in `src/CouchLink.App/profiles/` and
   is copied next to the exe on build and publish.
@@ -115,7 +116,8 @@ One JSON file per profile, UTF-8, extension `.json`.
 The `PadControl` names: `LeftUp`, `LeftDown`, `LeftLeft`, `LeftRight`,
 `DpadUp`, `DpadDown`, `DpadLeft`, `DpadRight`, `Cross`, `Circle`, `Square`,
 `Triangle`, `L1`, `R1`, `L2`, `R2`, `L3`, `R3`, `Options`, `Share`,
-`Touchpad`. The right stick is the mouse and can't appear in `controls`.
+`Touchpad`. `RightUp`, `RightDown`, `RightLeft` and `RightRight` were added
+by #59.
 
 Renaming a `PadControl` member would break every profile, so a unit test
 pins the list above.

@@ -85,6 +85,7 @@ such as "Shoot" on the F1 panel. Design:
 [controller profiles](docs/superpowers/specs/2026-10-08-couchlink-controller-profiles-design.md).
 
 - [#56](https://github.com/enriquezchristopher/CouchLink/issues/56) Controller profiles: load a game's key layout from a file
+- [#59](https://github.com/enriquezchristopher/CouchLink/issues/59) Bind keys to the right stick, alongside the mouse
 
 ## Game compatibility
 

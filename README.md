@@ -92,7 +92,7 @@ editor, stream quality, reading the stats, and troubleshooting.
 | Controller | Keys | Controller | Keys |
 |---|---|---|---|
 | Left stick | W A S D | L1 / R1 | Q / E |
-| Right stick | Mouse | L2 / R2 | Ctrl / Shift |
+| Right stick | Mouse (or keys you bind) | L2 / R2 | Ctrl / Shift |
 | D-pad | Arrow keys | L3 / R3 | F / middle mouse |
 | Cross / Circle | K / L | Options / Share | Enter / Backspace |
 | Square / Triangle | J or left mouse / I | Touchpad | Tab |

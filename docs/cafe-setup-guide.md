@@ -222,6 +222,10 @@ Each joining PC's keyboard and mouse act as a DualShock 4 controller.
 The mouse acts like a stick that springs back to the centre: move it to push
 the right stick, and the stick returns to the middle when the mouse stops.
 
+You can also put keys on the right stick's four directions in the editor.
+While one of those keys is held, the keys move the stick and the mouse is
+ignored; let go and the mouse works again.
+
 ### Changing keys
 
 ![The controls editor](images/controls.png)
@@ -259,8 +263,9 @@ During a game, F1 shows the profile's name and what each button does:
   pass, Num 3 lob, Enter to sprint, Left Shift to post up, Tab to call a
   play, Num + icon pass, Page Up timeout, Page Down pause, arrows for
   coaching), so players who know 2K's keyboard controls feel at home. The
-  pro stick stays on the mouse. Keep **Num Lock** on, or the number pad
-  keys send other keys.
+  pro stick is on Num 8/2/4/6, and the mouse still moves it while none of
+  those keys is held. Keep **Num Lock** on, or the number pad keys send
+  other keys.
 - **Add your own:** the profiles live in the `profiles` folder next to
   `CouchLink.App.exe`. Put more profile files there and copy the folder to
   every PC. The list reads the folder each time the editor opens.
