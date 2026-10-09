@@ -7,8 +7,8 @@ using System.Windows.Shapes;
 namespace CouchLink.App.Ui;
 
 /// <summary>
-/// A small turning ring for "looking" and "connecting". It turns while visible, even when Windows
-/// animations are off: it is the only sign the app is still working, so it is not decoration.
+/// A small turning ring for "looking" and "connecting". It turns while visible, even with Reduce
+/// motion on: it is the only sign the app is still working, so it is not decoration.
 /// </summary>
 internal sealed class Spinner : Grid
 {

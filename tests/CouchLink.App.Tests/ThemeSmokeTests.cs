@@ -17,22 +17,24 @@ public class ThemeSmokeTests
         return element;
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("PrimaryButton")]
-    [InlineData("DangerButton")]
-    [InlineData("DangerFilledButton")]
-    [InlineData("GhostButton")]
-    [InlineData("HeaderButton")]
-    [InlineData("HeroButton")]
-    [InlineData("HeroPrimaryButton")]
-    [InlineData("HostCardButton")]
-    [InlineData("ControlRowButton")]
-    public void Every_button_style_lays_out(string? style)
+    public static TheoryData<string?, bool> ButtonStyles()
     {
-        Wpf.Run(() =>
+        var data = new TheoryData<string?, bool>();
+        string?[] styles = [null, "PrimaryButton", "DangerButton", "DangerFilledButton", "GhostButton", "HeaderButton",
+            "HeroButton", "HeroPrimaryButton", "HostCardButton", "ControlRowButton", "CaptionButton", "CaptionCloseButton"];
+        foreach (bool reduced in new[] { false, true })
+            foreach (var style in styles)
+                data.Add(style, reduced);
+        return data;
+    }
+
+    /// <summary>Every template lays out with motion on and with Reduce motion on (its durations and scales differ).</summary>
+    [Theory]
+    [MemberData(nameof(ButtonStyles))]
+    public void Every_button_style_lays_out(string? style, bool reduced)
+    {
+        Wpf.WithMotion(reduced, () =>
         {
-            ThemeManager.Install(Application.Current);
             var button = new Button { Content = "Go" };
             if (style is not null)
                 button.Style = (Style)Application.Current.FindResource(style);
@@ -54,12 +56,13 @@ public class ThemeSmokeTests
         });
     }
 
-    [Fact]
-    public void Inputs_lay_out()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Inputs_lay_out(bool reduced)
     {
-        Wpf.Run(() =>
+        Wpf.WithMotion(reduced, () =>
         {
-            ThemeManager.Install(Application.Current);
             var app = Application.Current;
             var panel = new StackPanel();
             panel.Children.Add(new CheckBox { Content = "Plain" });
@@ -72,6 +75,9 @@ public class ThemeSmokeTests
             panel.Children.Add(new TextBox());
             panel.Children.Add(new Slider { Minimum = 1, Maximum = 10, Value = 5 });
             panel.Children.Add(new Expander { Header = "Stats", Content = new TextBlock { Text = "x" }, IsExpanded = true });
+            panel.Children.Add(new Expander { Header = "Closed", Content = new TextBlock { Text = "y" } });
+            panel.Children.Add(new MenuItem { Header = "Reduce motion", IsCheckable = true, IsChecked = true });
+            panel.Children.Add(new ComboBoxItem { Content = "720p" });
             panel.Children.Add(new ScrollViewer { Height = 50, Content = new Border { Height = 500 }, VerticalScrollBarVisibility = ScrollBarVisibility.Visible });
             Laid(panel);
             foreach (Control control in panel.Children)

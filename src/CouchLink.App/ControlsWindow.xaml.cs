@@ -79,8 +79,18 @@ internal sealed partial class ControlsWindow : Window
         InitializeComponent();
         WindowTheme.Apply(this);
         WindowTheme.UseCustomChrome(this, 32);
+        Motion.AnimateWindow(this, Body);
         MaxHeight = SystemParameters.WorkArea.Height * 0.85;
         BuildRows();
+        Loaded += (_, _) =>
+        {
+            // The group cards (with their headings) come in one after another as the window opens.
+            for (int i = 0; i < _groups.Count; i++)
+            {
+                Motion.RiseIn(_groups[i].Heading, i);
+                Motion.RiseIn(_groups[i].Card, i);
+            }
+        };
 
         SensitivitySlider.Minimum = ControlSettings.MinStep;
         SensitivitySlider.Maximum = ControlSettings.MaxStep;
@@ -158,7 +168,8 @@ internal sealed partial class ControlsWindow : Window
             foreach (var control in controls)
             {
                 var c = control;
-                var row = new Button { Style = (Style)FindResource("ControlRowButton") };
+                var row = new Button();
+                row.SetResourceReference(StyleProperty, "ControlRowButton"); // follows Reduce motion live
                 AutomationProperties.SetAutomationId(row, $"Row_{control}");
                 AutomationProperties.SetName(row, KeyNames.Of(control));
                 row.Click += (_, _) => Listen(c);

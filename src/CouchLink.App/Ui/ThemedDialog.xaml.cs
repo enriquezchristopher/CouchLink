@@ -12,6 +12,7 @@ internal sealed partial class ThemedDialog : Window
         InitializeComponent();
         WindowTheme.Apply(this);
         WindowTheme.UseCustomChrome(this, 32);
+        Motion.AnimateWindow(this, Body);
         TitleText.Text = title;
         MessageText.Text = message;
         OkButton.Content = okText;
@@ -29,7 +30,7 @@ internal sealed partial class ThemedDialog : Window
             CancelButton.IsDefault = danger;
         }
         if (danger)
-            OkButton.Style = (Style)FindResource("DangerFilledButton");
+            OkButton.SetResourceReference(StyleProperty, "DangerFilledButton");
         if (owner is { IsVisible: true })
         {
             Owner = owner;

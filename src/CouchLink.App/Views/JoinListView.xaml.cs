@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using CouchLink.App.Presentation;
+using CouchLink.App.Theme;
 using CouchLink.App.Ui;
 using CouchLink.Core.Net;
 using CouchLink.Core.Session;
@@ -83,12 +84,21 @@ internal sealed partial class JoinListView : UserControl, IDisposable
 
     internal void ShowHosts(IReadOnlyList<FoundHost> hosts)
     {
+        // Cards are rebuilt on every change; only hosts that weren't listed before come in, one after another.
+        var before = _shown.Select(h => h.Address).ToHashSet();
+        var arriving = new List<UIElement>();
         _shown = hosts;
         if (hosts.Count > 0)
             HelpCard.Visibility = Visibility.Collapsed;
         HostButtons.Children.Clear();
         foreach (var host in hosts)
-            HostButtons.Children.Add(HostCard(host));
+        {
+            var card = HostCard(host);
+            HostButtons.Children.Add(card);
+            if (!before.Contains(host.Address))
+                arriving.Add(card);
+        }
+        Motion.Stagger(arriving);
     }
 
     internal void ShowNoHostsHelp()
@@ -100,7 +110,8 @@ internal sealed partial class JoinListView : UserControl, IDisposable
     private Button HostCard(FoundHost host)
     {
         int players = host.Players + 1, capacity = host.Capacity + 1;
-        var card = new Button { Style = (Style)FindResource("HostCardButton"), Margin = new Thickness(0, 0, 0, 8) };
+        var card = new Button { Margin = new Thickness(0, 0, 0, 8) };
+        card.SetResourceReference(StyleProperty, "HostCardButton"); // follows Reduce motion live
         AutomationProperties.SetAutomationId(card, $"Host_{host.Name}");
         AutomationProperties.SetName(card, host.Compatible
             ? $"{host.Name}, {players} of {capacity} players"

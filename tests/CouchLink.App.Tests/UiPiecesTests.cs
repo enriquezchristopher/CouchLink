@@ -53,7 +53,7 @@ public class UiPiecesTests
     }
 
     [Fact]
-    public void Spinner_turns_while_visible_even_when_windows_animations_are_off()
+    public void Spinner_turns_while_visible_and_stops_when_hidden()
     {
         Wpf.Run(() =>
         {
@@ -72,8 +72,8 @@ public class UiPiecesTests
             try
             {
                 window.Show();
-                // It shows the app is still working, so it is not decoration: it turns whatever the
-                // Windows "animate controls" setting says.
+                // It shows the app is still working, so it is not decoration: it turns even with Reduce
+                // motion on (MotionTests checks that).
                 Assert.True(spinner.Turn.HasAnimatedProperties);
                 spinner.Visibility = Visibility.Collapsed;
                 Assert.False(spinner.Turn.HasAnimatedProperties);

@@ -14,6 +14,7 @@ public partial class App : Application
     {
         CrashHandler.Install(this); // first, so even startup crashes are reported
         ThemeManager.Install(this); // before any window, so every window gets the theme
+        ThemeManager.Follow(AppServices.MotionSettings); // Help → Reduce motion, for the whole run
         base.OnStartup(e);
         AppServices.Log.Write($"CouchLink started (args: {string.Join(' ', e.Args)})");
         AppServices.Options = DevOptions.Parse(e.Args);

@@ -8,14 +8,14 @@
         <DockPanel>
             <ui:CaptionButtons DockPanel.Dock="Right" Margin="8,0,0,0"/>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button x:Name="ControlsButton" Style="{StaticResource HeaderButton}" shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                <Button x:Name="ControlsButton" Style="{DynamicResource HeaderButton}" shell:WindowChrome.IsHitTestVisibleInChrome="True"
                         AutomationProperties.Name="Controls" AutomationProperties.AutomationId="HeaderControls">
                     <StackPanel Orientation="Horizontal">
                         <ui:Glyph Data="{StaticResource IconGamepad}" Brush="{DynamicResource PrimaryTextBrush}" Width="16" Height="16"/>
                         <TextBlock Text="Controls" Margin="6,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
-                <Button x:Name="HelpButton" Style="{StaticResource HeaderButton}" Margin="6,0,0,0" shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                <Button x:Name="HelpButton" Style="{DynamicResource HeaderButton}" Margin="6,0,0,0" shell:WindowChrome.IsHitTestVisibleInChrome="True"
                         AutomationProperties.Name="Help" AutomationProperties.AutomationId="HeaderHelp">
                     <StackPanel Orientation="Horizontal">
                         <ui:Glyph Data="{StaticResource IconHelp}" Brush="{DynamicResource TextMutedBrush}" Width="16" Height="16"/>
@@ -24,6 +24,9 @@
                     </StackPanel>
                     <Button.ContextMenu>
                         <ContextMenu x:Name="HelpMenu">
+                            <MenuItem x:Name="ReduceMotionItem" Header="Reduce motion" IsCheckable="True"
+                                      AutomationProperties.AutomationId="HelpReduceMotion"/>
+                            <Separator/>
                             <MenuItem x:Name="CrashReportsItem" Header="Crash reports" AutomationProperties.AutomationId="HelpCrashReports"/>
                             <MenuItem x:Name="AboutItem" Header="About CouchLink" AutomationProperties.AutomationId="HelpAbout"/>
                         </ContextMenu>

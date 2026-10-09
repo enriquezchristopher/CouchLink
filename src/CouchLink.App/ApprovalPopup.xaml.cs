@@ -42,8 +42,10 @@ internal sealed partial class ApprovalPopup : Window
         Loaded += (_, _) =>
         {
             PlaceAt(stackIndex);
-            Motion.Enter(Card);
+            Motion.SlideInFromRight(Card);
         };
+        // Answered, closed by the host or closed otherwise: the card slides out to the right first.
+        Motion.AnimateClose(this, done => Motion.SlideOutToRight(Card, done));
         SourceInitialized += (_, _) => Flash();
         Closed += (_, _) =>
         {
@@ -67,7 +69,7 @@ internal sealed partial class ApprovalPopup : Window
     /// <summary>
     /// Drains the bar from where it should be after <paramref name="elapsed"/> to empty in one linear
     /// animation, so it moves every frame instead of jumping on each timer tick. It shows how long the
-    /// host has left to answer, so it runs even when Windows animations are off.
+    /// host has left to answer, so it runs even with Reduce motion on.
     /// </summary>
     internal void StartBar(TimeSpan elapsed)
     {
@@ -82,6 +84,8 @@ internal sealed partial class ApprovalPopup : Window
 
     private void Answer(Action answer)
     {
+        if (_answered)
+            return; // a second click while the card slides out
         _answered = true;
         answer();
         Close();

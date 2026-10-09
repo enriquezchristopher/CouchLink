@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:CouchLink.App.Ui"
         Title="Controls" Width="460" SizeToContent="Height" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
-    <DockPanel>
+    <DockPanel x:Name="Body">
         <ui:TitleBar DockPanel.Dock="Top"/>
         <DockPanel Margin="16">
             <StackPanel DockPanel.Dock="Top">
@@ -13,7 +13,7 @@
                     <ComboBox x:Name="ProfileBox" AutomationProperties.Name="Profile" AutomationProperties.AutomationId="Profile"/>
                 </DockPanel>
                 <DockPanel Margin="0,10,0,0">
-                    <CheckBox x:Name="LabelsToggle" DockPanel.Dock="Right" Style="{StaticResource ToggleSwitch}" Content="Labels"
+                    <CheckBox x:Name="LabelsToggle" DockPanel.Dock="Right" Style="{DynamicResource ToggleSwitch}" Content="Labels"
                               Margin="12,0,0,0" VerticalAlignment="Center" AutomationProperties.AutomationId="ShowLabels"
                               ToolTip="Name what each button does in the game, e.g. Shoot"/>
                     <Grid>
@@ -36,7 +36,7 @@
                             <Slider x:Name="SensitivitySlider" TickFrequency="1" IsSnapToTickEnabled="True"
                                     AutomationProperties.Name="Mouse sensitivity" AutomationProperties.AutomationId="Sensitivity"/>
                         </DockPanel>
-                        <CheckBox x:Name="InvertYToggle" Style="{StaticResource ToggleSwitch}" Margin="0,12,0,0"
+                        <CheckBox x:Name="InvertYToggle" Style="{DynamicResource ToggleSwitch}" Margin="0,12,0,0"
                                   AutomationProperties.Name="Invert Y" AutomationProperties.AutomationId="InvertY">
                             <StackPanel>
                                 <TextBlock Text="Invert Y"/>
@@ -46,9 +46,9 @@
                     </StackPanel>
                 </Border>
                 <DockPanel Margin="0,12,0,0">
-                    <Button x:Name="DoneButton" DockPanel.Dock="Right" Content="Done" Style="{StaticResource PrimaryButton}" MinWidth="96"
+                    <Button x:Name="DoneButton" DockPanel.Dock="Right" Content="Done" Style="{DynamicResource PrimaryButton}" MinWidth="96"
                             AutomationProperties.AutomationId="Done"/>
-                    <Button x:Name="ResetButton" Content="Reset to default" Style="{StaticResource GhostButton}" HorizontalAlignment="Left"
+                    <Button x:Name="ResetButton" Content="Reset to default" Style="{DynamicResource GhostButton}" HorizontalAlignment="Left"
                             AutomationProperties.AutomationId="Reset"/>
                 </DockPanel>
             </StackPanel>

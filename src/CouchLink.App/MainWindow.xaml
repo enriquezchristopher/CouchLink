@@ -5,6 +5,11 @@
         Title="CouchLink" Width="540" Height="660" MinWidth="460" MinHeight="560">
     <DockPanel>
         <ui:AppHeader x:Name="Header" DockPanel.Dock="Top"/>
-        <ContentControl x:Name="Screen" Focusable="False"/>
+        <!-- ScreenSnapshot: a picture of the screen being left, fading out over the new one (MainWindow.Show) -->
+        <Grid ClipToBounds="True">
+            <ContentControl x:Name="Screen" Focusable="False"/>
+            <Image x:Name="ScreenSnapshot" IsHitTestVisible="False" Visibility="Collapsed" Stretch="None"
+                   HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        </Grid>
     </DockPanel>
 </Window>

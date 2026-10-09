@@ -3,6 +3,7 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using CouchLink.App.Presentation;
+using CouchLink.App.Theme;
 using CouchLink.App.Ui;
 using CouchLink.Core.Protocol;
 using CouchLink.Core.Session;
@@ -21,6 +22,7 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
     private readonly DispatcherTimer _details = new() { Interval = TimeSpan.FromMilliseconds(500) };
     private readonly Dictionary<int, ApprovalPopup> _asks = [];
     private HostService? _host;
+    private HashSet<byte>? _shownSlots;
 
     public HostLobbyView()
     {
@@ -39,12 +41,13 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
                 Content = StreamQualities.Label(quality),
                 Tag = quality,
                 GroupName = "Quality",
-                Style = (Style)FindResource("SegmentedItem"),
                 IsChecked = quality == StreamSettings.Default.Quality,
             };
+            item.SetResourceReference(StyleProperty, "SegmentedItem"); // follows Reduce motion live
             AutomationProperties.SetAutomationId(item, $"Quality{quality}");
             QualityGroup.Children.Add(item);
         }
+        QualityIndicator.Track(QualityGroup);
         _details.Tick += (_, _) => UpdateDetails();
     }
 
@@ -117,20 +120,37 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
     internal void ShowPlayers(IReadOnlyList<PlayerInfo> players)
     {
         PlayersHeading.Text = $"PLAYERS {players.Count + 1} / {HostSession.Capacity + 1}";
+        // The first time every row comes in; after that only players who just joined do.
+        bool first = _shownSlots is null;
+        var before = _shownSlots ?? [];
+        var arriving = new List<UIElement>();
         PlayerList.Children.Clear();
-        PlayerList.Children.Add(PlayerRow(1, "You (host)", reconnecting: false, kickable: false));
+        var hostRow = PlayerRow(1, "You (host)", reconnecting: false, kickable: false);
+        PlayerList.Children.Add(hostRow);
+        if (first)
+            arriving.Add(hostRow);
         if (players.Count == 0)
         {
-            PlayerList.Children.Add(new TextBlock
+            var hint = new TextBlock
             {
                 Text = "No one has joined yet. Players appear here when they join.",
                 Style = (Style)FindResource("CaptionText"),
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 6, 0, 0),
-            });
+            };
+            PlayerList.Children.Add(hint);
+            if (first)
+                arriving.Add(hint);
         }
         foreach (var player in players)
-            PlayerList.Children.Add(PlayerRow(player.Slot, player.Name, player.State == PlayerState.Reserved, kickable: true));
+        {
+            var row = PlayerRow(player.Slot, player.Name, player.State == PlayerState.Reserved, kickable: true);
+            PlayerList.Children.Add(row);
+            if (!before.Contains(player.Slot))
+                arriving.Add(row);
+        }
+        _shownSlots = players.Select(p => p.Slot).ToHashSet();
+        Motion.Stagger(arriving);
     }
 
     private DockPanel PlayerRow(byte slot, string name, bool reconnecting, bool kickable)
@@ -138,7 +158,8 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
         var row = new DockPanel { Margin = new Thickness(0, 4, 0, 4) };
         if (kickable)
         {
-            var kick = new Button { Content = "Kick", Style = (Style)FindResource("GhostButton") };
+            var kick = new Button { Content = "Kick" };
+            kick.SetResourceReference(StyleProperty, "GhostButton");
             AutomationProperties.SetName(kick, $"Kick {name}");
             AutomationProperties.SetAutomationId(kick, $"Kick{slot}");
             kick.Click += (_, _) => _host?.Kick(slot);

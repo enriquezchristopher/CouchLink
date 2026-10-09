@@ -8,7 +8,7 @@
             <UniformGrid Rows="1">
                 <Button x:Name="ControlsButton" Content="Controls" Focusable="False" MinHeight="40" Margin="0,0,4,0"
                         AutomationProperties.AutomationId="SessionControls"/>
-                <Button x:Name="LeaveButton" Style="{StaticResource DangerButton}" Focusable="False" MinHeight="40" Margin="4,0,0,0"
+                <Button x:Name="LeaveButton" Style="{DynamicResource DangerButton}" Focusable="False" MinHeight="40" Margin="4,0,0,0"
                         AutomationProperties.AutomationId="SessionLeave"/>
             </UniformGrid>
         </Border>

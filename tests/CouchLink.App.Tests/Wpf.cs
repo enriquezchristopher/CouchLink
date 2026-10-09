@@ -1,5 +1,10 @@
 using System.Windows;
 using System.Windows.Threading;
+using CouchLink.App.Theme;
+
+// Some WPF tests pump the dispatcher while they wait for an animation. With parallel test classes, another
+// class's Wpf.Run could run inside that pump and see the other motion mode, so tests run one at a time.
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace CouchLink.App.Tests;
 
@@ -14,6 +19,38 @@ internal static class Wpf
     public static void Run(Action action) => Ui.Value.Invoke(action);
 
     public static T Run<T>(Func<T> func) => Ui.Value.Invoke(func);
+
+    /// <summary>Runs <paramref name="test"/> on the WPF thread with Reduce motion on or off, then turns it off again.</summary>
+    public static void WithMotion(bool reduced, Action test) => Run(() =>
+    {
+        ThemeManager.Install(Application.Current);
+        ThemeManager.SetReducedMotion(reduced);
+        try
+        {
+            test();
+        }
+        finally
+        {
+            ThemeManager.SetReducedMotion(false);
+        }
+    });
+
+    /// <summary>On the WPF thread: lets the dispatcher (layout, rendering, animations) run until <paramref name="done"/> or the timeout.</summary>
+    public static bool PumpUntil(Func<bool> done, int milliseconds = 3000)
+    {
+        var stop = DateTime.UtcNow.AddMilliseconds(milliseconds);
+        while (!done())
+        {
+            if (DateTime.UtcNow > stop)
+                return false;
+            Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.Background);
+            Thread.Sleep(2);
+        }
+        return true;
+    }
+
+    /// <summary>On the WPF thread: lets the dispatcher run for a while.</summary>
+    public static void PumpFor(int milliseconds) => PumpUntil(() => false, milliseconds);
 
     private static Dispatcher Start()
     {

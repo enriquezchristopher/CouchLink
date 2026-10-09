@@ -4,7 +4,7 @@
         xmlns:ui="clr-namespace:CouchLink.App.Ui"
         Title="Save profile" Width="380" SizeToContent="Height" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
-    <DockPanel>
+    <DockPanel x:Name="Body">
         <ui:TitleBar DockPanel.Dock="Top"/>
         <StackPanel Margin="20">
             <TextBlock Text="Name" FontWeight="SemiBold"/>
@@ -16,7 +16,7 @@
             <TextBox x:Name="GameBox" Margin="0,6,0,0" AutomationProperties.Name="Game" AutomationProperties.AutomationId="ProfileGame"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
                 <Button x:Name="CancelButton" Content="Cancel" IsCancel="True" MinWidth="88" AutomationProperties.AutomationId="Cancel"/>
-                <Button x:Name="SaveButton" Content="Save" IsDefault="True" MinWidth="88" Margin="8,0,0,0" Style="{StaticResource PrimaryButton}"
+                <Button x:Name="SaveButton" Content="Save" IsDefault="True" MinWidth="88" Margin="8,0,0,0" Style="{DynamicResource PrimaryButton}"
                         AutomationProperties.AutomationId="Save"/>
             </StackPanel>
         </StackPanel>

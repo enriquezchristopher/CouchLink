@@ -41,16 +41,31 @@ public partial class MainWindow : Window, IClientUi
     }
 
     /// <summary>
-    /// Shows a view; the one it replaces is disposed (stopping whatever it owned). The header's buttons
-    /// can't take focus on the session screen, where Raw Input keys would press them.
+    /// Shows a view; the one it replaces is disposed at once (stopping whatever it owned, such as UDP ports)
+    /// and a picture of it fades out before the new one fades in and rises. The header's buttons can't take
+    /// focus on the session screen, where Raw Input keys would press them.
     /// </summary>
-    private void Show(UserControl view, bool headerFocusable = true)
+    internal void Show(UserControl view, bool headerFocusable = true)
     {
-        if (Screen.Content is IDisposable old && !ReferenceEquals(old, view))
-            old.Dispose();
+        var old = Screen.Content as FrameworkElement;
+        var picture = old is not null && !ReferenceEquals(old, view) ? Motion.Snapshot(old) : null;
+        if (old is IDisposable disposable && !ReferenceEquals(old, view))
+            disposable.Dispose();
         Screen.Content = view;
         Header.ButtonsFocusable = headerFocusable;
-        Motion.Enter(view);
+        if (picture is not null)
+        {
+            ScreenSnapshot.Source = picture;
+            ScreenSnapshot.Visibility = Visibility.Visible;
+            Motion.ExitScreen(ScreenSnapshot, () =>
+            {
+                if (!ReferenceEquals(ScreenSnapshot.Source, picture))
+                    return; // a newer screen change took over
+                ScreenSnapshot.Source = null;
+                ScreenSnapshot.Visibility = Visibility.Collapsed;
+            });
+        }
+        Motion.EnterScreen(view, picture is null ? TimeSpan.Zero : Motion.ScreenOut);
     }
 
     private void ShowStart()

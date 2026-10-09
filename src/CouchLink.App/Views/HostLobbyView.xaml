@@ -4,7 +4,7 @@
              xmlns:ui="clr-namespace:CouchLink.App.Ui">
     <DockPanel>
         <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="16,12">
-            <Button x:Name="StopButton" Style="{StaticResource DangerButton}" Content="Stop hosting" MinHeight="40"
+            <Button x:Name="StopButton" Style="{DynamicResource DangerButton}" Content="Stop hosting" MinHeight="40"
                     AutomationProperties.AutomationId="StopHosting"/>
         </Border>
         <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
@@ -29,7 +29,10 @@
                             <ComboBox x:Name="FrameRateBox" Grid.Column="2" AutomationProperties.Name="Frame rate" AutomationProperties.AutomationId="FrameRate"/>
                         </Grid>
                         <Border Style="{StaticResource Segmented}" Margin="0,8,0,0">
-                            <UniformGrid x:Name="QualityGroup" Rows="1" AutomationProperties.Name="Quality"/>
+                            <Grid>
+                                <ui:SegmentIndicator x:Name="QualityIndicator"/>
+                                <UniformGrid x:Name="QualityGroup" Rows="1" AutomationProperties.Name="Quality"/>
+                            </Grid>
                         </Border>
                     </StackPanel>
                 </Border>
@@ -41,7 +44,7 @@
                         <TextBlock x:Name="PlayersHeading" Style="{StaticResource OverlineText}"/>
                         <StackPanel x:Name="PlayerList" Margin="0,8,0,0"/>
                         <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="0,10,0,0">
-                            <CheckBox x:Name="AllowEveryoneBox" Style="{StaticResource ToggleSwitch}"
+                            <CheckBox x:Name="AllowEveryoneBox" Style="{DynamicResource ToggleSwitch}"
                                       AutomationProperties.Name="Let everyone in" AutomationProperties.AutomationId="LetEveryoneIn">
                                 <StackPanel>
                                     <TextBlock Text="Let everyone in"/>

@@ -43,8 +43,8 @@ public class ThemeManagerTests
             var app = Application.Current;
             ThemeManager.Install(app);
             ThemeManager.Install(app); // a second call changes nothing
-            Assert.Equal(2, app.Resources.MergedDictionaries.Count);
-            Assert.IsType<Duration>(app.Resources["FastDuration"]);
+            Assert.Equal(3, app.Resources.MergedDictionaries.Count); // palette, motion, controls
+            Assert.IsType<Duration>(app.FindResource("MotionHover"));
             Assert.IsAssignableFrom<Geometry>(app.FindResource("IconMonitor"));
             if (!SystemParameters.HighContrast)
                 Assert.Equal(Color.FromRgb(0x7C, 0x3A, 0xED), ((SolidColorBrush)app.FindResource("PrimaryBrush")).Color);
@@ -52,10 +52,37 @@ public class ThemeManagerTests
     }
 
     [Fact]
-    public void Durations_are_zero_when_windows_animations_are_off()
+    public void Motion_is_on_by_default_whatever_windows_says()
     {
-        Assert.Equal(TimeSpan.Zero, ThemeManager.FastDurationFor(animationsOn: false).TimeSpan);
-        Assert.Equal(TimeSpan.FromMilliseconds(120), ThemeManager.FastDurationFor(animationsOn: true).TimeSpan);
+        Wpf.Run(() =>
+        {
+            ThemeManager.Install(Application.Current);
+            Assert.False(Motion.Reduced);
+            Assert.Equal(TimeSpan.FromMilliseconds(150), ((Duration)Application.Current.FindResource("MotionHover")).TimeSpan);
+        });
+    }
+
+    [Fact]
+    public void Reduce_motion_makes_template_motion_instant_or_a_short_fade()
+    {
+        Wpf.Run(() =>
+        {
+            var on = Motion.Resources(reduced: false);
+            var off = Motion.Resources(reduced: true);
+            Assert.Equal(Motion.ResourceKeys.Order(), on.Keys.OfType<string>().Order());
+            Assert.Equal(Motion.ResourceKeys.Order(), off.Keys.OfType<string>().Order());
+            Assert.Equal(TimeSpan.FromMilliseconds(150), ((Duration)on["MotionHover"]).TimeSpan);
+            Assert.Equal(TimeSpan.FromMilliseconds(90), ((Duration)on["MotionPressDown"]).TimeSpan);
+            Assert.Equal(TimeSpan.FromMilliseconds(160), ((Duration)on["MotionPressUp"]).TimeSpan);
+            Assert.Equal(TimeSpan.FromMilliseconds(180), ((Duration)on["MotionMove"]).TimeSpan);
+            foreach (var key in off.Keys.OfType<string>())
+                if (off[key] is Duration duration)
+                    Assert.True(duration.TimeSpan <= TimeSpan.FromMilliseconds(120), key);
+            Assert.Equal(TimeSpan.Zero, ((Duration)off["MotionMove"]).TimeSpan); // movement is instant
+            Assert.Equal(1.0, (double)off["PressScale"]);
+            Assert.Equal(0.0, (double)off["RevealRise"]);
+            Assert.True(((Freezable)on["EaseOut"]).IsFrozen);
+        });
     }
 
     [Fact]
@@ -65,7 +92,7 @@ public class ThemeManagerTests
         {
             var element = new FrameworkElement();
             Assert.True(ThemeManager.TryInstallInto(element));
-            Assert.True(element.Resources.Contains("FastDuration"));
+            Assert.NotNull(element.TryFindResource("MotionHover"));
             Assert.NotNull(element.TryFindResource("CardBrush"));
         });
     }

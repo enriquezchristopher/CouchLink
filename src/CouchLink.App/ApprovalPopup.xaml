@@ -11,7 +11,7 @@
         </Border.Effect>
         <StackPanel>
             <DockPanel>
-                <Button x:Name="CloseButton" DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Padding="4,0" MinHeight="24"
+                <Button x:Name="CloseButton" DockPanel.Dock="Right" Style="{DynamicResource GhostButton}" Padding="4,0" MinHeight="24"
                         VerticalAlignment="Top" AutomationProperties.Name="Deny and close" AutomationProperties.AutomationId="ToastClose">
                     <ui:Glyph Data="{StaticResource IconClose}" Brush="{DynamicResource TextMutedBrush}" Width="14" Height="14"/>
                 </Button>
@@ -33,7 +33,7 @@
             </Border>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button x:Name="DenyButton" Content="Deny" MinWidth="88" AutomationProperties.AutomationId="Deny"/>
-                <Button x:Name="AllowButton" Content="Allow" MinWidth="88" Margin="8,0,0,0" Style="{StaticResource PrimaryButton}"
+                <Button x:Name="AllowButton" Content="Allow" MinWidth="88" Margin="8,0,0,0" Style="{DynamicResource PrimaryButton}"
                         AutomationProperties.AutomationId="Allow"/>
             </StackPanel>
         </StackPanel>

@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using CouchLink.App.Theme;
 
 namespace CouchLink.App.Ui;
 
@@ -43,6 +44,14 @@ internal sealed class Banner : Border
     }
 
     public event Action? CloseClicked;
+
+    /// <summary>Shown (Visibility → Visible): it slides down into place and fades in.</summary>
+    protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+        if (e.Property == VisibilityProperty && Visibility == Visibility.Visible)
+            Motion.DropIn(this);
+    }
 
     internal Button CloseButton { get; }
 

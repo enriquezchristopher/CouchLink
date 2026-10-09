@@ -5,7 +5,7 @@ namespace CouchLink.App.Tests;
 
 /// <summary>
 /// A misspelled DynamicResource fails silently: the control just has no color. Every key used anywhere
-/// in CouchLink.App must be defined in Theme/*.xaml (or be FastDuration, which ThemeManager sets).
+/// in CouchLink.App must be defined in Theme/*.xaml (or be a Motion key, which ThemeManager puts in from Theme/Motion.cs).
 /// </summary>
 public partial class ResourceKeyTests
 {
@@ -14,7 +14,7 @@ public partial class ResourceKeyTests
     {
         var defined = Directory.GetFiles(Path.Combine(RepoFiles.AppSource, "Theme"), "*.xaml")
             .SelectMany(f => DefinedKey().Matches(File.ReadAllText(f)).Select(m => m.Groups[1].Value))
-            .Append("FastDuration")
+            .Concat(CouchLink.App.Theme.Motion.ResourceKeys)
             .ToHashSet();
 
         var sources = Directory.GetFiles(RepoFiles.AppSource, "*.*", SearchOption.AllDirectories)
