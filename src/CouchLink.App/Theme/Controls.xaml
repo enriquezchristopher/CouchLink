@@ -152,7 +152,7 @@
     <Style x:Key="HeaderButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="10,0"/>
-        <Setter Property="MinHeight" Value="30"/>
+        <Setter Property="MinHeight" Value="32"/>
         <Setter Property="FontWeight" Value="Normal"/>
         <Setter Property="FontSize" Value="13"/>
     </Style>
@@ -220,7 +220,7 @@
     </ControlTemplate>
     <Style x:Key="HeroButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Template" Value="{StaticResource HeroTemplate}"/>
-        <Setter Property="MinHeight" Value="76"/>
+        <Setter Property="MinHeight" Value="72"/>
         <Setter Property="Padding" Value="16,12"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
     </Style>
@@ -236,6 +236,7 @@
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Setter Property="Background" Value="{DynamicResource InputBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+        <Setter Property="MinHeight" Value="32"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -296,7 +297,7 @@
     <Style x:Key="SegmentedItem" TargetType="RadioButton">
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-        <Setter Property="MinHeight" Value="30"/>
+        <Setter Property="MinHeight" Value="32"/>
         <Setter Property="Padding" Value="12,0"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
@@ -586,7 +587,7 @@
                                       IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
-                                    <Border Background="Transparent" Padding="0,4">
+                                    <Border Background="Transparent" Padding="0,4" MinHeight="32">
                                         <StackPanel Orientation="Horizontal">
                                             <ui:Glyph x:Name="Chevron" Data="{StaticResource IconChevronRight}" Brush="{DynamicResource TextMutedBrush}"
                                                       Width="14" Height="14" RenderTransformOrigin="0.5,0.5"/>

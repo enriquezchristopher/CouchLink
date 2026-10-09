@@ -93,6 +93,30 @@ public class ThemeSmokeTests
     }
 
     [Fact]
+    public void Touch_targets_are_at_least_32_and_hero_buttons_72()
+    {
+        Wpf.Run(() =>
+        {
+            ThemeManager.Install(Application.Current);
+            var app = Application.Current;
+            Assert.True(MinHeightOf((Style)app.FindResource("HeaderButton")) >= 32);
+            Assert.True(MinHeightOf((Style)app.FindResource("SegmentedItem")) >= 32);
+            Assert.True(MinHeightOf((Style)app.FindResource(typeof(CheckBox))) >= 32);
+            Assert.True(MinHeightOf((Style)app.FindResource("ToggleSwitch")) >= 32);
+            Assert.Equal(72, MinHeightOf((Style)app.FindResource("HeroButton")));
+        });
+    }
+
+    private static double MinHeightOf(Style? style)
+    {
+        for (; style is not null; style = style.BasedOn)
+            foreach (var setter in style.Setters.OfType<Setter>())
+                if (setter.Property == FrameworkElement.MinHeightProperty)
+                    return (double)setter.Value;
+        return 0;
+    }
+
+    [Fact]
     public void A_text_box_shows_its_placeholder_only_while_empty()
     {
         Wpf.Run(() =>
