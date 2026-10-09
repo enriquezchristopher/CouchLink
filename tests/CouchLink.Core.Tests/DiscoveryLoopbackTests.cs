@@ -46,9 +46,16 @@ public class DiscoveryLoopbackTests
             int count = 0;
             using var cts = new CancellationTokenSource();
             var loop = listener!.RunAsync((_, _) => Interlocked.Increment(ref count), cts.Token);
+            var started = System.Diagnostics.Stopwatch.StartNew();
             using (new DiscoveryBroadcaster(listener.LocalPort, () => HostAnnounce.For(0, 9, "PC-03"), () => [IPAddress.Loopback]))
-                await Task.Delay(2500);
-            Assert.InRange(Volatile.Read(ref count), 2, 4); // at 0, 1 and 2 s, give or take a slow timer
+            {
+                // Waits for the broadcasts at 0, 1 and 2 s rather than counting a fixed window: the timer runs on the
+                // thread pool, which a parallel test run can starve for seconds.
+                while (Volatile.Read(ref count) < 3 && started.Elapsed < Timeout)
+                    await Task.Delay(50);
+            }
+            // About one a second: late timer callbacks can catch up in a burst, but never beat the clock.
+            Assert.InRange(Volatile.Read(ref count), 3, (int)started.Elapsed.TotalSeconds + 2);
             cts.Cancel();
             await loop.WaitAsync(Timeout);
         }
