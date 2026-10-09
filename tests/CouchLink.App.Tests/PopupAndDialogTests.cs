@@ -14,10 +14,13 @@ public class PopupAndDialogTests
             ThemeManager.Install(Application.Current);
             var toast = new ApprovalPopup("PC-11", 0, () => { }, () => { });
             Assert.Equal("PC-11 wants to join", toast.Heading.Text);
+            Assert.Equal(1.0, toast.CountdownScale.ScaleX, 0.01);
             Assert.False(toast.ShowActivated);
             Assert.True(toast.Topmost);
             toast.UpdateRemaining(TimeSpan.FromSeconds(8));
             Assert.Equal("Denied automatically in 22 s", toast.Remaining.Text);
+            toast.UpdateRemaining(TimeSpan.FromSeconds(15));
+            Assert.Equal(0.5, toast.CountdownScale.ScaleX, 0.01);
             toast.CloseByHost();
         });
     }
@@ -34,6 +37,25 @@ public class PopupAndDialogTests
             Assert.True(dialog.SaveButton.IsEnabled);
             Assert.Equal("NBA 2K22 (my keys)", dialog.ProfileName);
             Assert.Null(dialog.Game);
+            dialog.Close();
+        });
+    }
+
+    [Fact]
+    public void The_crash_dialog_keeps_all_four_buttons_on_one_row()
+    {
+        Wpf.Run(() =>
+        {
+            ThemeManager.Install(Application.Current);
+            var dialog = new CrashDialog("CouchLink crashed.", @"C:\reports\crash.txt", null);
+            var content = (FrameworkElement)dialog.Content;
+            double width = dialog.Width - 16; // window chrome
+            content.Measure(new Size(width, double.PositiveInfinity));
+            content.Arrange(new Rect(0, 0, width, content.DesiredSize.Height));
+            content.UpdateLayout();
+            var buttons = new[] { dialog.OpenFolderButton, dialog.CopyPathButton, dialog.ReportButton, dialog.CloseButton };
+            double[] ys = buttons.Select(b => b.TranslatePoint(new Point(0, 0), content).Y).ToArray();
+            Assert.All(ys, y => Assert.InRange(y, ys[0] - 1, ys[0] + 1));
             dialog.Close();
         });
     }
