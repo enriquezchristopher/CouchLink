@@ -4,7 +4,8 @@
 .DESCRIPTION
     Publishes the app, PadTest and VideoTest as self-contained win-x64 builds
     (no .NET install needed on the target PC), with FFmpeg 9 in ffmpeg\, and
-    zips them with the license files.
+    zips them with the license files. All three go into one folder so they
+    share one copy of the .NET runtime and of FFmpeg.
     The version comes from eng/version.props.
 .EXAMPLE
     ./eng/package.ps1 -OutDir artifacts
@@ -32,9 +33,11 @@ function Publish([string]$project, [string]$destination) {
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed for $project" }
 }
 
+# One folder, one runtime. The files the three builds share are identical except WindowsBase.dll: the
+# app's is the real WPF one and the console tools' is a smaller stand-in, so the app goes last to win.
+Publish 'src/CouchLink.PadTest' $stage
+Publish 'src/CouchLink.VideoTest' $stage
 Publish 'src/CouchLink.App' $stage
-Publish 'src/CouchLink.PadTest' (Join-Path $stage 'PadTest')
-Publish 'src/CouchLink.VideoTest' (Join-Path $stage 'VideoTest')
 
 foreach ($file in 'LICENSE', 'README.md', 'THIRD-PARTY-NOTICES.md') {
     Copy-Item (Join-Path $root $file) $stage

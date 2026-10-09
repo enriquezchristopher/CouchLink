@@ -192,10 +192,11 @@ dotnet test
 ./eng/package.ps1          # builds artifacts/CouchLink-v<version>-win-x64.zip
 ```
 
-`PadTest\CouchLink.PadTest.exe check 9` checks, without any game, that a PC
+`CouchLink.PadTest.exe check 9` checks, without any game, that a PC
 can create 9 separate virtual controllers and that every button, stick and
-trigger works on each. `VideoTest\CouchLink.VideoTest.exe encode 5` checks
-that the host's GPU can capture and encode at 60 fps.
+trigger works on each. `CouchLink.VideoTest.exe encode 5` checks
+that the host's GPU can capture and encode at 60 fps. Both sit next to
+`CouchLink.App.exe` in the release folder.
 
 ## Contributing
 

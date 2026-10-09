@@ -110,7 +110,7 @@ ports stay closed to the internet.
 
 ### Check the controllers (optional)
 
-On a host, `PadTest\CouchLink.PadTest.exe check 9` creates 9 virtual
+On a host, `CouchLink.PadTest.exe check 9` (next to `CouchLink.App.exe`) creates 9 virtual
 controllers and checks every button, stick and trigger on each, without any
 game. It ends with a pass or fail line for each controller.
 
