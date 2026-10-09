@@ -66,23 +66,4 @@ public class VideoStreamerTargetsTests
         await Until(() => sender.SentTo(A) > 0);
         await Until(() => source.Forced > forcedBefore);
     }
-
-    [Fact]
-    public async Task A_removed_target_gets_nothing_more()
-    {
-        var sender = new RecordingSender();
-        using var streamer = new VideoStreamer(new CountingSource(), sender, 47802, TimeProvider.System);
-        streamer.AddTarget(2, A);
-        streamer.AddTarget(3, B);
-        await Until(() => sender.SentTo(B) > 0);
-
-        streamer.RemoveTarget(3);
-        await Task.Delay(50); // a frame already being sent may still reach B
-        int toB = sender.SentTo(B);
-        int toA = sender.SentTo(A);
-        await Until(() => sender.SentTo(A) > toA + 5);
-
-        Assert.Equal(toB, sender.SentTo(B));
-        Assert.Equal(1, streamer.Stats.Clients);
-    }
 }

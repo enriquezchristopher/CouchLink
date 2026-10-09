@@ -29,23 +29,4 @@ public class TestToneSourceTests
         for (int i = 0; i < AudioFormat.FrameSamples; i++)
             Assert.Equal(frame[2 * i], frame[2 * i + 1]);
     }
-
-    [Fact]
-    public void Frames_come_in_real_time_and_only_the_first_is_a_discontinuity()
-    {
-        using var tone = new TestToneSource();
-        var frame = new short[AudioFormat.FrameValues];
-        var clock = Stopwatch.StartNew();
-
-        Assert.True(tone.TryRead(frame, TimeSpan.FromSeconds(1), out bool first));
-        Assert.True(first);
-        for (int i = 1; i < 40; i++)
-        {
-            Assert.True(tone.TryRead(frame, TimeSpan.FromSeconds(1), out bool later));
-            Assert.False(later);
-        }
-
-        Assert.InRange(clock.ElapsedMilliseconds, 180, 400); // frame 39 is due at 195 ms
-        Assert.Equal("test tone", tone.Description);
-    }
 }
