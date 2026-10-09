@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.1](https://github.com/enriquezchristopher/CouchLink/compare/v1.12.0...v1.12.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* show the app icon in the header, not a gradient placeholder ([e947116](https://github.com/enriquezchristopher/CouchLink/commit/e94711658bf0b5530d053baa4bf2e982b2707601))
+* show the app icon in the header, not a gradient placeholder ([3e5c6f5](https://github.com/enriquezchristopher/CouchLink/commit/3e5c6f5cfb14fa3bb118942257e9c2a4829239f9))
+
 ## [1.12.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.11.0...v1.12.0) (2026-10-09)
 
 
