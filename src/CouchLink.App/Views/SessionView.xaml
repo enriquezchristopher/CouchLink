@@ -1,15 +1,57 @@
 <UserControl x:Class="CouchLink.App.Views.SessionView" x:ClassModifier="internal"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StackPanel Margin="24" VerticalAlignment="Center">
-        <TextBlock x:Name="Heading" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap"/>
-        <TextBlock x:Name="Hint" Margin="0,8,0,0" Foreground="Gray" TextWrapping="Wrap"/>
-        <!-- Not focusable: Raw Input keys still reach a focused control, so Space or Enter in the game must not press it. -->
-        <Button x:Name="LeaveButton" Height="40" Margin="0,16,0,0" Focusable="False"/>
-        <Button x:Name="ControlsButton" Content="⚙ Controls" Height="32" Margin="0,8,0,0" Focusable="False"
-                HorizontalAlignment="Left" Padding="12,0"/>
-        <Expander Header="Details" Margin="0,16,0,0" Focusable="False">
-            <TextBlock x:Name="DetailsText" FontFamily="Consolas" TextWrapping="Wrap" Margin="0,4,0,0"/>
-        </Expander>
-    </StackPanel>
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:CouchLink.App.Ui">
+    <!-- Nothing here is focusable: Raw Input keys still reach a focused control, so Space or Enter in the game must not press it. -->
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="16,12">
+            <UniformGrid Rows="1">
+                <Button x:Name="ControlsButton" Content="Controls" Focusable="False" MinHeight="40" Margin="0,0,4,0"
+                        AutomationProperties.AutomationId="SessionControls"/>
+                <Button x:Name="LeaveButton" Style="{StaticResource DangerButton}" Focusable="False" MinHeight="40" Margin="4,0,0,0"
+                        AutomationProperties.AutomationId="SessionLeave"/>
+            </UniformGrid>
+        </Border>
+        <StackPanel Margin="24,16" VerticalAlignment="Center">
+            <ui:StepTracker x:Name="Steps"/>
+            <DockPanel Margin="0,28,0,0">
+                <ui:PlayerChip x:Name="Chip" Large="True" DockPanel.Dock="Left" Margin="0,0,16,0" Visibility="Collapsed"/>
+                <ui:Spinner x:Name="Busy" DockPanel.Dock="Left" Margin="0,0,12,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="Heading" Style="{StaticResource TitleText}" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="Hint" Style="{StaticResource BodyMutedText}" Margin="0,4,0,0"/>
+                    <ui:StatusPill x:Name="ReconnectingPill" Kind="Reconnecting" Text="Reconnecting" HorizontalAlignment="Left"
+                                   Margin="0,8,0,0" Visibility="Collapsed"/>
+                </StackPanel>
+            </DockPanel>
+            <Border x:Name="Shortcuts" Style="{StaticResource Card}" Margin="0,20,0,0" Visibility="Collapsed">
+                <StackPanel>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <ui:KeyCap Key="Ctrl"/><ui:KeyCap Key="Alt"/><ui:KeyCap Key="Q"/>
+                        </StackPanel>
+                        <TextBlock Text="Leave the game" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <DockPanel Margin="0,8,0,0">
+                        <ui:KeyCap DockPanel.Dock="Right" Key="F1"/>
+                        <TextBlock Text="Show the keys" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <DockPanel Margin="0,8,0,0">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <ui:KeyCap Key="Ctrl"/><ui:KeyCap Key="Alt"/><ui:KeyCap Key="C"/>
+                        </StackPanel>
+                        <TextBlock Text="Change keys" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <DockPanel Margin="0,8,0,0">
+                        <ui:KeyCap DockPanel.Dock="Right" Key="F2"/>
+                        <TextBlock Text="Stream stats" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </StackPanel>
+            </Border>
+            <Expander x:Name="DetailsExpander" Header="Connection details" Margin="0,16,0,0" Focusable="False"
+                      AutomationProperties.AutomationId="ConnectionDetails">
+                <TextBlock x:Name="DetailsText" Style="{StaticResource MonoText}" TextWrapping="Wrap"/>
+            </Expander>
+        </StackPanel>
+    </DockPanel>
 </UserControl>
