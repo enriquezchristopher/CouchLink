@@ -6,19 +6,14 @@
 ### Features
 
 * **app:** stream quality setting in the host lobby, with a network link warning ([8f9534e](https://github.com/enriquezchristopher/CouchLink/commit/8f9534e864d10a21d294b874f6d2ee3f9f303007))
-* **app:** stream quality setting in the host lobby, with a network link warning ([699592e](https://github.com/enriquezchristopher/CouchLink/commit/699592e1717db6f7396d3e6676c1c48784a13bec))
 * **core:** slower NVENC and AMF settings for high stream quality ([8f9534e](https://github.com/enriquezchristopher/CouchLink/commit/8f9534e864d10a21d294b874f6d2ee3f9f303007))
-* **core:** slower NVENC and AMF settings for high stream quality ([699592e](https://github.com/enriquezchristopher/CouchLink/commit/699592e1717db6f7396d3e6676c1c48784a13bec))
 * **core:** stream quality presets scale the bitrate up to 100 Mbps ([8f9534e](https://github.com/enriquezchristopher/CouchLink/commit/8f9534e864d10a21d294b874f6d2ee3f9f303007))
-* **core:** stream quality presets scale the bitrate up to 100 Mbps ([699592e](https://github.com/enriquezchristopher/CouchLink/commit/699592e1717db6f7396d3e6676c1c48784a13bec))
 * **core:** warn when the stream would outgrow the host's network link ([8f9534e](https://github.com/enriquezchristopher/CouchLink/commit/8f9534e864d10a21d294b874f6d2ee3f9f303007))
-* **core:** warn when the stream would outgrow the host's network link ([699592e](https://github.com/enriquezchristopher/CouchLink/commit/699592e1717db6f7396d3e6676c1c48784a13bec))
 
 
 ### Bug Fixes
 
 * **video:** turn off driver auto-processing in the host converter ([8f9534e](https://github.com/enriquezchristopher/CouchLink/commit/8f9534e864d10a21d294b874f6d2ee3f9f303007))
-* **video:** turn off driver auto-processing in the host converter ([699592e](https://github.com/enriquezchristopher/CouchLink/commit/699592e1717db6f7396d3e6676c1c48784a13bec))
 
 ## [1.7.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.6.2...v1.7.0) (2026-10-08)
 
