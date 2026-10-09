@@ -13,11 +13,38 @@ mouse. The game sees separate controllers, so every PC is a separate player.
 Built for internet cafés and LAN rooms: everything runs on your local
 network, with **no accounts, no cloud and no internet** required.
 
-<p align="center">
-  <img src="docs/images/start.png" width="260" alt="CouchLink's Start screen with Host a game and Join a game">
-  <img src="docs/images/host-lobby.png" width="260" alt="The host lobby with the stream card and the player list">
-  <img src="docs/images/controls.png" width="220" alt="The controls editor with grouped controls and their keys">
-</p>
+<table>
+  <tr>
+    <th width="33%">Start</th>
+    <th width="33%">Host lobby</th>
+    <th width="33%">Join list</th>
+  </tr>
+  <tr>
+    <td valign="top"><img src="docs/images/start.png" alt="CouchLink's Start screen with Host a game and Join a game"></td>
+    <td valign="top"><img src="docs/images/host-lobby.png" alt="The host lobby with the stream card and the player list"></td>
+    <td valign="top"><img src="docs/images/join-list.png" alt="The join list with a host card and Join by address"></td>
+  </tr>
+  <tr>
+    <td>Host a game or join one.</td>
+    <td>Stream settings, joined players and Stop hosting.</td>
+    <td>Hosts on the network, with how full each game is.</td>
+  </tr>
+  <tr>
+    <th>Session</th>
+    <th>Controls editor</th>
+    <th>Join request</th>
+  </tr>
+  <tr>
+    <td valign="top"><img src="docs/images/session-waiting.png" alt="The session screen while the host decides"></td>
+    <td valign="top"><img src="docs/images/controls.png" alt="The controls editor with grouped controls and their keys"></td>
+    <td valign="top"><img src="docs/images/approval.png" alt="The join request popup with a countdown bar"></td>
+  </tr>
+  <tr>
+    <td>Steps from connecting to playing.</td>
+    <td>Controls in cards, with Find and key caps.</td>
+    <td>The host allows or denies before the countdown ends.</td>
+  </tr>
+</table>
 
 ## Features
 
@@ -42,6 +69,9 @@ network, with **no accounts, no cloud and no internet** required.
 - **Recovers by itself**: brief network drops reconnect automatically, and a
   dropped player gets the same controller back.
 - **No install needed** on joining PCs: unzip and run. No .NET to install.
+- **A dark theme with its own title bar** on every window, and smooth screen
+  changes. **Help → Reduce motion** turns the movement off, and Windows High
+  Contrast is followed.
 
 ## How it works
 
