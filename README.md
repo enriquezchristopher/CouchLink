@@ -146,7 +146,7 @@ and the [changelog](CHANGELOG.md).
   [new issue](https://github.com/enriquezchristopher/CouchLink/issues/new/choose).
 - **Something else:** describe what you did and what happened, and attach
   the newest log from `%LOCALAPPDATA%\CouchLink\Logs`. For lag, include a
-  screenshot of F2 on the joining PC and the host lobby's **Details**.
+  screenshot of F2 on the joining PC and the host lobby's **Stream stats**.
 - **A security issue:** see [SECURITY.md](SECURITY.md); please don't open a
   public issue.
 

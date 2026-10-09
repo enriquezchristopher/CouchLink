@@ -98,9 +98,9 @@ function Save-Shot($window, [string]$name) {
 }
 
 $host1 = Start-Process $Exe -ArgumentList '--test-pattern', '--windowed-player' -PassThru
-Close-CrashDialog $host1.Id
 $client = $null
 try {
+    Close-CrashDialog $host1.Id
     $main = Wait-Window $host1.Id 'CouchLink'
     Start-Sleep -Seconds 1
     Save-Shot $main 'start'
