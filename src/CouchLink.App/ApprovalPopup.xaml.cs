@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using CouchLink.App.Presentation;
 using CouchLink.App.Theme;
@@ -34,6 +36,7 @@ internal sealed partial class ApprovalPopup : Window
         CloseButton.Click += (_, _) => Answer(deny);
 
         UpdateRemaining(TimeSpan.Zero);
+        StartBar(TimeSpan.Zero);
         _countdown.Tick += (_, _) => UpdateRemaining(_shown.Elapsed);
         _countdown.Start();
         Loaded += (_, _) =>
@@ -57,12 +60,25 @@ internal sealed partial class ApprovalPopup : Window
         Close();
     }
 
-    internal void UpdateRemaining(TimeSpan elapsed)
+    /// <summary>The "Denied automatically in N s" text; the timer refreshes it, the bar animates by itself.</summary>
+    internal void UpdateRemaining(TimeSpan elapsed) =>
+        Remaining.Text = AskCountdown.For(elapsed, HostSession.AskTimeout).Text;
+
+    /// <summary>
+    /// Drains the bar from where it should be after <paramref name="elapsed"/> to empty in one linear
+    /// animation, so it moves every frame instead of jumping on each timer tick. It shows how long the
+    /// host has left to answer, so it runs even when Windows animations are off.
+    /// </summary>
+    internal void StartBar(TimeSpan elapsed)
     {
         var countdown = AskCountdown.For(elapsed, HostSession.AskTimeout);
-        Remaining.Text = countdown.Text;
-        CountdownScale.ScaleX = countdown.Remaining;
+        var left = HostSession.AskTimeout - elapsed;
+        BarAnimation = new DoubleAnimation(countdown.Remaining, 0, left > TimeSpan.Zero ? left : TimeSpan.Zero);
+        CountdownScale.BeginAnimation(ScaleTransform.ScaleXProperty, BarAnimation);
     }
+
+    /// <summary>The bar's current drain, for tests.</summary>
+    internal DoubleAnimation? BarAnimation { get; private set; }
 
     private void Answer(Action answer)
     {

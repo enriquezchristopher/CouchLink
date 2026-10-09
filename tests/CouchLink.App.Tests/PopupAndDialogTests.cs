@@ -19,8 +19,26 @@ public class PopupAndDialogTests
             Assert.True(toast.Topmost);
             toast.UpdateRemaining(TimeSpan.FromSeconds(8));
             Assert.Equal("Denied automatically in 22 s", toast.Remaining.Text);
-            toast.UpdateRemaining(TimeSpan.FromSeconds(15));
-            Assert.Equal(0.5, toast.CountdownScale.ScaleX, 0.01);
+            toast.CloseByHost();
+        });
+    }
+
+    [Fact]
+    public void The_countdown_bar_glides_to_empty_instead_of_stepping()
+    {
+        Wpf.Run(() =>
+        {
+            ThemeManager.Install(Application.Current);
+            var toast = new ApprovalPopup("PC-11", 0, () => { }, () => { });
+            // One animation drains the bar over the whole timeout at the screen's frame rate; a timer that
+            // moved it 5 times a second made it jump.
+            Assert.True(toast.CountdownScale.HasAnimatedProperties);
+            Assert.Equal(1.0, toast.BarAnimation!.From!.Value, 0.01);
+            Assert.Equal(0.0, toast.BarAnimation.To!.Value, 0.01);
+            Assert.Equal(TimeSpan.FromSeconds(30), toast.BarAnimation.Duration.TimeSpan);
+            toast.StartBar(TimeSpan.FromSeconds(15));
+            Assert.Equal(0.5, toast.BarAnimation!.From!.Value, 0.01);
+            Assert.Equal(TimeSpan.FromSeconds(15), toast.BarAnimation.Duration.TimeSpan);
             toast.CloseByHost();
         });
     }

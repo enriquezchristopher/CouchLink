@@ -53,6 +53,39 @@ public class UiPiecesTests
     }
 
     [Fact]
+    public void Spinner_turns_while_visible_even_when_windows_animations_are_off()
+    {
+        Wpf.Run(() =>
+        {
+            ThemeManager.Install(Application.Current);
+            var spinner = new Spinner();
+            var window = new Window
+            {
+                Content = spinner,
+                Left = -20000,
+                Top = -20000,
+                Width = 100,
+                Height = 100,
+                ShowActivated = false,
+                ShowInTaskbar = false,
+            };
+            try
+            {
+                window.Show();
+                // It shows the app is still working, so it is not decoration: it turns whatever the
+                // Windows "animate controls" setting says.
+                Assert.True(spinner.Turn.HasAnimatedProperties);
+                spinner.Visibility = Visibility.Collapsed;
+                Assert.False(spinner.Turn.HasAnimatedProperties);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
     public void Status_pill_has_round_ends_not_an_oval()
     {
         Wpf.Run(() =>

@@ -3,11 +3,13 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using CouchLink.App.Theme;
 
 namespace CouchLink.App.Ui;
 
-/// <summary>A small turning ring for "looking" and "connecting". It only turns while visible, and not at all when Windows animations are off.</summary>
+/// <summary>
+/// A small turning ring for "looking" and "connecting". It turns while visible, even when Windows
+/// animations are off: it is the only sign the app is still working, so it is not decoration.
+/// </summary>
 internal sealed class Spinner : Grid
 {
     private readonly RotateTransform _turn = new();
@@ -35,9 +37,11 @@ internal sealed class Spinner : Grid
         IsVisibleChanged += (_, _) => Animate(IsVisible);
     }
 
+    internal RotateTransform Turn => _turn;
+
     private void Animate(bool on)
     {
-        if (on && ThemeManager.AnimationsOn)
+        if (on)
             _turn.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(0, 360, TimeSpan.FromSeconds(0.9)) { RepeatBehavior = RepeatBehavior.Forever });
         else
             _turn.BeginAnimation(RotateTransform.AngleProperty, null);
