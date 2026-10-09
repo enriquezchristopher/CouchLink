@@ -4,7 +4,7 @@ using System.Windows.Controls;
 
 namespace CouchLink.App.Ui;
 
-internal enum BannerKind { Info, Warning, Error }
+public enum BannerKind { Info, Warning, Error }
 
 /// <summary>A message across the screen: info, warning (link too slow, key moved) or error (why the last session ended).</summary>
 internal sealed class Banner : Border

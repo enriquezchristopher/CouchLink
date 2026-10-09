@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using CouchLink.App.Theme;
 using CouchLink.App.Views;
 using CouchLink.Core.Session;
@@ -80,6 +82,31 @@ public class SessionScreenTests
             Assert.False(view.LeaveButton.Focusable);
             Assert.False(view.ControlsButton.Focusable);
             Assert.False(view.DetailsExpander.Focusable);
+        });
+    }
+
+    [Fact]
+    public void Nothing_inside_the_expander_can_take_keyboard_focus()
+    {
+        Wpf.Run(() =>
+        {
+            var view = View();
+            var host = new Border { Child = view };
+            host.Measure(new Size(540, 600));
+            host.Arrange(new Rect(0, 0, 540, 600));
+            view.DetailsExpander.IsExpanded = true;
+            view.DetailsExpander.ApplyTemplate();
+            host.UpdateLayout();
+            var focusable = new List<string>();
+            void Walk(DependencyObject node)
+            {
+                if (node is UIElement { Focusable: true })
+                    focusable.Add(node.GetType().Name);
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(node); i++)
+                    Walk(VisualTreeHelper.GetChild(node, i));
+            }
+            Walk(view.DetailsExpander);
+            Assert.Empty(focusable);
         });
     }
 }

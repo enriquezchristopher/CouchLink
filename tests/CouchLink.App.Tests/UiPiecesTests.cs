@@ -127,4 +127,20 @@ public class UiPiecesTests
             dialog.Close();
         });
     }
+
+    [Theory]
+    [InlineData(BannerKind.Info)]
+    [InlineData(BannerKind.Warning)]
+    [InlineData(BannerKind.Error)]
+    public void Every_banner_kind_resolves_its_brushes(BannerKind kind)
+    {
+        Wpf.Run(() =>
+        {
+            ThemeManager.Install(Application.Current);
+            Assert.NotNull(Application.Current.TryFindResource($"{kind}BannerFillBrush"));
+            Assert.NotNull(Application.Current.TryFindResource($"{kind}BannerBorderBrush"));
+            Assert.NotNull(Application.Current.TryFindResource($"{kind}BannerTextBrush"));
+            Assert.NotNull(new Banner { Kind = kind }.Background);
+        });
+    }
 }
