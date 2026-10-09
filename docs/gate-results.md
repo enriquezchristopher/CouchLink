@@ -114,3 +114,23 @@ Host / client PCs: <fill in>
 | Live session at Max on the gigabit switch: colored text sharper than at Balanced; F2 packet loss on the client no higher than at Balanced, keyframes included | <pass/fail> |
 | Changing Quality while two clients play: both stay in, the picture comes back within a second | <pass/fail> |
 | Host card forced to 100 Mbps: the orange warning appears as clients join at High, and goes away after switching to Balanced | <pass/fail> |
+
+## UI/UX revamp (Plan 12)
+
+Date: <fill in>
+PCs / Windows builds: <fill in>
+
+| Check | Result |
+|---|---|
+| Windows 10 and 11: every window has the dark title bar; Windows 11 shows the navy caption color | <pass/fail> |
+| Windows High Contrast on while CouchLink runs: every screen switches to system colors at once and stays readable; off again: back to the dark theme | <pass/fail> |
+| "Show animations in Windows" off: screen changes, toasts and button hovers are instant; the spinners stand still | <pass/fail> |
+| Keyboard only: Tab reaches Host a game, Join a game, Controls, Help; the purple focus ring shows; Enter presses; the Help menu opens and works with arrows | <pass/fail> |
+| Keyboard only in the Controls editor: Find, Labels, each row, the slider (arrows), Invert Y, Reset, Done | <pass/fail> |
+| While playing, Space and Enter in the game never press Leave, Controls or a header button on the client's main window | <pass/fail> |
+| Ctrl+Alt+C over the game opens the new editor on top; Done returns to the game | <pass/fail> |
+| Two players join at once: two toasts stack in the bottom-right, both count down, the host's taskbar button flashes, the game keeps the keyboard | <pass/fail> |
+| Stop hosting with two players in: the confirm names both; Enter keeps hosting; Stop hosting ends both sessions | <pass/fail> |
+| Join by address with "192.168": the error shows under the box and nothing connects | <pass/fail> |
+| `--crash-test=ui` and `--crash-test=startup`: the themed crash dialog opens with its four buttons working | <pass/fail> |
+| 125% and 150% display scaling: nothing clipped on Start, the lobby with 9 players, the join list, the editor with Labels on | <pass/fail> |

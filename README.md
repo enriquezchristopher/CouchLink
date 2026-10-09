@@ -14,9 +14,9 @@ Built for internet cafés and LAN rooms: everything runs on your local
 network, with **no accounts, no cloud and no internet** required.
 
 <p align="center">
-  <img src="docs/images/start.png" width="260" alt="CouchLink's Start screen with Host and Join buttons">
-  <img src="docs/images/host-lobby.png" width="260" alt="The host lobby with stream settings and the player list">
-  <img src="docs/images/controls.png" width="220" alt="The controls editor listing each controller button and its key">
+  <img src="docs/images/start.png" width="260" alt="CouchLink's Start screen with Host a game and Join a game">
+  <img src="docs/images/host-lobby.png" width="260" alt="The host lobby with the stream card and the player list">
+  <img src="docs/images/controls.png" width="220" alt="The controls editor with grouped controls and their keys">
 </p>
 
 ## Features
@@ -141,7 +141,7 @@ and the [changelog](CHANGELOG.md).
 ## Reporting a problem
 
 - **A crash:** CouchLink saves a report and shows where it is (or click
-  **Crash reports** on the Start screen). Reports contain no PC names, user
+  **Help → Crash reports** in the header). Reports contain no PC names, user
   names or IP addresses. Attach the file to a
   [new issue](https://github.com/enriquezchristopher/CouchLink/issues/new/choose).
 - **Something else:** describe what you did and what happened, and attach

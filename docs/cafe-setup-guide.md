@@ -80,7 +80,7 @@ The PCs talk to each other on these ports:
 | UDP 47802 | Video and audio, host to joining PC |
 | UDP 47803 | Controller input, joining PC to host |
 
-The first time you click **Host** or **Join**, Windows Firewall may ask
+The first time you click **Host a game** or **Join a game**, Windows Firewall may ask
 whether to allow CouchLink. Tick **both** "Private networks" and "Public
 networks", then click **Allow access**. Windows often treats a café network
 as public, and with only "Private" ticked, the PCs won't find each other.
@@ -135,7 +135,7 @@ game. It ends with a pass or fail line for each controller.
 
 ### On the host
 
-1. Start CouchLink and click **Host**.
+1. Start CouchLink and click **Host a game**.
 2. The host lobby opens. Pick the **Stream** quality (see
    [section 8](#8-stream-quality-and-performance)), then minimize the window
    and start the game.
@@ -144,24 +144,18 @@ game. It ends with a pass or fail line for each controller.
 
 ### On each joining PC
 
-1. Start CouchLink and click **Join**.
-2. Hosts on your network appear in the list as "PC name · players/10
-   players". Click the host.
+1. Start CouchLink and click **Join a game**.
+2. Hosts on your network appear as cards with the PC name and "3 / 10 players". Click the host. A host running a different version of CouchLink is greyed out.
 
 ![The join list](images/join-list.png)
 
-If the host doesn't appear, click **Join by address...** and type the host's
-IP address (run `ipconfig` on the host to find it).
+If the host doesn't appear, type the host's IP address in **Join by address** at the bottom of the list and click **Join** (run `ipconfig` on the host to find it). After 10 seconds without a host, the list shows what to check.
 
 ### Approving players
 
-When someone joins, a small popup appears in the bottom-right corner of the
-host's screen with **Allow** and **Deny**. If nobody answers within 30
-seconds, the request is denied and the joining PC shows "The host didn't
-answer."
+When someone joins, a card appears in the bottom-right corner of the host's screen with **Allow** and **Deny** and a bar counting down. If nobody answers within 30 seconds, the request is denied and the joining PC shows "The host didn't answer."
 
-Tick **Allow everyone (no popup when someone joins)** in the host lobby to let
-anyone on the network join without the popup.
+Turn on **Let everyone in** in the host lobby to let anyone on the network join without the popup.
 
 Once allowed, the joining PC goes fullscreen with the game, and its keyboard
 and mouse control its player (P2, P3 and so on, in joining order).
@@ -170,13 +164,15 @@ and mouse control its player (P2, P3 and so on, in joining order).
 
 - The lobby lists each player; **Kick** removes one ("You were removed by the
   host." on their screen).
-- **Stop hosting** ends the session for everyone ("Host ended the session.").
-- **Details** shows the stream: the video encoder in use, the resolution,
+- **Stop hosting** ends the session for everyone ("Host ended the session."). With players connected it asks first; Enter keeps hosting.
+- **Stream stats** shows the stream: the video encoder in use, the resolution,
   how many clients get video, and audio.
 
 ## 6. While playing
 
 On a joining PC:
+
+![The session screen while the host decides](images/session-waiting.png)
 
 | Key | What it does |
 |---|---|
@@ -230,16 +226,14 @@ ignored; let go and the mouse works again.
 
 ![The controls editor](images/controls.png)
 
-Open the editor with **⚙ Controls** on the Start screen or the session
-screen, or with **Ctrl+Alt+C** during a game.
+Open the editor with **Controls** in the header or on the session screen, or with **Ctrl+Alt+C** during a game.
 
 - Click a control, then press the key or mouse button for it. Mouse side
   buttons work too. Esc cancels.
 - Each key does one thing. Choosing a key that another control uses moves it,
-  and the editor says where it came from (for example "Space moved from
-  Cross."); that control is then left without a key until you give it one.
+  the control that lost it lights up, and the editor says where it came from (for example "Space moved here from Cross. Cross has no key now."). **Find** at the top filters the list by control or label.
 - Esc, F1, F2 and the Windows keys are reserved and can't be bound.
-- **Mouse sensitivity (right stick)** goes from 1 (slow) to 10 (fast).
+- **Sensitivity** under **Mouse (right stick)** goes from 1 (slow) to 10 (fast).
 - **Invert Y** flips the mouse's up and down on the right stick.
 - **Reset to default** restores the layout above.
 
@@ -252,7 +246,7 @@ A profile is a key layout for one game, saved as a file. Players pick one
 from the **Profile** list at the top of the controls editor instead of
 changing keys one by one.
 
-![The controls editor with the NBA 2K22 profile loaded and Show labels ticked](images/controls-profile.png)
+![The controls editor with the NBA 2K22 profile loaded and Labels turned on](images/controls-profile.png)
 
 During a game, F1 shows the profile's name and what each button does:
 
@@ -272,7 +266,7 @@ During a game, F1 shows the profile's name and what each button does:
 - **Make one:** change the keys in the editor, then click **Save as…**,
   give it a name (this is what players see in the list) and save it in the
   `profiles` folder.
-- **Name the buttons:** tick **Show labels** and type what each button
+- **Name the buttons:** turn on **Labels** and type what each button
   does in the game, such as "Shoot" or "Pass". The labels are saved with
   the profile, and F1 shows them during a game.
 - **Load one from elsewhere:** **Browse…** opens a profile from a USB stick
@@ -304,22 +298,22 @@ settings look sharper and need more from the host's GPU and the network.
 - On a gigabit network, **High** or **Max** makes text and fine detail
   sharper. Max at 1080p60 sends up to about 50 Mbps to each joining PC.
 - If the stream needs more than the host PC's network link can carry, the
-  lobby shows an orange warning under the Stream row with the numbers.
+  lobby shows an amber warning under the Stream card with the numbers.
   Lower the quality or the resolution until it goes away. A 100 Mbps link
   fits Balanced at 1080p60 for up to 5 joining PCs.
-- The host lobby's **Details** shows the video encoder. `h264_amf` (AMD) or
+- The host lobby's **Stream stats** shows the video encoder. `h264_amf` (AMD) or
   `h264_nvenc` (NVIDIA) with "(hardware)" is what you want. `libx264` with
   "(software)" and "No hardware encoder - may lag with heavy games." means
   the host encodes on the CPU, which struggles alongside a game.
-- From version 1.6.2, **Details** also shows "GPU priority: realtime" (or
+- From version 1.6.2, **Stream stats** also shows "GPU priority: realtime" (or
   "high"). CouchLink asks Windows to run its capture and encoding ahead of
   the game on the GPU, so a busy game doesn't starve the stream.
-- **Details** also shows the quality and the bitrate. At **High** and
+- **Stream stats** also shows the quality and the bitrate. At **High** and
   **Max** the encoder reads `h264_amf (balanced)` or `h264_nvenc (p3)`, a
   slower setting that keeps more detail. If the card can't run it, CouchLink
   uses the normal `h264_amf` or `h264_nvenc` instead.
 
-![Details at Max quality](images/host-lobby-details.png)
+![Stream stats at Max quality](images/host-lobby-details.png)
 
 ### Reading F2 on a joining PC
 
@@ -345,20 +339,19 @@ Latency ~22 ms (host 9 + network 1 + client 3)
 
 | Problem | What to check |
 |---|---|
-| The host doesn't appear in the Join list | Both PCs on the same switch or subnet? Firewall allowed on **Public** networks too ([section 3](#windows-firewall))? Use **Join by address...** with the host's IP. |
+| The host doesn't appear in the Join list | Both PCs on the same switch or subnet? Firewall allowed on **Public** networks too ([section 3](#windows-firewall))? Use **Join by address** with the host's IP. |
 | "ViGEmBus driver not installed" when hosting | Install the [ViGEmBus driver](https://github.com/nefarius/ViGEmBus/releases) on the host. |
 | A joining player has no controller in the game | On the host, check Device Manager > System devices for "Nefarius Virtual Gamepad Emulation Bus". Restart the game after installing the driver, and check the game's controller settings. |
-| "The host didn't answer." or "Request denied." | Someone on the host has to click **Allow** within 30 seconds, or tick **Allow everyone**. |
+| "The host didn't answer." or "Request denied." | Someone on the host has to click **Allow** within 30 seconds, or turn on **Let everyone in**. |
 | Black screen on the joining PC | Run the game in borderless windowed mode on the host. F2 on the joining PC shows whether video arrives. |
-| Stutter or low fps | F2 on the joining PC: high **host** latency means the host GPU is overloaded (lower the Stream resolution); packet loss means the network. Check the host's Details for "(software)". |
+| Stutter or low fps | F2 on the joining PC: high **host** latency means the host GPU is overloaded (lower the Stream resolution); packet loss means the network. Check the host's **Stream stats** for "(software)". |
 | No sound on the joining PC | Check the joining PC's speakers or headphones. If both PCs are the same machine (testing), the client mutes itself on purpose. |
 | Keys don't work in the game | Click inside the game window once so it has the keyboard. F1 shows the current layout. |
 | CouchLink crashed | See below. |
 
 ### Crash reports
 
-If CouchLink crashes, it saves a report and shows where. Click **Crash
-reports** on the Start screen to open the folder
+If CouchLink crashes, it saves a report and shows where. Click **Help → Crash reports** in the header to open the folder
 (`%LOCALAPPDATA%\CouchLink\CrashReports`). Reports contain no PC names, user
 names or IP addresses. Please attach the file to a
 [new issue](https://github.com/enriquezchristopher/CouchLink/issues/new/choose).
