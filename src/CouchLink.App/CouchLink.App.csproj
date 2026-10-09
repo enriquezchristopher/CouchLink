@@ -15,6 +15,9 @@
     <UseWPF>true</UseWPF>
     <PlatformTarget>x64</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The app's text is English only. Without this, a self-contained publish copies WPF's translated
+         strings for 13 other languages (about 8 MB) next to the exe. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>
