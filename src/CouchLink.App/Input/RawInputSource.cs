@@ -12,6 +12,8 @@ namespace CouchLink.App.Input;
 /// </summary>
 internal sealed class RawInputSource : IDisposable
 {
+    private const int VK_NUMLOCK = 0x90;
+
     private readonly HwndSource _source;
     private readonly Func<bool> _inputAllowed;
     private bool _suspended;
@@ -76,7 +78,10 @@ internal sealed class RawInputSource : IDisposable
     {
         if (kb.VKey is 0 or 0xFF)
             return; // fake/overrun keys
-        var vk = VirtualKeys.FromRawKeyboard(kb.VKey, kb.MakeCode, kb.Flags);
+        if (VirtualKeys.IsFakeShift(kb.VKey, kb.MakeCode, kb.Flags))
+            return; // Windows' Shift release/press around a numpad key; the real Shift is still down
+        bool numLockOn = (GetKeyState(VK_NUMLOCK) & 1) != 0;
+        var vk = VirtualKeys.FromRawKeyboard(kb.VKey, kb.MakeCode, kb.Flags, numLockOn);
         if ((kb.Flags & RI_KEY_BREAK) != 0)
             KeyUp?.Invoke(vk);
         else

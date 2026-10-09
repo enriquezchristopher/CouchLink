@@ -31,6 +31,7 @@ public static class VirtualKeys
     private const ushort Shift = 0x10;
     private const ushort Control = 0x11;
     private const ushort Menu = 0x12;
+    private const ushort LeftShiftMakeCode = 0x2A;
     private const ushort RightShiftMakeCode = 0x36;
     private const ushort ExtendedKeyFlag = 0x02; // RI_KEY_E0
 
@@ -43,11 +44,58 @@ public static class VirtualKeys
     /// holding both and releasing one doesn't release the other, and so they match the codes WPF
     /// gives the controls editor. Other keys pass through.
     /// </summary>
-    public static ushort FromRawKeyboard(ushort vkey, ushort makeCode, ushort flags) => vkey switch
+    public static ushort FromRawKeyboard(ushort vkey, ushort makeCode, ushort flags, bool numLockOn = false) => vkey switch
     {
         Shift => makeCode == RightShiftMakeCode ? RShift : LShift,
         Control => (flags & ExtendedKeyFlag) != 0 ? RControl : LControl,
         Menu => (flags & ExtendedKeyFlag) != 0 ? RMenu : LMenu,
+        _ when numLockOn && (flags & ExtendedKeyFlag) == 0 && NumpadKeyOf(vkey, makeCode) is var num and not 0 => num,
         _ => vkey,
     };
+
+    /// <summary>
+    /// Windows' fake Shift event (Shift's make code with the E0 flag). With Num Lock on and Shift held, Windows
+    /// wraps each numpad key in a fake Shift release and press; the real Shift never went up.
+    /// </summary>
+    public static bool IsFakeShift(ushort vkey, ushort makeCode, ushort flags) =>
+        vkey == Shift && makeCode == LeftShiftMakeCode && (flags & ExtendedKeyFlag) != 0;
+
+    /// <summary>
+    /// Whether a key counts as physically down. With Num Lock on and Shift held, Windows reports a numpad key as
+    /// its navigation key (Num8 as Up), so a Num key also counts when that key is down.
+    /// </summary>
+    public static bool IsHeld(ushort vk, Func<ushort, bool> isPhysicallyDown)
+    {
+        if (isPhysicallyDown(vk))
+            return true;
+        foreach (var (_, nav, num) in ShiftedNumpad)
+            if (num == vk)
+                return isPhysicallyDown(nav);
+        return false;
+    }
+
+    // With Num Lock on and Shift held, a numpad key arrives as its navigation key with the numpad's make code and
+    // no E0 flag (the real arrow and editing keys have E0).
+    private static readonly (ushort MakeCode, ushort Nav, ushort Num)[] ShiftedNumpad =
+    [
+        (0x47, 0x24, 0x67), // Home      Num7
+        (0x48, 0x26, 0x68), // Up        Num8
+        (0x49, 0x21, 0x69), // PageUp    Num9
+        (0x4B, 0x25, 0x64), // Left      Num4
+        (0x4C, 0x0C, 0x65), // Clear     Num5
+        (0x4D, 0x27, 0x66), // Right     Num6
+        (0x4F, 0x23, 0x61), // End       Num1
+        (0x50, 0x28, 0x62), // Down      Num2
+        (0x51, 0x22, 0x63), // PageDown  Num3
+        (0x52, 0x2D, 0x60), // Insert    Num0
+        (0x53, 0x2E, 0x6E), // Delete    NumDecimal
+    ];
+
+    private static ushort NumpadKeyOf(ushort vkey, ushort makeCode)
+    {
+        foreach (var (code, nav, num) in ShiftedNumpad)
+            if (code == makeCode && nav == vkey)
+                return num;
+        return 0;
+    }
 }
