@@ -75,9 +75,8 @@ public class JoinListTests
             ]);
             var cards = list.HostButtons.Children.OfType<Button>().ToList();
             Assert.Equal(2, cards.Count);
-            Assert.True(cards[0].IsHitTestVisible);
-            Assert.False(cards[1].IsHitTestVisible);
-            Assert.False(cards[1].Focusable);
+            Assert.True(cards[0].IsEnabled);
+            Assert.False(cards[1].IsEnabled);
             Assert.Equal("PORTAL-SERVER, 3 of 10 players", System.Windows.Automation.AutomationProperties.GetName(cards[0]));
         });
     }

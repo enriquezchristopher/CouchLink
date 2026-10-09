@@ -14,8 +14,12 @@
                 <CheckBox x:Name="LabelsToggle" DockPanel.Dock="Right" Style="{StaticResource ToggleSwitch}" Content="Labels"
                           Margin="12,0,0,0" VerticalAlignment="Center" AutomationProperties.AutomationId="ShowLabels"
                           ToolTip="Name what each button does in the game, e.g. Shoot"/>
-                <TextBox x:Name="FindBox" ui:ThemeProps.Placeholder="Find a control or label"
-                         AutomationProperties.Name="Find a control or label" AutomationProperties.AutomationId="Find"/>
+                <Grid>
+                    <TextBox x:Name="FindBox" ui:ThemeProps.Placeholder="Find a control or label" Padding="32,0,8,0"
+                             AutomationProperties.Name="Find a control or label" AutomationProperties.AutomationId="Find"/>
+                    <ui:Glyph Data="{StaticResource IconSearch}" Brush="{DynamicResource TextHintBrush}" Width="16" Height="16"
+                              HorizontalAlignment="Left" Margin="10,0,0,0" IsHitTestVisible="False"/>
+                </Grid>
             </DockPanel>
             <ui:Banner x:Name="MessageBanner" Margin="0,10,0,0" Visibility="Collapsed" AutomationProperties.AutomationId="EditorMessage"/>
         </StackPanel>

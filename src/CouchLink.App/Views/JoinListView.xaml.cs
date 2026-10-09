@@ -164,9 +164,7 @@ internal sealed partial class JoinListView : UserControl, IDisposable
         }
         else
         {
-            card.IsHitTestVisible = false;
-            card.Focusable = false;
-            card.Opacity = 0.6;
+            card.IsEnabled = false;
         }
         return card;
     }
