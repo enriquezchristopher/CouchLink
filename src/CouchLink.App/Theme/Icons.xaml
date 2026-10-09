@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Geometry x:Key="IconMonitor">M4,4 H20 A2,2 0 0 1 22,6 V15 A2,2 0 0 1 20,17 H4 A2,2 0 0 1 2,15 V6 A2,2 0 0 1 4,4 Z M8,21 H16 M12,17 V21</Geometry>
+    <Geometry x:Key="IconArrowRight">M5,12 H19 M13,6 L19,12 L13,18</Geometry>
+    <Geometry x:Key="IconArrowLeft">M19,12 H5 M11,6 L5,12 L11,18</Geometry>
+    <Geometry x:Key="IconGamepad">M6,11 H10 M8,9 V13 M15,12 H15.01 M18,10 H18.01 M17.32,5 H6.68 A4,4 0 0 0 2.7,8.6 L2.02,14.6 A3,3 0 0 0 5,18 C6,18 6.5,17.5 7,17 L8.41,15.59 A2,2 0 0 1 9.83,15 H14.17 A2,2 0 0 1 15.59,15.59 L17,17 C17.5,17.5 18,18 19,18 A3,3 0 0 0 21.98,14.6 L21.3,8.6 A4,4 0 0 0 17.32,5 Z</Geometry>
+    <Geometry x:Key="IconHelp">M3,12 A9,9 0 1 0 21,12 A9,9 0 1 0 3,12 Z M9.1,9 A3,3 0 0 1 14.9,10 C14.9,12 12,12.5 12,14.5 M12,17.5 H12.01</Geometry>
+    <Geometry x:Key="IconInfo">M3,12 A9,9 0 1 0 21,12 A9,9 0 1 0 3,12 Z M12,16 V12 M12,8 H12.01</Geometry>
+    <Geometry x:Key="IconAlert">M10.3,3.9 L1.8,18 A2,2 0 0 0 3.5,21 H20.5 A2,2 0 0 0 22.2,18 L13.7,3.9 A2,2 0 0 0 10.3,3.9 Z M12,9 V13 M12,17 H12.01</Geometry>
+    <Geometry x:Key="IconCheck">M20,6 L9,17 L4,12</Geometry>
+    <Geometry x:Key="IconChevronDown">M6,9 L12,15 L18,9</Geometry>
+    <Geometry x:Key="IconChevronRight">M9,6 L15,12 L9,18</Geometry>
+    <Geometry x:Key="IconClose">M18,6 L6,18 M6,6 L18,18</Geometry>
+    <Geometry x:Key="IconSearch">M3,11 A8,8 0 1 0 19,11 A8,8 0 1 0 3,11 Z M21,21 L16.65,16.65</Geometry>
+    <Geometry x:Key="IconUser">M20,21 V19 A4,4 0 0 0 16,15 H8 A4,4 0 0 0 4,19 V21 M8,7 A4,4 0 1 0 16,7 A4,4 0 1 0 8,7 Z</Geometry>
+    <!-- Caption button glyphs: a 10x10 box, drawn with a 1 px stroke -->
+    <Geometry x:Key="CaptionMinimizeGlyph">M0,5.5 H10</Geometry>
+    <Geometry x:Key="CaptionMaximizeGlyph">M0.5,0.5 H9.5 V9.5 H0.5 Z</Geometry>
+    <Geometry x:Key="CaptionRestoreGlyph">M0.5,2.5 H7.5 V9.5 H0.5 Z M2.5,2.5 V0.5 H9.5 V7.5 H7.5</Geometry>
+    <Geometry x:Key="CaptionCloseGlyph">M0,0 L10,10 M10,0 L0,10</Geometry>
+</ResourceDictionary>

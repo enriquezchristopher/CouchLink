@@ -5,6 +5,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using CouchLink.App.Input;
+using CouchLink.App.Presentation;
+using CouchLink.App.Theme;
+using CouchLink.App.Ui;
 using CouchLink.App.Views;
 
 namespace CouchLink.App;
@@ -24,6 +27,11 @@ public partial class MainWindow : Window, IClientUi
     public MainWindow()
     {
         InitializeComponent();
+        WindowTheme.Apply(this);
+        WindowTheme.UseCustomChrome(this, 48);
+        Header.ControlsClicked += () => ControlsWindow.Open(this);
+        Header.CrashReportsClicked += OpenCrashReports;
+        Header.AboutClicked += () => ThemedDialog.Alert(this, "About CouchLink", AppInfo.AboutText);
         _detailsTimer.Tick += (_, _) =>
         {
             if (_sessionView is not null)
@@ -32,12 +40,32 @@ public partial class MainWindow : Window, IClientUi
         ShowStart();
     }
 
-    /// <summary>Shows a view; the one it replaces is disposed (stopping whatever it owned).</summary>
-    private void Show(UserControl view)
+    /// <summary>
+    /// Shows a view; the one it replaces is disposed at once (stopping whatever it owned, such as UDP ports)
+    /// and a picture of it fades out before the new one fades in and rises. The header's buttons can't take
+    /// focus on the session screen, where Raw Input keys would press them.
+    /// </summary>
+    internal void Show(UserControl view, bool headerFocusable = true)
     {
-        if (Screen.Content is IDisposable old && !ReferenceEquals(old, view))
-            old.Dispose();
+        var old = Screen.Content as FrameworkElement;
+        var picture = old is not null && !ReferenceEquals(old, view) ? Motion.Snapshot(old) : null;
+        if (old is IDisposable disposable && !ReferenceEquals(old, view))
+            disposable.Dispose();
         Screen.Content = view;
+        Header.ButtonsFocusable = headerFocusable;
+        if (picture is not null)
+        {
+            ScreenSnapshot.Source = picture;
+            ScreenSnapshot.Visibility = Visibility.Visible;
+            Motion.ExitScreen(ScreenSnapshot, () =>
+            {
+                if (!ReferenceEquals(ScreenSnapshot.Source, picture))
+                    return; // a newer screen change took over
+                ScreenSnapshot.Source = null;
+                ScreenSnapshot.Visibility = Visibility.Collapsed;
+            });
+        }
+        Motion.EnterScreen(view, picture is null ? TimeSpan.Zero : Motion.ScreenOut);
     }
 
     private void ShowStart()
@@ -45,8 +73,6 @@ public partial class MainWindow : Window, IClientUi
         var start = new StartView();
         start.HostClicked += ShowHost;
         start.JoinClicked += () => ShowJoinList(null);
-        start.ControlsClicked += () => ControlsWindow.Open(this);
-        start.CrashReportsClicked += OpenCrashReports;
         Show(start);
         AppServices.DescribeMode = () => "Idle";
     }
@@ -56,7 +82,7 @@ public partial class MainWindow : Window, IClientUi
         var lobby = new HostLobbyView();
         if (!lobby.TryStart(out var error))
         {
-            MessageBox.Show(this, error, "CouchLink");
+            ThemedDialog.Alert(this, "Couldn't start hosting", error ?? "Hosting could not start.");
             return;
         }
         lobby.Stopped += ShowStart;
@@ -77,7 +103,7 @@ public partial class MainWindow : Window, IClientUi
         _sessionView = new SessionView();
         _sessionView.LeaveClicked += LeaveSession;
         _sessionView.ControlsClicked += () => ControlsWindow.Open(this);
-        Show(_sessionView); // closes the join list, freeing UDP 47800
+        Show(_sessionView, headerFocusable: false); // closes the join list, freeing UDP 47800
         _session = new ClientSessionService(host, hostName, Dispatcher, this);
         UpdateSessionView();
         _detailsTimer.Start();
@@ -166,7 +192,7 @@ public partial class MainWindow : Window, IClientUi
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, $"Could not open the crash reports folder:\n{ex.Message}", "CouchLink");
+            ThemedDialog.Alert(this, "Couldn't open crash reports", $"Could not open the crash reports folder:\n{ex.Message}");
         }
     }
 

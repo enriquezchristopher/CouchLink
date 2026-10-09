@@ -14,9 +14,9 @@ Built for internet cafés and LAN rooms: everything runs on your local
 network, with **no accounts, no cloud and no internet** required.
 
 <p align="center">
-  <img src="docs/images/start.png" width="260" alt="CouchLink's Start screen with Host and Join buttons">
-  <img src="docs/images/host-lobby.png" width="260" alt="The host lobby with stream settings and the player list">
-  <img src="docs/images/controls.png" width="220" alt="The controls editor listing each controller button and its key">
+  <img src="docs/images/start.png" width="260" alt="CouchLink's Start screen with Host a game and Join a game">
+  <img src="docs/images/host-lobby.png" width="260" alt="The host lobby with the stream card and the player list">
+  <img src="docs/images/controls.png" width="220" alt="The controls editor with grouped controls and their keys">
 </p>
 
 ## Features
@@ -127,6 +127,10 @@ which every café PC has.
 **Is my key layout saved?** No, on purpose: in a café the next customer
 should start with the default layout. Changes last until CouchLink closes.
 
+**Can I turn the animations off?** Yes: **Help → Reduce motion** in the
+header. Screens and dialogs then appear with a short fade and nothing slides
+or bounces. Unlike the key layout, this is saved on the PC.
+
 **Which GPUs work for hosting?** AMD and NVIDIA GPUs with a hardware encoder.
 Without one (for example a GT 710 or GT 1030), the host encodes on the CPU,
 which lags with heavy games.
@@ -141,12 +145,12 @@ and the [changelog](CHANGELOG.md).
 ## Reporting a problem
 
 - **A crash:** CouchLink saves a report and shows where it is (or click
-  **Crash reports** on the Start screen). Reports contain no PC names, user
+  **Help → Crash reports** in the header). Reports contain no PC names, user
   names or IP addresses. Attach the file to a
   [new issue](https://github.com/enriquezchristopher/CouchLink/issues/new/choose).
 - **Something else:** describe what you did and what happened, and attach
   the newest log from `%LOCALAPPDATA%\CouchLink\Logs`. For lag, include a
-  screenshot of F2 on the joining PC and the host lobby's **Details**.
+  screenshot of F2 on the joining PC and the host lobby's **Stream stats**.
 - **A security issue:** see [SECURITY.md](SECURITY.md); please don't open a
   public issue.
 

@@ -1,4 +1,5 @@
 using System.IO;
+using CouchLink.App.Presentation;
 using CouchLink.Core;
 using CouchLink.Core.Diagnostics;
 using CouchLink.Core.Input;
@@ -23,4 +24,7 @@ internal static class AppServices
 
     /// <summary>The player's controls for this run: shared by the input mapper, the F1 panel and the editor.</summary>
     public static ControlSettings Controls { get; } = new();
+
+    /// <summary>Help → Reduce motion, saved for this PC. The theme follows it (ThemeManager.Follow); tests swap it.</summary>
+    public static MotionSettings MotionSettings { get; set; } = new(MotionSettings.DefaultPath, Log.Write);
 }

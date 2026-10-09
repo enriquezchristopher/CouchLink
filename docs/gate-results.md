@@ -114,3 +114,33 @@ Host / client PCs: <fill in>
 | Live session at Max on the gigabit switch: colored text sharper than at Balanced; F2 packet loss on the client no higher than at Balanced, keyframes included | <pass/fail> |
 | Changing Quality while two clients play: both stay in, the picture comes back within a second | <pass/fail> |
 | Host card forced to 100 Mbps: the orange warning appears as clients join at High, and goes away after switching to Balanced | <pass/fail> |
+
+## UI/UX revamp (Plan 12)
+
+Date: <fill in>
+PCs / Windows builds: <fill in>
+
+| Check | Result |
+|---|---|
+| Windows 10 and 11: every window has the dark custom title bar: Minimize, Maximize and Close where it can resize, Close alone on the dialogs; Close turns red on hover | <pass/fail> |
+| Windows High Contrast on while CouchLink runs: every screen switches to system colors at once and stays readable; off again: back to the dark theme | <pass/fail> |
+| Help → Reduce motion on: screen changes, dialogs, toasts, banners and list items appear with a short fade and nothing slides or scales; the quality selector jumps; button presses don't dip; the spinners and the toast countdown bar still move | <pass/fail> |
+| Reduce motion stays on after closing and reopening CouchLink, and turning it off brings the motion back at once, without a restart | <pass/fail> |
+| Reduce motion off: switching screens fades the old one out and the new one in with no flash or blank frame; host cards and player rows come in one after another; the quality fill glides between Low, Balanced, High and Max | <pass/fail> |
+| Closing a dialog with OK, Cancel, Esc, Alt+F4 and the close button: it fades out and the answer still counts (Stop hosting really stops, Cancel doesn't) | <pass/fail> |
+| Keyboard only: Tab reaches Host a game, Join a game, Controls, Help; the purple focus ring shows; Enter presses; the Help menu opens and works with arrows | <pass/fail> |
+| Keyboard only in the Controls editor: Find, Labels, each row, the slider (arrows), Invert Y, Reset, Done | <pass/fail> |
+| While playing, Space and Enter in the game never press Leave, Controls or a header button on the client's main window | <pass/fail> |
+| Ctrl+Alt+C over the game opens the new editor on top; Done returns to the game | <pass/fail> |
+| Two players join at once: two toasts stack in the bottom-right, both count down, the host's taskbar button flashes, the game keeps the keyboard | <pass/fail> |
+| Stop hosting with two players in: the confirm names both; Enter keeps hosting; Stop hosting ends both sessions | <pass/fail> |
+| Join by address with "192.168": the error shows under the box and nothing connects | <pass/fail> |
+| `--crash-test=ui` and `--crash-test=startup`: the themed crash dialog opens with its four buttons working | <pass/fail> |
+| 125% and 150% display scaling: nothing clipped on Start, the lobby with 9 players, the join list, the editor with Labels on | <pass/fail> |
+| Drag by the title bar moves the window; double-click on it maximizes and restores | <pass/fail> |
+| Aero Snap: drag to the left, right and top edges, and Win+arrow keys | <pass/fail> |
+| Resize the main window from every edge and corner | <pass/fail> |
+| Maximize on a second monitor and on a monitor with the taskbar on the side: nothing cut off, taskbar visible | <pass/fail> |
+| Alt+Space and a right-click on the bar open the system menu | <pass/fail> |
+| Windows 11: rounded corners and shadow; Windows 10: 1 px border and shadow | <pass/fail> |
+| 125% and 150% scaling: caption buttons and bar height scale cleanly | <pass/fail> |

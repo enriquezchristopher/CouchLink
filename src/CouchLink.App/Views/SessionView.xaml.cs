@@ -1,9 +1,11 @@
+using System.Windows;
 using System.Windows.Controls;
+using CouchLink.App.Presentation;
 using CouchLink.Core.Session;
 
 namespace CouchLink.App.Views;
 
-/// <summary>The main window while joining or playing: what is happening, and Cancel or Leave.</summary>
+/// <summary>The main window while joining or playing: the steps, what is happening, the shortcuts, and Cancel or Leave.</summary>
 internal sealed partial class SessionView : UserControl
 {
     public SessionView()
@@ -23,16 +25,17 @@ internal sealed partial class SessionView : UserControl
 
     public void Show(ClientState state, string host, byte slot)
     {
-        (string heading, string hint, string button) = state switch
-        {
-            ClientState.Connecting => ($"Connecting to {host}...", "", "Cancel"),
-            ClientState.Waiting => ($"Waiting for {host} to let you in...", "The host sees a popup and can allow or deny.", "Cancel"),
-            ClientState.Playing => ($"Playing on {host} as P{slot}", "Ctrl+Alt+Q leaves. F1 shows the keys, Ctrl+Alt+C changes them. F2 shows stats.", "Leave"),
-            ClientState.Reconnecting => ($"Reconnecting to {host}...", "Your slot is kept for a minute.", "Leave"),
-            _ => (Heading.Text, Hint.Text, LeaveButton.Content as string ?? "Leave"),
-        };
-        Heading.Text = heading;
-        Hint.Text = hint;
-        LeaveButton.Content = button;
+        if (SessionText.For(state, host, slot) is not { } text)
+            return;
+        Steps.Current = text.Step;
+        Heading.Text = text.Heading;
+        Hint.Text = text.Hint;
+        Hint.Visibility = text.Hint.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
+        LeaveButton.Content = text.LeaveText;
+        Chip.Slot = slot;
+        Chip.Visibility = text.Playing ? Visibility.Visible : Visibility.Collapsed;
+        Busy.Visibility = text.Playing ? Visibility.Collapsed : Visibility.Visible;
+        Shortcuts.Visibility = text.Playing ? Visibility.Visible : Visibility.Collapsed;
+        ReconnectingPill.Visibility = text.Reconnecting ? Visibility.Visible : Visibility.Collapsed;
     }
 }

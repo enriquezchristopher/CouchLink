@@ -1,0 +1,30 @@
+<Window x:Class="CouchLink.App.Diagnostics.CrashDialog" x:ClassModifier="internal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:CouchLink.App.Ui"
+        Title="CouchLink crashed" Width="600" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen" Topmost="True">
+    <StackPanel Margin="20">
+        <DockPanel>
+            <ui:Glyph DockPanel.Dock="Left" Data="{DynamicResource IconAlert}" Brush="{DynamicResource DangerBrush}"
+                      Width="22" Height="22" Margin="0,0,10,0" VerticalAlignment="Top"/>
+            <TextBlock x:Name="HeadingText" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+        </DockPanel>
+        <StackPanel x:Name="SavedPanel">
+            <TextBlock Text="A report was saved to:" Margin="0,12,0,6"/>
+            <TextBox x:Name="PathBox" IsReadOnly="True" TextWrapping="Wrap" FontFamily="{DynamicResource MonoFont}"
+                     AutomationProperties.AutomationId="ReportPath"/>
+            <TextBlock Text="Please attach this file to a new issue so we can fix it." Margin="0,10,0,0" TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextMutedBrush}"/>
+        </StackPanel>
+        <TextBlock x:Name="SaveErrorText" Margin="0,12,0,0" TextWrapping="Wrap" Foreground="{DynamicResource DangerBrush}"
+                   Visibility="Collapsed" AutomationProperties.AutomationId="SaveError"/>
+        <WrapPanel HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button x:Name="OpenFolderButton" Content="Open folder" MinWidth="110" Margin="0" AutomationProperties.AutomationId="OpenFolderButton"/>
+            <Button x:Name="CopyPathButton" Content="Copy path" MinWidth="110" Margin="8,0,0,0" AutomationProperties.AutomationId="CopyPathButton"/>
+            <Button x:Name="ReportButton" Content="Report on GitHub" MinWidth="110" Margin="8,0,0,0" Style="{DynamicResource PrimaryButton}"
+                    AutomationProperties.AutomationId="ReportButton"/>
+            <Button x:Name="CloseButton" Content="Close" MinWidth="110" Margin="8,0,0,0" AutomationProperties.AutomationId="CloseButton"/>
+        </WrapPanel>
+    </StackPanel>
+</Window>
