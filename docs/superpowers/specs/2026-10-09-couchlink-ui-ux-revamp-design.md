@@ -69,7 +69,7 @@ identity colors in `PlayerColors`.
 
 | Token | Hex | Use |
 |---|---|---|
-| `Chrome` | `#0B0B1A` | Title bar caption color (Windows 11) |
+| `Chrome` | `#0B0B1A` | Caption color of the native crash dialog (Windows 11) |
 | `Background` | `#0F0F23` | Window background |
 | `Input` | `#16152B` | Text box, combo box fill |
 | `Card` | `#1E1C35` | Cards, secondary buttons, header buttons |
@@ -90,6 +90,8 @@ identity colors in `PlayerColors`.
 | `DangerFill` | `#F43F5E` | Filled danger button (white text) |
 | `Warning` | `#FBBF24` | Warning text, Reconnecting pill text |
 | `Success` | `#4ADE80` | Live pill text |
+| `CaptionCloseHover` | `#E81123` | Close button fill on hover |
+| `CaptionCloseGlyphHover` | `#FFFFFF` | Close glyph on hover |
 
 Banner and pill fills:
 
@@ -167,11 +169,60 @@ styles that are not brushes use `StaticResource`.
 
 ### 3.7 Window chrome
 
-Every window keeps the native title bar so snapping, resizing and the system
-menu work as usual. `WindowTheme.Apply(Window)` sets
-`DWMWA_USE_IMMERSIVE_DARK_MODE` (Windows 10 20H1 and later) and, on
-Windows 11, `DWMWA_CAPTION_COLOR` to `Chrome`. If either call fails the
-window keeps the light title bar; nothing else depends on it.
+The native title bar is replaced with the app's own, so the top of every
+window matches the theme. `WindowTheme.UseCustomChrome(window, captionHeight)`
+sets a `System.Windows.Shell.WindowChrome` on the window. `WindowStyle` stays
+as it is, so the window is still a normal window: drag by the bar to move,
+double-click to maximize or restore, Aero Snap, Win+arrows, resizing from the
+edges where the window is resizable, Alt+Space and a right-click on the bar
+for the system menu. `UseAeroCaptionButtons` is off and `CornerRadius` is 0.
+`GlassFrameThickness` is `0,0,0,1`: that keeps the DWM drop shadow without a
+white or glass line on any edge. `ResizeBorderThickness` is the system value
+for resizable windows and 0 for `NoResize` ones.
+
+**Main window.** `AppHeader` is the title bar, one bar 48 px tall
+(`CaptionHeight` 48). Left to right: logo and "CouchLink" (the drag area),
+empty drag space, Controls, Help, then the caption buttons, flush with the
+window's right edge and as tall as the bar. Controls and Help set
+`WindowChrome.IsHitTestVisibleInChrome` so they stay clickable; the logo and
+title do not, so they drag. The bar keeps its bottom border line.
+
+**Secondary windows.** The Controls editor, `ThemedDialog` and
+`SaveProfileDialog` get a 32 px `TitleBar` (`CaptionHeight` 32): the window's
+`Title` on the left (12 px, `TextMuted`), caption buttons on the right, and
+the same bottom border line. All three are `NoResize`, so they show only
+Close. `CrashDialog` and `ApprovalPopup` are not touched. The crash dialog
+keeps the native title bar because it must open even if the theme fails to
+load.
+
+**Caption buttons.** `CaptionButtons` is used by both bars. Each button is
+46 px wide, stretches to the bar height and is never focusable (Alt+Space
+covers the keyboard). Minimize and Maximize/Restore hide on `NoResize`;
+`CanMinimize` shows Minimize but not Maximize. The glyphs are 10×10 paths
+with a 1 px stroke in `Text`, not an icon font. Maximize swaps to Restore
+(two overlapping squares) while the window is maximized, and its automation
+name follows ("Maximize" or "Restore"). Minimize and Maximize get the
+`HoverOverlay` at 8% on hover. Close turns red on hover with a white glyph
+(`CaptionCloseHover`, `CaptionCloseGlyphHover`). Automation ids are
+`CaptionMinimize`, `CaptionMaximize` and `CaptionClose`. The Windows 11 Snap
+Layouts flyout does not appear on our Maximize button, because it belongs to
+the native button.
+
+**Frame.** On Windows 11 (build 22000 and later) `UseCustomChrome` asks DWM
+for rounded corners (`DWMWA_WINDOW_CORNER_PREFERENCE` = round). On Windows 10
+it draws a 1 px `Border` line around the window content instead. The window
+keeps its DWM shadow on both.
+
+**Maximize padding.** A maximized `WindowChrome` window reaches past the
+screen by the frame Windows no longer draws. While maximized, the content
+gets no border and is padded by `SM_CXSIZEFRAME + SM_CXPADDEDBORDER`
+(and the Y equivalents) at the window's DPI, in device-independent units.
+The padding updates on `StateChanged` and `DpiChanged`. A maximized window
+stops at the work area, so the taskbar stays visible.
+
+`WindowTheme.Apply` still sets `DWMWA_USE_IMMERSIVE_DARK_MODE` and, on Windows
+11, `DWMWA_CAPTION_COLOR`. They no longer show on the windows above and are
+harmless; they still apply to the crash dialog.
 
 ## 4. Components
 
@@ -380,11 +431,12 @@ src/CouchLink.App/
     Icons.xaml             Geometry resources
     ThemeManager.cs        merges the dictionaries in code (so animation
                            durations can be set first), follows High Contrast
-    WindowTheme.cs         window background, font, dark title bar (DWM)
+    WindowTheme.cs         window background, font, custom chrome (WindowChrome, DWM)
     Motion.cs              the screen and toast enter animation
   Ui/
     ThemeProps.cs  Glyph  PlayerChip  KeyCap  StatusPill  Banner
     StepTracker  Spinner  AppHeader.xaml(.cs)  ThemedDialog.xaml(.cs)
+    CaptionButtons.xaml(.cs)  TitleBar.xaml(.cs)
     PlayerColors.cs
   Presentation/            the logic classes below
   Views/                   Start, HostLobby, JoinList, Session (rewritten XAML)
@@ -425,7 +477,7 @@ src/CouchLink.App/
   and a `Name`. A screenshot script (in `eng/`) launches the built app,
   drives each screen through UI Automation and saves PNGs, which replace the
   ones in `docs/images/`.
-- Manual check on Windows 10 and 11: dark title bar, High Contrast on and off,
+- Manual check on Windows 10 and 11: custom title bar, High Contrast on and off,
   animations off, keyboard-only navigation through Start, Join and the
   Controls editor, Ctrl+Alt+C over the game, two approval toasts stacked,
   and keys typed in the game never pressing a button on the Session screen.

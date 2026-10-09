@@ -122,7 +122,7 @@ PCs / Windows builds: <fill in>
 
 | Check | Result |
 |---|---|
-| Windows 10 and 11: every window has the dark title bar; Windows 11 shows the navy caption color | <pass/fail> |
+| Windows 10 and 11: every window has the dark custom title bar: Minimize, Maximize and Close where it can resize, Close alone on the dialogs; Close turns red on hover | <pass/fail> |
 | Windows High Contrast on while CouchLink runs: every screen switches to system colors at once and stays readable; off again: back to the dark theme | <pass/fail> |
 | "Show animations in Windows" off: screen changes, toasts and button hovers are instant; the spinners stand still | <pass/fail> |
 | Keyboard only: Tab reaches Host a game, Join a game, Controls, Help; the purple focus ring shows; Enter presses; the Help menu opens and works with arrows | <pass/fail> |
@@ -134,3 +134,10 @@ PCs / Windows builds: <fill in>
 | Join by address with "192.168": the error shows under the box and nothing connects | <pass/fail> |
 | `--crash-test=ui` and `--crash-test=startup`: the themed crash dialog opens with its four buttons working | <pass/fail> |
 | 125% and 150% display scaling: nothing clipped on Start, the lobby with 9 players, the join list, the editor with Labels on | <pass/fail> |
+| Drag by the title bar moves the window; double-click on it maximizes and restores | <pass/fail> |
+| Aero Snap: drag to the left, right and top edges, and Win+arrow keys | <pass/fail> |
+| Resize the main window from every edge and corner | <pass/fail> |
+| Maximize on a second monitor and on a monitor with the taskbar on the side: nothing cut off, taskbar visible | <pass/fail> |
+| Alt+Space and a right-click on the bar open the system menu | <pass/fail> |
+| Windows 11: rounded corners and shadow; Windows 10: 1 px border and shadow | <pass/fail> |
+| 125% and 150% scaling: caption buttons and bar height scale cleanly | <pass/fail> |
