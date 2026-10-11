@@ -1,5 +1,6 @@
 using CouchLink.Core.Audio;
 using CouchLink.Core.Input;
+using CouchLink.Core.Pads;
 using CouchLink.Core.Video;
 
 namespace CouchLink.Core.Tests;
@@ -160,5 +161,21 @@ public class OverlayTextTests
 
         Assert.DoesNotContain("Pro stick up", text);
         Assert.Contains($"{"Cross",-18}K\n", text);
+    }
+
+    [Fact]
+    public void The_Xbox_panel_uses_Xbox_names_and_has_no_touchpad()
+    {
+        var text = OverlayText.Controls(new ControlSettings(), PadKind.Xbox360);
+        Assert.Contains("\nA ", text);
+        Assert.Contains("\nStart ", text);
+        Assert.DoesNotContain("Touchpad", text);
+        Assert.DoesNotContain("Cross", text);
+    }
+
+    [Fact]
+    public void The_default_panel_is_unchanged()
+    {
+        Assert.Equal(OverlayText.Controls(new ControlSettings()), OverlayText.Controls(new ControlSettings(), PadKind.DualShock4));
     }
 }

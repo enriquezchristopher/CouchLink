@@ -1,5 +1,6 @@
 using CouchLink.App.Presentation;
 using CouchLink.Core.Input;
+using CouchLink.Core.Pads;
 
 namespace CouchLink.App.Tests;
 
@@ -54,5 +55,13 @@ public class ControlFilterTests
     public void Surrounding_spaces_in_the_query_are_ignored()
     {
         Assert.True(ControlFilter.Matches(PadControl.Cross, "Buttons", null, "  cross "));
+    }
+
+    [Fact]
+    public void Xbox_rows_are_named_and_found_by_Xbox_names()
+    {
+        Assert.Equal("LB", ControlFilter.RowName(PadControl.L1, PadKind.Xbox360));
+        Assert.True(ControlFilter.Matches(PadControl.L1, "Shoulders", null, "lb", PadKind.Xbox360));
+        Assert.False(ControlFilter.Matches(PadControl.L1, "Shoulders", null, "l1", PadKind.Xbox360));
     }
 }

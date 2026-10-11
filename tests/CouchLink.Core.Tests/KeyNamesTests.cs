@@ -1,4 +1,5 @@
 using CouchLink.Core.Input;
+using CouchLink.Core.Pads;
 
 namespace CouchLink.Core.Tests;
 
@@ -93,5 +94,49 @@ public class KeyNamesTests
         var layout = KeyLayout.CreateDefault();
         foreach (var control in KeyNames.RightStick)
             Assert.Empty(layout.KeysFor(control));
+    }
+
+    [Theory]
+    [InlineData(PadControl.Cross, "A")]
+    [InlineData(PadControl.Circle, "B")]
+    [InlineData(PadControl.Square, "X")]
+    [InlineData(PadControl.Triangle, "Y")]
+    [InlineData(PadControl.L1, "LB")]
+    [InlineData(PadControl.R1, "RB")]
+    [InlineData(PadControl.L2, "LT")]
+    [InlineData(PadControl.R2, "RT")]
+    [InlineData(PadControl.L3, "LS")]
+    [InlineData(PadControl.R3, "RS")]
+    [InlineData(PadControl.Options, "Start")]
+    [InlineData(PadControl.Share, "Back")]
+    [InlineData(PadControl.LeftUp, "Left stick up")]
+    [InlineData(PadControl.DpadLeft, "D-pad left")]
+    public void Xbox_controls_have_Xbox_names(PadControl control, string name)
+    {
+        Assert.Equal(name, KeyNames.Of(control, PadKind.Xbox360));
+    }
+
+    [Fact]
+    public void DualShock_names_are_unchanged()
+    {
+        foreach (var control in Enum.GetValues<PadControl>())
+            Assert.Equal(KeyNames.Of(control), KeyNames.Of(control, PadKind.DualShock4));
+    }
+
+    [Fact]
+    public void Xbox_groups_have_no_touchpad_and_keep_the_right_stick_instance()
+    {
+        var xbox = KeyNames.GroupsFor(PadKind.Xbox360);
+        Assert.Equal(KeyNames.Groups.Select(g => g.Name), xbox.Select(g => g.Name));
+        Assert.Equal([PadControl.Options, PadControl.Share], xbox.Single(g => g.Name == "Menu").Controls);
+        Assert.Same(KeyNames.RightStick, xbox.Single(g => g.Name == "Right stick").Controls);
+        Assert.Same(KeyNames.Groups, KeyNames.GroupsFor(PadKind.DualShock4));
+    }
+
+    [Fact]
+    public void Labels_use_the_kind()
+    {
+        Assert.Equal("Pass (A)", KeyNames.Labelled(PadControl.Cross, "Pass", PadKind.Xbox360));
+        Assert.Equal("Pass (Cross)", KeyNames.Labelled(PadControl.Cross, "Pass"));
     }
 }

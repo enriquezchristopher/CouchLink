@@ -1,3 +1,5 @@
+using CouchLink.Core.Pads;
+
 namespace CouchLink.Core.Input;
 
 /// <summary>What the controls editor and the F1 panel call keys and controls. A table, no Windows API.</summary>
@@ -35,6 +37,14 @@ public static class KeyNames
         ("Menu", [PadControl.Options, PadControl.Share, PadControl.Touchpad]),
     ];
 
+    // After Groups: static initialisers run in order.
+    private static readonly IReadOnlyList<(string Name, PadControl[] Controls)> XboxGroups =
+        Groups.Select(g => g.Name == "Menu" ? (g.Name, new[] { PadControl.Options, PadControl.Share }) : g).ToList();
+
+    /// <summary>The editor's and F1 panel's groups for the session's pad. Xbox 360 has no touchpad.</summary>
+    public static IReadOnlyList<(string Name, PadControl[] Controls)> GroupsFor(PadKind kind) =>
+        kind == PadKind.Xbox360 ? XboxGroups : Groups;
+
     public static string Of(ushort vk)
     {
         if (vk is >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A)
@@ -63,9 +73,27 @@ public static class KeyNames
         _ => control.ToString(), // Cross, Circle, L1, Options, Touchpad...
     };
 
+    /// <summary>A control's name on the session's pad: Xbox 360 says A, LB, Start...; sticks and the D-pad keep theirs.</summary>
+    public static string Of(PadControl control, PadKind kind) => kind != PadKind.Xbox360 ? Of(control) : control switch
+    {
+        PadControl.Cross => "A",
+        PadControl.Circle => "B",
+        PadControl.Square => "X",
+        PadControl.Triangle => "Y",
+        PadControl.L1 => "LB",
+        PadControl.R1 => "RB",
+        PadControl.L2 => "LT",
+        PadControl.R2 => "RT",
+        PadControl.L3 => "LS",
+        PadControl.R3 => "RS",
+        PadControl.Options => "Start",
+        PadControl.Share => "Back",
+        _ => Of(control),
+    };
+
     /// <summary>A control as the player sees it: "Shoot (Square)" when a profile names it, else "Square".</summary>
-    public static string Labelled(PadControl control, string? label) =>
-        label is null ? Of(control) : $"{label} ({Of(control)})";
+    public static string Labelled(PadControl control, string? label, PadKind kind = PadKind.DualShock4) =>
+        label is null ? Of(control, kind) : $"{label} ({Of(control, kind)})";
 
     /// <summary>The control's keys, e.g. "J / Left click", or "(none)".</summary>
     public static string Describe(KeyLayout layout, PadControl control)
