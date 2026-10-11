@@ -41,7 +41,7 @@ network, with **no accounts, no cloud and no internet** required.
   </tr>
   <tr>
     <td>Steps from connecting to playing.</td>
-    <td>Controls in cards, with Find and key caps.</td>
+    <td>Your controller lights up as you press keys; click a button to change it.</td>
     <td>The host allows or denies before the countdown ends.</td>
   </tr>
 </table>
@@ -49,7 +49,9 @@ network, with **no accounts, no cloud and no internet** required.
 ## Features
 
 - **Up to 10 players** on one game: the host player on the keyboard, plus up
-  to 9 joining PCs, each as its own virtual DualShock 4.
+  to 9 joining PCs, each as its own virtual DualShock 4. For games that only
+  work with Xbox controllers, the host picks Xbox 360 instead (up to 4
+  joining PCs).
 - **Low-latency streaming**: GPU screen capture, hardware H.264 encoding
   (AMD AMF, NVIDIA NVENC, with a CPU fallback), error correction over UDP and
   GPU decoding. Typically 20 to 35 ms from the host's screen to a joining
@@ -77,7 +79,7 @@ network, with **no accounts, no cloud and no internet** required.
  Joining PC (P2..P10)                          Host PC (P1)
 ┌──────────────────────┐   keyboard + mouse   ┌──────────────────────────┐
 │ CouchLink            │ ───────────────────▶ │ CouchLink                │
-│  shows the stream    │   (UDP 47803)        │  virtual DualShock 4 ──▶ │ the game
+│  shows the stream    │   (UDP 47803)        │  virtual controller ──▶  │ the game
 │  plays the sound     │ ◀─────────────────── │  captures screen + sound │
 └──────────────────────┘   video + audio      └──────────────────────────┘
                            (UDP 47802)
@@ -108,8 +110,9 @@ details.
    host, and allow CouchLink through the firewall on **both** private and
    public networks when Windows asks.)
 2. Start CouchLink from the Start menu on every PC.
-3. On the host, click **Host**, then start the game in borderless windowed
-   mode.
+3. On the host, click **Host a game**, pick the controller (**DualShock 4**
+   for most games, **Xbox 360** for games like NBA 2K14) and click **Start
+   hosting**. Then start the game in borderless windowed mode.
 4. On each other PC, click **Join** and pick the host. The host clicks
    **Allow**, and the player is in.
 
@@ -127,6 +130,10 @@ editor, stream quality, reading the stats, and troubleshooting.
 | Cross / Circle | K / L | Options / Share | Enter / Backspace |
 | Square / Triangle | J or left mouse / I | Touchpad | Tab |
 
+In an Xbox 360 session the F1 panel and the editor use Xbox names: Cross is
+A, Circle B, Square X, Triangle Y, L1/R1 LB/RB, L2/R2 LT/RT, Options Start and
+Share Back. There's no touchpad.
+
 While playing: **F1** shows the keys, **F2** shows connection stats,
 **Ctrl+Alt+C** changes keys, **Ctrl+Alt+Q** leaves. See
 [Controls](docs/cafe-setup-guide.md#7-controls) in the guide.
@@ -136,7 +143,7 @@ While playing: **F1** shows the keys, **F2** shows connection stats,
 | Game | Status |
 |---|---|
 | NBA 2K22 | Works: each joining PC appears as its own controller. |
-| NBA 2K14 | Not yet: only one virtual controller is detected and its left stick doesn't move the player ([#30](https://github.com/enriquezchristopher/CouchLink/issues/30), [#49](https://github.com/enriquezchristopher/CouchLink/issues/49)). |
+| NBA 2K14 | Host with **Xbox 360**, up to 4 joining PCs. With DualShock 4 the left stick doesn't move the player. Not yet confirmed on hardware ([#30](https://github.com/enriquezchristopher/CouchLink/issues/30), [#49](https://github.com/enriquezchristopher/CouchLink/issues/49)). A real Xbox pad plugged into the host uses one of the 4 Xbox slots Windows allows. |
 
 Tried another game? Please
 [open an issue](https://github.com/enriquezchristopher/CouchLink/issues/new/choose)

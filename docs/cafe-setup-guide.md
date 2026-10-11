@@ -21,8 +21,9 @@ on screen.
 
 One PC runs the game and **hosts**. Every other PC **joins**: it shows the
 host's screen and plays its sound, and its keyboard and mouse become a
-controller in the game. The host creates one virtual DualShock 4 controller
-per joining PC, so the game sees separate players.
+controller in the game. The host creates one virtual controller per joining
+PC (a DualShock 4, or an Xbox 360 when the host picks it), so the game sees
+separate players.
 
 - Up to 10 players: the host player on the game's own keyboard controls (P1),
   plus up to 9 joining PCs (P2 to P10).
@@ -165,8 +166,10 @@ game. It ends with a pass or fail line for each controller.
 - **NBA 2K22:** each joining player appears as a controller on the controller
   select screen; move it to a team as usual. The host player uses the
   keyboard.
-- **NBA 2K14:** joining players' controllers are detected, but the left stick
-  doesn't move the player, and only one virtual controller is accepted. See
+- **NBA 2K14:** pick **Xbox 360** on the host's setup screen. 2K14 doesn't
+  read the DualShock 4's left stick. Windows lets games see at most 4 Xbox
+  controllers, so up to 4 players join, and a real Xbox pad plugged into the
+  host uses one of those 4. Not yet confirmed on hardware; see
   [#49](https://github.com/enriquezchristopher/CouchLink/issues/49) and
   [#30](https://github.com/enriquezchristopher/CouchLink/issues/30).
 
@@ -177,9 +180,19 @@ game. It ends with a pass or fail line for each controller.
 ### On the host
 
 1. Start CouchLink and click **Host a game**.
-2. The host lobby opens. Pick the **Stream** quality (see
-   [section 8](#8-stream-quality-and-performance)), then minimize the window
-   and start the game.
+2. Pick the **Controller** every player gets, then click **Start hosting**.
+   Nothing is shared on the network until you do; the back arrow (or Esc)
+   returns to the start screen.
+   - **DualShock 4** works with most games, like NBA 2K22. Up to 9 players.
+   - **Xbox 360** is for games that only work with Xbox controllers, like
+     NBA 2K14. Up to 4 players; a fifth sees "Host is full: Xbox 360 sessions
+     take up to 4 players."
+
+   CouchLink remembers the choice for next time. To change it, stop hosting
+   and set up again.
+3. The host lobby opens and shows the controller. Pick the **Stream** quality
+   (see [section 8](#8-stream-quality-and-performance)), then minimize the
+   window and start the game.
 
 ![The host lobby](images/host-lobby.png)
 
@@ -236,7 +249,11 @@ player back without a new approval.
 
 ## 7. Controls
 
-Each joining PC's keyboard and mouse act as a DualShock 4 controller.
+Each joining PC's keyboard and mouse act as the controller the host picked:
+a DualShock 4, or an Xbox 360. In an Xbox 360 session the editor and the F1
+panel use Xbox names (Cross is A, Circle B, Square X, Triangle Y, L1/R1 LB/RB,
+L2/R2 LT/RT, Options Start, Share Back) and there's no touchpad. The keys are
+the same.
 
 ### Default layout
 
@@ -268,6 +285,11 @@ ignored; let go and the mouse works again.
 ![The controls editor](images/controls.png)
 
 Open the editor with **Controls** in the header or on the session screen, or with **Ctrl+Alt+C** during a game.
+
+The controller at the top is drawn as the session's pad. Press your keys to
+test them: the buttons light up, the triggers fill and the sticks lean, and
+the key caps in the list light up too. Click a button on the picture to change
+its key.
 
 - Click a control, then press the key or mouse button for it. Mouse side
   buttons work too. Esc cancels.
