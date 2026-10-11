@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Channels;
 using CouchLink.Core.Net;
+using CouchLink.Core.Pads;
 using CouchLink.Core.Protocol;
 using CouchLink.Core.Session;
 using static CouchLink.Core.Tests.AudioTestKit;
@@ -63,11 +64,12 @@ public class SessionLoopbackTests
         }
     }
 
-    private static (SessionServer Server, AppEffects Effects) StartServer(bool allowEveryone, Action<Exception>? onError = null)
+    private static (SessionServer Server, AppEffects Effects) StartServer(bool allowEveryone, Action<Exception>? onError = null,
+        PadKind padKind = PadKind.DualShock4)
     {
         Assert.True(SessionServer.TryCreate(0, out var server, out var error), error);
         var effects = new AppEffects();
-        server!.Start(effects, TimeProvider.System, onError: onError);
+        server!.Start(effects, TimeProvider.System, onError: onError, padKind: padKind);
         server.AllowEveryone = allowEveryone;
         return (server, effects);
     }
@@ -229,6 +231,22 @@ public class SessionLoopbackTests
             Assert.False(SessionServer.TryCreate(port, out var second, out var error));
             Assert.Null(second);
             Assert.Equal($"TCP port {port} is already in use. Is CouchLink already hosting on this PC?", error);
+        }
+    }
+
+    [Fact]
+    public async Task An_Xbox_host_tells_the_client_its_pad_kind()
+    {
+        var (server, _) = StartServer(allowEveryone: true, padKind: PadKind.Xbox360);
+        using (server)
+        {
+            Assert.Equal(4, server.Capacity);
+            var (client, events) = Join(server);
+            using (client)
+            {
+                Assert.Equal("connected", await events.Next());
+                Assert.Equal("Accepted P2 Xbox360", await events.Next());
+            }
         }
     }
 }

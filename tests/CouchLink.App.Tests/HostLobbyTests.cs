@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using CouchLink.App.Theme;
 using CouchLink.App.Ui;
 using CouchLink.App.Views;
+using CouchLink.Core.Pads;
 using CouchLink.Core.Session;
 using CouchLink.Core.Video;
 
@@ -37,7 +38,7 @@ public class HostLobbyTests
         {
             var lobby = Lobby();
             lobby.ShowPlayers([]);
-            Assert.Equal($"PLAYERS 1 / {HostSession.Capacity + 1}", lobby.PlayersHeading.Text);
+            Assert.Equal($"PLAYERS 1 / {PadKinds.Capacity(PadKind.DualShock4) + 1}", lobby.PlayersHeading.Text);
             Assert.Contains(Descendants<TextBlock>(lobby.PlayerList), t => t.Text == "You (host)");
             Assert.Contains(Descendants<TextBlock>(lobby.PlayerList), t => t.Text == "No one has joined yet. Players appear here when they join.");
         });
@@ -54,7 +55,7 @@ public class HostLobbyTests
                 new PlayerInfo(2, "PC-07", IPAddress.Loopback, PlayerState.Active),
                 new PlayerInfo(3, "PC-11", IPAddress.Loopback, PlayerState.Reserved),
             ]);
-            Assert.Equal($"PLAYERS 3 / {HostSession.Capacity + 1}", lobby.PlayersHeading.Text);
+            Assert.Equal($"PLAYERS 3 / {PadKinds.Capacity(PadKind.DualShock4) + 1}", lobby.PlayersHeading.Text);
             Assert.Equal(new[] { 1, 2, 3 }, Descendants<PlayerChip>(lobby.PlayerList).Select(c => (int)c.Slot));
             Assert.Single(Descendants<StatusPill>(lobby.PlayerList), p => p.Text == "Reconnecting");
             Assert.Equal(2, Descendants<Button>(lobby.PlayerList).Count(b => (string)b.Content == "Kick"));

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using CouchLink.Core.Pads;
 using CouchLink.Core.Protocol;
 using CouchLink.Core.Session;
 
@@ -54,11 +55,12 @@ public sealed class SessionServer : IDisposable
     public int LocalPort => ((IPEndPoint)_listener.LocalEndpoint).Port;
 
     /// <summary>Starts accepting clients. <paramref name="effects"/> run with the server's lock held.</summary>
-    public void Start(IHostEffects effects, TimeProvider time, Action<string>? log = null, Action<Exception>? onError = null)
+    public void Start(IHostEffects effects, TimeProvider time, Action<string>? log = null, Action<Exception>? onError = null,
+        PadKind padKind = PadKind.DualShock4)
     {
         _onError = onError;
         lock (_gate)
-            _session = new HostSession(new Effects(this, effects), time, log);
+            _session = new HostSession(new Effects(this, effects), time, log, padKind);
         _acceptLoop = AcceptLoopAsync(_cts.Token);
         _timer = new Timer(_ => OnTimer(), null, TickInterval, TickInterval);
     }
@@ -72,6 +74,12 @@ public sealed class SessionServer : IDisposable
     public IReadOnlyList<PlayerInfo> Players
     {
         get { lock (_gate) return _session?.Players ?? []; }
+    }
+
+    /// <summary>Clients the session takes, for the announce.</summary>
+    public int Capacity
+    {
+        get { lock (_gate) return _session?.Capacity ?? PadKinds.Capacity(PadKind.DualShock4); }
     }
 
     public int PlayerCount

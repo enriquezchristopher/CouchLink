@@ -5,6 +5,7 @@ using System.Windows.Threading;
 using CouchLink.App.Presentation;
 using CouchLink.App.Theme;
 using CouchLink.App.Ui;
+using CouchLink.Core.Pads;
 using CouchLink.Core.Protocol;
 using CouchLink.Core.Session;
 using CouchLink.Core.Video;
@@ -119,7 +120,7 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
 
     internal void ShowPlayers(IReadOnlyList<PlayerInfo> players)
     {
-        PlayersHeading.Text = $"PLAYERS {players.Count + 1} / {HostSession.Capacity + 1}";
+        PlayersHeading.Text = $"PLAYERS {players.Count + 1} / {PadKinds.Capacity(PadKind.DualShock4) + 1}";
         // The first time every row comes in; after that only players who just joined do.
         bool first = _shownSlots is null;
         var before = _shownSlots ?? [];

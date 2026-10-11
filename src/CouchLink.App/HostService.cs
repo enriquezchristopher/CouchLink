@@ -56,7 +56,7 @@ internal sealed class HostService : IDisposable, IHostEffects
         _staleTimer = new Timer(_ => ReleaseStale(), null, PadManager.CheckInterval, PadManager.CheckInterval);
         _server.Start(this, TimeProvider.System, message => AppServices.Log.Write(message), OnError);
         _broadcaster = new DiscoveryBroadcaster(Ports.Discovery,
-            () => HostAnnounce.For(_server.PlayerCount, HostSession.Capacity, PcName.ThisPc), onError: OnError);
+            () => HostAnnounce.For(_server.PlayerCount, _server.Capacity, PcName.ThisPc), onError: OnError);
     }
 
     public static bool TryStart(StreamSettings settings, IHostUi ui, out HostService? service, out string? error)
