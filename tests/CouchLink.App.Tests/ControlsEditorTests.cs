@@ -132,4 +132,103 @@ public class ControlsEditorTests
             Assert.Equal("Cross", editor.RowAutomationName(PadControl.Cross));
         });
     }
+
+    [Fact]
+    public void A_held_key_lights_its_part_and_key_cap()
+    {
+        WithEditor(editor =>
+        {
+            editor.PreviewDown(K);
+            editor.UpdatePreview();
+            Assert.True(editor.Pad.IsLit(PadControl.Cross));
+            Assert.True(editor.IsKeyCapLit(PadControl.Cross, K));
+            editor.PreviewUp(K);
+            editor.UpdatePreview();
+            Assert.False(editor.Pad.IsLit(PadControl.Cross));
+            Assert.False(editor.IsKeyCapLit(PadControl.Cross, K));
+        });
+    }
+
+    [Fact]
+    public void Clicking_a_part_starts_changing_its_key_and_outlines_it()
+    {
+        WithEditor(editor =>
+        {
+            editor.Pad.ClickPart(PadControl.Circle);
+            Assert.Equal(PadControl.Circle, editor.Listening);
+            Assert.Equal(PadControl.Circle, editor.Pad.Outlined);
+            Assert.Equal("Changing Circle: press a key · Esc cancels", editor.PadCaption.Text);
+        });
+    }
+
+    [Fact]
+    public void Clicking_a_stick_ring_does_not_listen()
+    {
+        WithEditor(editor =>
+        {
+            editor.Pad.ClickPart(PadControl.LeftUp);
+            Assert.Null(editor.Listening);
+        });
+    }
+
+    [Fact]
+    public void The_preview_pauses_while_listening()
+    {
+        WithEditor(editor =>
+        {
+            editor.PreviewDown(K);
+            editor.Listen(PadControl.Circle);
+            editor.UpdatePreview();
+            Assert.False(editor.Pad.IsLit(PadControl.Cross));
+        });
+    }
+
+    [Fact]
+    public void Releasing_the_preview_clears_everything()
+    {
+        WithEditor(editor =>
+        {
+            editor.PreviewDown(K);
+            editor.ReleasePreview();          // what Deactivated does
+            editor.UpdatePreview();
+            Assert.False(editor.Pad.IsLit(PadControl.Cross));
+            Assert.False(editor.IsKeyCapLit(PadControl.Cross, K));
+        });
+    }
+
+    [Fact]
+    public void A_reset_while_a_key_is_held_leaves_nothing_lit()
+    {
+        WithEditor(editor =>
+        {
+            editor.PreviewDown(K);
+            editor.UpdatePreview();
+            AppServices.Controls.ResetToDefault();      // raises Changed; the editor refreshes on the dispatcher
+            Wpf.PumpFor(50);
+            editor.UpdatePreview();
+            Assert.False(editor.Pad.IsLit(PadControl.Cross));
+            Assert.False(editor.IsKeyCapLit(PadControl.Cross, K));
+        });
+    }
+
+    [Fact]
+    public void Typing_in_a_text_box_does_not_drive_the_preview()
+    {
+        Wpf.Run(() =>
+        {
+            Assert.True(ControlsWindow.PreviewIgnores(new System.Windows.Controls.TextBox()));
+            Assert.False(ControlsWindow.PreviewIgnores(new System.Windows.Controls.Button()));
+            Assert.False(ControlsWindow.PreviewIgnores(null));
+        });
+    }
+
+    [Fact]
+    public void The_picture_follows_the_kind_and_the_caption_invites_testing()
+    {
+        WithEditor(editor =>
+        {
+            Assert.Equal(PadKind.Xbox360, editor.Pad.Kind);
+            Assert.Equal("Press your keys to test them · Click a button to change its key", editor.PadCaption.Text);
+        }, PadKind.Xbox360);
+    }
 }
