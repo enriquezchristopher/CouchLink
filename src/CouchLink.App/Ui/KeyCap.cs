@@ -30,6 +30,26 @@ internal sealed class KeyCap : Grid
 
     public string Text => _text.Text;
 
+    /// <summary>The key this cap shows, so the editor can light it while the key is held.</summary>
+    public ushort? VirtualKey { get; init; }
+
+    private bool _lit;
+
+    /// <summary>Held right now: the cap fills with the primary colour.</summary>
+    public bool IsLit
+    {
+        get => _lit;
+        set
+        {
+            if (value == _lit || string.IsNullOrEmpty(_key))
+                return;
+            _lit = value;
+            _cap.SetResourceReference(Border.BackgroundProperty, value ? "PrimaryBrush" : "RaisedBrush");
+            _cap.SetResourceReference(Border.BorderBrushProperty, value ? "PrimaryTextBrush" : "BorderStrongBrush");
+            _text.SetResourceReference(TextBlock.ForegroundProperty, value ? "OnPrimaryBrush" : "TextBrush");
+        }
+    }
+
     public string? Key
     {
         get => _key;

@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -9,6 +10,7 @@ using CouchLink.App.Presentation;
 using CouchLink.App.Theme;
 using CouchLink.App.Ui;
 using CouchLink.Core.Input;
+using CouchLink.Core.Pads;
 using Microsoft.Win32;
 
 namespace CouchLink.App;
@@ -18,12 +20,14 @@ namespace CouchLink.App;
 /// button to bind it (Esc cancels); when the key came from another control, that row lights up and the
 /// banner says so. A profile bar loads a profile from the profiles folder or a file and saves the
 /// current controls as one; Find filters the rows; Labels adds a box per row for the game's name of
-/// each button. Mouse sensitivity, Invert Y and Reset to default. Edits go straight into
+/// each button. The session's controller on top reacts to the player's keys through the current bindings;
+/// clicking a part changes its key. Mouse sensitivity, Invert Y and Reset to default. Edits go straight into
 /// <see cref="AppServices.Controls"/>, so they count mid-game. One window at a time.
 /// </summary>
 internal sealed partial class ControlsWindow : Window
 {
     private const string ListeningText = "Press a key or mouse button · Esc cancels";
+    private const string PadIdleCaption = "Press your keys to test them · Click a button to change its key";
     private const string FileFilter = "CouchLink profile (*.json)|*.json";
     private const double NarrowWidth = 460, WideWidth = 600;
     private static ControlsWindow? _open;
@@ -40,6 +44,10 @@ internal sealed partial class ControlsWindow : Window
     private readonly List<(string Name, TextBlock Heading, Border Card, PadControl[] Controls)> _groups = [];
     private readonly DispatcherTimer _messageTimer = new();
     private readonly DispatcherTimer _movedTimer = new() { Interval = TimeSpan.FromSeconds(4) };
+    private readonly InputMapper _preview = new(AppServices.Controls);
+    private readonly HashSet<ushort> _held = [];
+    private readonly DispatcherTimer _previewTimer = new() { Interval = TimeSpan.FromMilliseconds(16) };
+    private DateTime _lastPreview = DateTime.UtcNow;
     private IReadOnlyList<ProfileEntry> _entries = [];
     private bool _updatingProfiles;
 
@@ -50,14 +58,14 @@ internal sealed partial class ControlsWindow : Window
     }
 
     /// <summary>Shows the editor, or brings the open one forward. <paramref name="overGame"/>: opened with Ctrl+Alt+C over the fullscreen player.</summary>
-    public static void Open(Window? owner, bool overGame = false, Action? closed = null)
+    public static void Open(Window? owner, bool overGame = false, Action? closed = null, PadKind kind = PadKind.DualShock4)
     {
         if (_open is { } existing)
         {
             existing.Activate();
             return;
         }
-        var window = new ControlsWindow { Topmost = overGame };
+        var window = new ControlsWindow(kind) { Topmost = overGame };
         if (owner is { IsVisible: true, WindowState: not WindowState.Minimized } && !overGame)
         {
             window.Owner = owner;
@@ -74,14 +82,17 @@ internal sealed partial class ControlsWindow : Window
     }
 
     /// <summary>Internal for tests; use <see cref="Open"/>.</summary>
-    internal ControlsWindow()
+    internal ControlsWindow(PadKind kind = PadKind.DualShock4)
     {
+        Kind = kind;
         InitializeComponent();
         WindowTheme.Apply(this);
         WindowTheme.UseCustomChrome(this, 32);
         Motion.AnimateWindow(this, Body);
         MaxHeight = SystemParameters.WorkArea.Height * 0.85;
         BuildRows();
+        Pad.Kind = Kind;
+        Pad.PartClicked += OnPartClicked;
         Loaded += (_, _) =>
         {
             // The group cards (with their headings) come in one after another as the window opens.
@@ -120,6 +131,10 @@ internal sealed partial class ControlsWindow : Window
         };
 
         PreviewKeyDown += OnPreviewKeyDown;
+        PreviewKeyUp += OnPreviewKeyUp;
+        Deactivated += (_, _) => ReleasePreview();
+        _previewTimer.Tick += (_, _) => UpdatePreview();
+        _previewTimer.Start();
         PreviewMouseDown += OnPreviewMouseDown;
         _messageTimer.Tick += (_, _) =>
         {
@@ -143,10 +158,19 @@ internal sealed partial class ControlsWindow : Window
             _settings.Changed -= OnSettingsChanged;
             _messageTimer.Stop();
             _movedTimer.Stop();
+            _previewTimer.Stop();
+            _preview.Dispose();
         };
         _entries = _store.List();
         Refresh();
     }
+
+    /// <summary>The session's pad: the rows' names follow it, and Xbox 360 has no touchpad row.</summary>
+    internal PadKind Kind { get; }
+
+    internal bool HasRow(PadControl control) => _rows.ContainsKey(control);
+
+    internal string RowAutomationName(PadControl control) => AutomationProperties.GetName(_rows[control]);
 
     /// <summary>The row waiting for a key, or null.</summary>
     internal PadControl? Listening { get; private set; }
@@ -160,7 +184,7 @@ internal sealed partial class ControlsWindow : Window
 
     private void BuildRows()
     {
-        foreach (var (group, controls) in KeyNames.Groups)
+        foreach (var (group, controls) in KeyNames.GroupsFor(Kind))
         {
             var heading = new TextBlock { Text = group.ToUpperInvariant(), Style = (Style)FindResource("OverlineText"), Margin = new Thickness(4, 12, 0, 6) };
             var card = new Border { Style = (Style)FindResource("Card"), Padding = new Thickness(4) };
@@ -171,7 +195,7 @@ internal sealed partial class ControlsWindow : Window
                 var row = new Button();
                 row.SetResourceReference(StyleProperty, "ControlRowButton"); // follows Reduce motion live
                 AutomationProperties.SetAutomationId(row, $"Row_{control}");
-                AutomationProperties.SetName(row, KeyNames.Of(control));
+                AutomationProperties.SetName(row, KeyNames.Of(control, Kind));
                 row.Click += (_, _) => Listen(c);
                 _rows[control] = row;
 
@@ -184,7 +208,7 @@ internal sealed partial class ControlsWindow : Window
                     ToolTip = "What this button does in the game, e.g. Shoot",
                 };
                 ThemeProps.SetPlaceholder(label, "Label");
-                AutomationProperties.SetName(label, $"Label for {KeyNames.Of(control)}");
+                AutomationProperties.SetName(label, $"Label for {KeyNames.Of(control, Kind)}");
                 AutomationProperties.SetAutomationId(label, $"Label_{control}");
                 label.LostFocus += (_, _) => CommitLabel(c);
                 label.KeyDown += (_, e) =>
@@ -211,7 +235,12 @@ internal sealed partial class ControlsWindow : Window
         }
     }
 
-    private void OnSettingsChanged() => Dispatcher.InvokeAsync(Refresh);
+    // The preview's mapper drops held keys on a change; the lit key caps must follow.
+    private void OnSettingsChanged() => Dispatcher.InvokeAsync(() =>
+    {
+        ReleasePreview();
+        Refresh();
+    });
 
     private void Refresh()
     {
@@ -220,6 +249,10 @@ internal sealed partial class ControlsWindow : Window
             row.Content = RowContent(control);
             PaintRow(control, row);
         }
+        Pad.Outlined = Listening;
+        PadCaption.Text = Listening is { } listening
+            ? $"Changing {KeyNames.Of(listening, Kind)}: press a key · Esc cancels"
+            : PadIdleCaption;
         foreach (var (control, box) in _labelBoxes)
             if (!box.IsKeyboardFocusWithin) // don't overwrite what is being typed
                 box.Text = _settings.LabelFor(control) ?? "";
@@ -247,12 +280,12 @@ internal sealed partial class ControlsWindow : Window
             if (bound.Count == 0)
                 keys.Children.Add(new KeyCap());
             foreach (var key in bound)
-                keys.Children.Add(new KeyCap { Key = KeyNames.Of(key) });
+                keys.Children.Add(new KeyCap { Key = KeyNames.Of(key), VirtualKey = key });
             DockPanel.SetDock(keys, Dock.Right);
             panel.Children.Add(keys);
         }
         var name = new TextBlock { VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
-        name.Inlines.Add(new Run(ControlFilter.RowName(control)));
+        name.Inlines.Add(new Run(ControlFilter.RowName(control, Kind)));
         if (LabelsToggle.IsChecked != true && _settings.LabelFor(control) is { } label)
         {
             var run = new Run($"  ·  {label}");
@@ -290,7 +323,7 @@ internal sealed partial class ControlsWindow : Window
             bool any = false;
             foreach (var control in controls)
             {
-                bool match = ControlFilter.Matches(control, name, _settings.LabelFor(control), query);
+                bool match = ControlFilter.Matches(control, name, _settings.LabelFor(control), query, Kind);
                 _lines[control].Visibility = match ? Visibility.Visible : Visibility.Collapsed;
                 any |= match;
             }
@@ -394,7 +427,7 @@ internal sealed partial class ControlsWindow : Window
             return;
 
         var profile = _settings.ToProfile(details.ProfileName, details.Game);
-        if (_store.Write(dialog.FileName, profile) is { } error)
+        if (_store.Write(dialog.FileName, profile, Kind) is { } error) // the session's names: A, LB... for Xbox 360
         {
             ShowError(error);
             return;
@@ -417,16 +450,80 @@ internal sealed partial class ControlsWindow : Window
 
     internal void Listen(PadControl control)
     {
+        ReleasePreview();
         Listening = control;
         Refresh();
     }
 
+    /// <summary>Keys typed into Find or a label box are text, not pad input.</summary>
+    internal static bool PreviewIgnores(object? focused) => focused is TextBoxBase;
+
+    internal void PreviewDown(ushort vk)
+    {
+        _held.Add(vk);
+        _preview.KeyDown(vk);
+    }
+
+    internal void PreviewUp(ushort vk)
+    {
+        _held.Remove(vk);
+        _preview.KeyUp(vk);
+    }
+
+    internal void ReleasePreview()
+    {
+        _held.Clear();
+        _preview.ReleaseAll();
+    }
+
+    /// <summary>One frame: the pad state the host would get, drawn; the held keys' caps lit. Paused while listening.</summary>
+    internal void UpdatePreview()
+    {
+        var now = DateTime.UtcNow;
+        var state = _preview.Tick((now - _lastPreview).TotalSeconds);
+        _lastPreview = now;
+        Pad.Show(Listening is null ? PadPicture.From(state, Kind) : PadPicture.Neutral);
+        foreach (var cap in _rows.Values.SelectMany(KeyCaps))
+            cap.IsLit = Listening is null && cap.VirtualKey is { } vk && _held.Contains(vk);
+    }
+
+    internal bool IsKeyCapLit(PadControl control, ushort vk) => KeyCaps(_rows[control]).Any(c => c.VirtualKey == vk && c.IsLit);
+
+    private static IEnumerable<KeyCap> KeyCaps(Button row) =>
+        row.Content is DockPanel panel
+            ? panel.Children.OfType<StackPanel>().SelectMany(s => s.Children.OfType<KeyCap>())
+            : [];
+
+    private void OnPartClicked(PadControl control)
+    {
+        if (control is PadControl.LeftUp or PadControl.RightUp)
+        {
+            _rows[control].BringIntoView(); // the stick's keys; the thumb itself changes L3/R3
+            return;
+        }
+        Listen(control);
+        _rows[control].BringIntoView();
+    }
+
+    private void OnPreviewKeyUp(object sender, KeyEventArgs e)
+    {
+        int vk = KeyInterop.VirtualKeyFromKey(e.Key == Key.System ? e.SystemKey : e.Key);
+        if (vk is > 0 and <= 0xFF)
+            PreviewUp((ushort)vk);
+    }
+
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (Listening is not { } control)
-            return;
-        e.Handled = true; // Space, Enter and Tab must not press a button here
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        if (Listening is not { } control)
+        {
+            // Pad input for the picture; never handled, so Space, Enter and Tab keep working.
+            int down = KeyInterop.VirtualKeyFromKey(key);
+            if (down is > 0 and <= 0xFF && !PreviewIgnores(Keyboard.FocusedElement))
+                PreviewDown((ushort)down);
+            return;
+        }
+        e.Handled = true; // Space, Enter and Tab must not press a button here
         if (key == Key.Escape)
         {
             Listening = null;
@@ -438,9 +535,16 @@ internal sealed partial class ControlsWindow : Window
             Bind(control, (ushort)vk);
     }
 
+    /// <summary>
+    /// While listening, a mouse button binds to the row, except a click on the picture: that picks another part,
+    /// so clicking a second button switches what is being changed instead of binding Left click.
+    /// </summary>
+    internal bool MouseDownBinds(object? source) =>
+        source is not DependencyObject d || (d != Pad && !Pad.IsAncestorOf(d));
+
     private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (Listening is not { } control)
+        if (Listening is not { } control || !MouseDownBinds(e.OriginalSource))
             return;
         e.Handled = true;
         Bind(control, e.ChangedButton switch
@@ -471,8 +575,8 @@ internal sealed partial class ControlsWindow : Window
             _movedTimer.Start();
         }
         Refresh();
-        if (result.MovedFrom is { } moved)
-            _rows[moved].BringIntoView();
+        if (result.MovedFrom is { } moved && _rows.TryGetValue(moved, out var movedRow))
+            movedRow.BringIntoView(); // Xbox 360 has no touchpad row
     }
 
     private void ShowMessage(string text, BannerKind kind, double seconds = 3)

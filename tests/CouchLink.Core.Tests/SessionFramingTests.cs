@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using CouchLink.Core.Pads;
 using CouchLink.Core.Protocol;
 
 namespace CouchLink.Core.Tests;
@@ -10,6 +11,9 @@ public class SessionFramingTests
         SessionMessage.JoinRequest("PC-07"),
         SessionMessage.Accepted(2),
         SessionMessage.Accepted(10),
+        SessionMessage.Accepted(2, PadKind.Xbox360),
+        SessionMessage.Accepted(5, PadKind.DualShock4),
+        SessionMessage.Denied(DenyReason.XboxFull),
         SessionMessage.Denied(DenyReason.Denied),
         SessionMessage.Denied(DenyReason.Full),
         SessionMessage.Denied(DenyReason.TimedOut),
@@ -91,10 +95,14 @@ public class SessionFramingTests
             return frame;
         }
 
-        Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeAccepted, 1)));      // slot 1
-        Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeAccepted, 11)));     // slot 11
-        Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeAccepted)));         // no slot
-        Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeDenied, 9)));        // unknown reason
+        Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeAccepted, 1, 1)));      // slot 1
+        Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeAccepted, 11, 1)));     // slot 11
+        Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeAccepted)));            // no slot
+        Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeAccepted, 2)));         // version 1 body: no kind
+        Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeAccepted, 2, 0)));      // kind 0
+        Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeAccepted, 2, 3)));      // unknown kind
+        Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeAccepted, 2, 1, 0)));   // extra byte
+        Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeDenied, 6)));           // unknown reason
         Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeHeartbeat, 0)));     // body on an empty message
         Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeJoinRequest, 3, 65))); // name shorter than its length
         Assert.Throws<InvalidDataException>(() => SessionFraming.Decode(Frame(Wire.TypeJoinRequest, 0)));   // empty name
@@ -120,6 +128,27 @@ public class SessionFramingTests
             {
             }
         }
+    }
+
+    [Fact]
+    public void The_wire_version_is_2()
+    {
+        Assert.Equal(2, Wire.Version);
+    }
+
+    [Fact]
+    public void An_accepted_message_carries_slot_then_kind()
+    {
+        var bytes = SessionFraming.Encode(SessionMessage.Accepted(3, PadKind.Xbox360));
+        Assert.Equal(new byte[] { 3, 2 }, bytes[6..]);
+    }
+
+    [Fact]
+    public void Accepted_names_the_kind_only_for_Xbox()
+    {
+        Assert.Equal("Accepted P4", SessionMessage.Accepted(4).ToString());
+        Assert.Equal("Accepted P4 Xbox360", SessionMessage.Accepted(4, PadKind.Xbox360).ToString());
+        Assert.Equal(PadKind.DualShock4, SessionMessage.Accepted(4).PadKind);
     }
 
     [Fact]

@@ -10,13 +10,23 @@ public sealed class ViGEmPadFactory : IVirtualPadFactory, IDisposable
 
     private readonly ViGEmClient _client;
 
-    private ViGEmPadFactory(ViGEmClient client) => _client = client;
+    private ViGEmPadFactory(ViGEmClient client, PadKind kind)
+    {
+        _client = client;
+        Kind = kind;
+    }
 
-    public static bool TryCreate(out ViGEmPadFactory? factory, out string? error)
+    /// <summary>The pad every Create plugs in.</summary>
+    public PadKind Kind { get; }
+
+    public static bool TryCreate(out ViGEmPadFactory? factory, out string? error) =>
+        TryCreate(PadKind.DualShock4, out factory, out error);
+
+    public static bool TryCreate(PadKind kind, out ViGEmPadFactory? factory, out string? error)
     {
         try
         {
-            factory = new ViGEmPadFactory(new ViGEmClient());
+            factory = new ViGEmPadFactory(new ViGEmClient(), kind);
             error = null;
             return true;
         }
@@ -28,7 +38,7 @@ public sealed class ViGEmPadFactory : IVirtualPadFactory, IDisposable
         }
     }
 
-    public IVirtualPad Create() => new ViGEmPad(_client);
+    public IVirtualPad Create() => Kind == PadKind.Xbox360 ? new ViGEmXbox360Pad(_client) : new ViGEmDs4Pad(_client);
 
     public void Dispose() => _client.Dispose();
 }

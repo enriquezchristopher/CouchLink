@@ -1,6 +1,7 @@
 using System.Net;
 using System.Windows.Threading;
 using CouchLink.Core.Net;
+using CouchLink.Core.Pads;
 using CouchLink.Core.Protocol;
 using CouchLink.Core.Session;
 using CouchLink.Core.Video;
@@ -10,7 +11,7 @@ namespace CouchLink.App;
 /// <summary>What the main window does as the session moves on. Always called on the UI thread.</summary>
 internal interface IClientUi
 {
-    void StartPlaying(byte slot);
+    void StartPlaying(byte slot, PadKind kind);
     void Ended(string? message);
     void StateChanged();
 }
@@ -56,6 +57,12 @@ internal sealed class ClientSessionService : IDisposable, IClientSessionEffects,
         get { lock (_gate) return _session.Slot; }
     }
 
+    /// <summary>The host's virtual controller; DualShock 4 until accepted.</summary>
+    public PadKind PadKind
+    {
+        get { lock (_gate) return _session.PadKind; }
+    }
+
     /// <summary>The player's status line: "Reconnecting..." while the host is lost, otherwise null. Any thread.</summary>
     public string? PlayerStatus => State == ClientState.Reconnecting ? OverlayText.Reconnecting : null;
 
@@ -89,10 +96,10 @@ internal sealed class ClientSessionService : IDisposable, IClientSessionEffects,
     void IClientSessionEffects.Send(SessionMessage message) => _client.Send(message);
     void IClientSessionEffects.Disconnect() => _client.Disconnect();
 
-    void IClientSessionEffects.StartPlaying(byte slot)
+    void IClientSessionEffects.StartPlaying(byte slot, PadKind kind)
     {
-        AppServices.Log.Write($"Accepted by {HostName} as P{slot}");
-        _dispatcher.InvokeAsync(() => _ui.StartPlaying(slot));
+        AppServices.Log.Write($"Accepted by {HostName} as P{slot} ({PadKinds.Label(kind)})");
+        _dispatcher.InvokeAsync(() => _ui.StartPlaying(slot, kind));
     }
 
     void IClientSessionEffects.Ended(string? message)

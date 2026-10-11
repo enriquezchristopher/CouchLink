@@ -1,4 +1,5 @@
 using System.Net;
+using CouchLink.Core.Pads;
 using CouchLink.Core.Protocol;
 using CouchLink.Core.Session;
 using Microsoft.Extensions.Time.Testing;
@@ -357,5 +358,68 @@ public class HostSessionTests
              new PlayerInfo(3, "PC-2", IPAddress.Parse("10.0.0.2"), PlayerState.Active)],
             _session.Players);
         Assert.Equal(2, _session.PlayerCount);
+    }
+
+    private HostSession XboxSession() => new(_effects, _time, padKind: PadKind.Xbox360) { AllowEveryone = true };
+
+    private static void JoinAll(HostSession session, int count)
+    {
+        for (int i = 1; i <= count; i++)
+        {
+            session.Connected(i, IPAddress.Parse($"10.0.0.{i}"));
+            session.Received(i, SessionMessage.JoinRequest($"PC-{i}"));
+        }
+    }
+
+    [Fact]
+    public void An_Xbox_session_takes_four_players_on_P2_to_P5()
+    {
+        var session = XboxSession();
+        JoinAll(session, 4);
+        Assert.Equal(new byte[] { 2, 3, 4, 5 }, session.Players.Select(p => p.Slot));
+        Assert.Contains("send #1 Accepted P2 Xbox360", Calls);
+        Assert.Equal(4, session.Capacity);
+    }
+
+    [Fact]
+    public void A_fifth_Xbox_player_is_told_why()
+    {
+        var session = XboxSession();
+        JoinAll(session, 5);
+        Assert.Equal(["send #5 Denied XboxFull", "close #5"], Calls.TakeLast(2));
+        Assert.Equal(4, session.PlayerCount);
+    }
+
+    [Fact]
+    public void A_reserved_Xbox_seat_counts_toward_four_and_comes_back_to_its_player()
+    {
+        var session = XboxSession();
+        JoinAll(session, 4);
+        session.Disconnected(4);                       // PC-4 drops; P5 is reserved
+        session.Connected(5, IPAddress.Parse("10.0.0.5"));
+        session.Received(5, SessionMessage.JoinRequest("PC-5"));
+        Assert.Contains("send #5 Denied XboxFull", Calls);
+
+        session.Connected(6, IPAddress.Parse("10.0.0.4"));
+        session.Received(6, SessionMessage.JoinRequest("PC-4"));
+        Assert.Contains("send #6 Accepted P5 Xbox360", Calls);
+    }
+
+    [Fact]
+    public void A_freed_Xbox_seat_lets_the_next_player_in()
+    {
+        var session = XboxSession();
+        JoinAll(session, 4);
+        session.Received(2, SessionMessage.Leave);     // P3 leaves for good
+        session.Connected(5, IPAddress.Parse("10.0.0.5"));
+        session.Received(5, SessionMessage.JoinRequest("PC-5"));
+        Assert.Contains("send #5 Accepted P3 Xbox360", Calls);
+    }
+
+    [Fact]
+    public void A_DualShock_session_still_takes_nine()
+    {
+        Assert.Equal(PadKind.DualShock4, _session.PadKind);
+        Assert.Equal(9, _session.Capacity);
     }
 }

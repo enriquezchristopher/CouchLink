@@ -27,4 +27,7 @@ internal static class AppServices
 
     /// <summary>Help → Reduce motion, saved for this PC. The theme follows it (ThemeManager.Follow); tests swap it.</summary>
     public static MotionSettings MotionSettings { get; set; } = new(MotionSettings.DefaultPath, Log.Write);
+
+    /// <summary>The controller the host picked last, saved for this PC; tests swap it.</summary>
+    public static HostSettings HostSettings { get; set; } = new(HostSettings.DefaultPath, Log.Write);
 }

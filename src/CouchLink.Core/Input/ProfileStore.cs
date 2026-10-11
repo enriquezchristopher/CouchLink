@@ -1,4 +1,5 @@
 using System.Text;
+using CouchLink.Core.Pads;
 
 namespace CouchLink.Core.Input;
 
@@ -73,12 +74,12 @@ public sealed class ProfileStore(string folder, Action<string>? log = null)
     }
 
     /// <summary>Writes through a temp file in the same folder, so a failed save never leaves half a file. Null, or why it failed.</summary>
-    public string? Write(string path, ControlProfile profile)
+    public string? Write(string path, ControlProfile profile, PadKind kind = PadKind.DualShock4)
     {
         string temp = $"{path}.{Guid.NewGuid():N}.tmp";
         try
         {
-            File.WriteAllText(temp, ProfileFile.Save(profile), new UTF8Encoding(false));
+            File.WriteAllText(temp, ProfileFile.Save(profile, kind), new UTF8Encoding(false));
             File.Move(temp, path, overwrite: true);
             return null;
         }

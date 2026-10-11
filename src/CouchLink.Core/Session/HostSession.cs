@@ -48,7 +48,6 @@ public interface IHostSessionEffects : IHostEffects
 /// </summary>
 public sealed class HostSession
 {
-    public const int Capacity = PadManager.LastSlot - PadManager.FirstSlot + 1;
     public static readonly TimeSpan SilenceLimit = TimeSpan.FromSeconds(5);
     public static readonly TimeSpan AskTimeout = TimeSpan.FromSeconds(30);
     public static readonly TimeSpan ReserveFor = TimeSpan.FromSeconds(60);
@@ -78,12 +77,22 @@ public sealed class HostSession
     private readonly Dictionary<int, Connection> _connections = [];
     private readonly SortedDictionary<byte, Seat> _seats = [];
 
-    public HostSession(IHostSessionEffects effects, TimeProvider time, Action<string>? log = null)
+    public HostSession(IHostSessionEffects effects, TimeProvider time, Action<string>? log = null, PadKind padKind = PadKind.DualShock4)
     {
         _effects = effects;
         _time = time;
         _log = log;
+        PadKind = padKind;
+        Capacity = PadKinds.Capacity(padKind);
     }
+
+    /// <summary>The virtual controller every player gets; sent with Accepted.</summary>
+    public PadKind PadKind { get; }
+
+    /// <summary>Clients this session takes: P2 up to P(1 + Capacity).</summary>
+    public int Capacity { get; }
+
+    private DenyReason FullReason => PadKind == PadKind.Xbox360 ? DenyReason.XboxFull : DenyReason.Full;
 
     /// <summary>Accept joins without asking the host.</summary>
     public bool AllowEveryone { get; set; }
@@ -254,7 +263,7 @@ public sealed class HostSession
         if (FreeSlot() is null)
         {
             _log?.Invoke($"Session: {Describe(c)} denied, host is full");
-            Refuse(c, DenyReason.Full);
+            Refuse(c, FullReason);
         }
         else if (AllowEveryone)
             Accept(c);
@@ -269,7 +278,7 @@ public sealed class HostSession
     {
         if (FreeSlot() is not { } slot)
         {
-            Refuse(c, DenyReason.Full);
+            Refuse(c, FullReason);
             return;
         }
         if (!_effects.PlugPad(slot, c.Address))
@@ -281,7 +290,7 @@ public sealed class HostSession
         _seats[slot] = new Seat(slot, c.Name!, c.Address) { Connection = c.Id };
         c.Slot = slot;
         _effects.AddTarget(slot, c.Address);
-        _effects.Send(c.Id, SessionMessage.Accepted(slot));
+        _effects.Send(c.Id, SessionMessage.Accepted(slot, PadKind));
         _effects.PlayersChanged();
         _log?.Invoke($"Session: {Describe(c)} is P{slot}");
     }
@@ -302,7 +311,7 @@ public sealed class HostSession
         seat.Connection = c.Id;
         c.Slot = seat.Slot;
         _effects.AddTarget(seat.Slot, c.Address);
-        _effects.Send(c.Id, SessionMessage.Accepted(seat.Slot));
+        _effects.Send(c.Id, SessionMessage.Accepted(seat.Slot, PadKind));
         _effects.PlayersChanged();
     }
 
@@ -350,7 +359,8 @@ public sealed class HostSession
 
     private byte? FreeSlot()
     {
-        for (byte slot = PadManager.FirstSlot; slot <= PadManager.LastSlot; slot++)
+        int last = PadManager.FirstSlot + Capacity - 1;
+        for (byte slot = PadManager.FirstSlot; slot <= last; slot++)
             if (!_seats.ContainsKey(slot))
                 return slot;
         return null;

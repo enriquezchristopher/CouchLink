@@ -6,7 +6,7 @@ namespace CouchLink.PadTest;
 /// <summary>
 /// Leak check: plugs in and removes a virtual pad many times (like players being
 /// kicked and rejoining). Each removed pad knowingly keeps one stuck ViGEm thread
-/// and a few handles (see ViGEmPad.Dispose); this fails if a pad costs more than
+/// and a few handles (see RemovedTargets); this fails if a pad costs more than
 /// that, or if removing pads crashes the process.
 /// </summary>
 internal static class ChurnMode

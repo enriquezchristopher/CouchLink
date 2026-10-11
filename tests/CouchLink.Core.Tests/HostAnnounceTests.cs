@@ -19,11 +19,11 @@ public class HostAnnounceTests
     [Fact]
     public void An_announce_from_another_version_still_parses_and_is_not_compatible()
     {
-        var bytes = new HostAnnounce(Version: 2, Players: 1, Capacity: 9, Name: "PC-03").ToArray();
+        var bytes = new HostAnnounce(Version: (byte)(Wire.Version + 1), Players: 1, Capacity: 9, Name: "PC-03").ToArray();
 
         Assert.True(HostAnnounce.TryParse(bytes, out var parsed));
 
-        Assert.Equal(2, parsed.Version);
+        Assert.Equal(Wire.Version + 1, parsed.Version);
         Assert.False(parsed.Compatible);
     }
 

@@ -12,6 +12,15 @@
                     <Button x:Name="BrowseButton" DockPanel.Dock="Right" Content="Browse…" Margin="8,0,0,0" AutomationProperties.AutomationId="Browse"/>
                     <ComboBox x:Name="ProfileBox" AutomationProperties.Name="Profile" AutomationProperties.AutomationId="Profile"/>
                 </DockPanel>
+                <Border Style="{StaticResource Card}" Margin="0,10,0,0" Padding="8,8,8,6">
+                    <StackPanel>
+                        <ui:ControllerView x:Name="Pad" Height="190" AutomationProperties.Name="Controller"
+                                           AutomationProperties.AutomationId="ControllerPicture"/>
+                        <TextBlock x:Name="PadCaption" Style="{StaticResource CaptionText}" HorizontalAlignment="Center"
+                                   Margin="0,4,0,0" AutomationProperties.AutomationId="ControllerCaption"
+                                   AutomationProperties.LiveSetting="Polite"/>
+                    </StackPanel>
+                </Border>
                 <DockPanel Margin="0,10,0,0">
                     <CheckBox x:Name="LabelsToggle" DockPanel.Dock="Right" Style="{DynamicResource ToggleSwitch}" Content="Labels"
                               Margin="12,0,0,0" VerticalAlignment="Center" AutomationProperties.AutomationId="ShowLabels"

@@ -69,7 +69,7 @@ public class HostListTests
     public void Hosts_are_sorted_by_name_and_other_versions_are_marked()
     {
         _list.Seen(HostAnnounce.For(0, 9, "PC-07"), Lan);
-        _list.Seen(new HostAnnounce(2, 0, 9, "PC-01"), OtherLan);
+        _list.Seen(new HostAnnounce((byte)(Wire.Version + 1), 0, 9, "PC-01"), OtherLan);
         var hosts = _list.Current();
         Assert.Equal(["PC-01", "PC-07"], hosts.Select(h => h.Name));
         Assert.False(hosts[0].Compatible);

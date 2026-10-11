@@ -4,6 +4,7 @@ using System.Windows.Interop;
 using CouchLink.App.Input;
 using CouchLink.Core.Input;
 using CouchLink.Core.Net;
+using CouchLink.Core.Pads;
 using CouchLink.Core.Video;
 using CouchLink.Video;
 
@@ -36,7 +37,7 @@ internal sealed class ClientPlay : IDisposable
         _window.Deactivated += OnDeactivated;
     }
 
-    public static bool TryStart(Window window, IPAddress host, byte slot, Action leave, Func<string?> sessionStatus,
+    public static bool TryStart(Window window, IPAddress host, byte slot, PadKind kind, Action leave, Func<string?> sessionStatus,
         Action openControls,
         out ClientPlay? play, out string? error)
     {
@@ -45,7 +46,7 @@ internal sealed class ClientPlay : IDisposable
         var options = new PlayerOptions(new WindowInteropHelper(window).Handle, AppServices.Options.WindowedPlayer,
             LockInput: !AppServices.Options.WindowedPlayer);
         if (!ClientStreams.TryStart(host, sender, options, AppServices.Options.SaveVideoPath, leave, sessionStatus,
-                () => OverlayText.Controls(AppServices.Controls), openControls,
+                () => OverlayText.Controls(AppServices.Controls, kind), openControls,
                 out var streams, out error))
         {
             sender.Dispose();

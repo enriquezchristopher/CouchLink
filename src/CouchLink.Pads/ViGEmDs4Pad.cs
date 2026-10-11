@@ -7,7 +7,7 @@ using Nefarius.ViGEm.Client.Targets.DualShock4;
 namespace CouchLink.Pads;
 
 /// <summary>A virtual DualShock 4 on ViGEmBus. Each Apply sends one full report.</summary>
-public sealed class ViGEmPad : IVirtualPad
+public sealed class ViGEmDs4Pad : IVirtualPad
 {
     private static readonly (PadButtons Flag, DualShock4Button Button)[] Buttons =
     [
@@ -25,11 +25,9 @@ public sealed class ViGEmPad : IVirtualPad
         (PadButtons.Share, DualShock4Button.Share),
     ];
 
-    private static readonly List<IDualShock4Controller> Removed = [];
-
     private readonly IDualShock4Controller _pad;
 
-    internal ViGEmPad(ViGEmClient client)
+    internal ViGEmDs4Pad(ViGEmClient client)
     {
         _pad = client.CreateDualShock4Controller();
         _pad.AutoSubmitReport = false;
@@ -56,13 +54,7 @@ public sealed class ViGEmPad : IVirtualPad
     public void Dispose()
     {
         _pad.Disconnect();
-        // Never free the controller. Connect starts a native notification thread
-        // (vigemclient.dll) that nothing can stop; it stays blocked after unplug and
-        // reads the target struct if it ever wakes. Freeing the target (Dispose, or
-        // the finalizer once unreferenced) is a use-after-free that crashes the host.
-        // Rooting it costs about one idle thread and 2 handles per pad ever created.
-        lock (Removed)
-            Removed.Add(_pad);
+        RemovedTargets.Keep(_pad); // see RemovedTargets: never free a connected target
     }
 
     private static DualShock4DPadDirection ToViGEm(Dpad8 d) => d switch

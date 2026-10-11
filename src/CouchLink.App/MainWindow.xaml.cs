@@ -9,6 +9,7 @@ using CouchLink.App.Presentation;
 using CouchLink.App.Theme;
 using CouchLink.App.Ui;
 using CouchLink.App.Views;
+using CouchLink.Core.Pads;
 
 namespace CouchLink.App;
 
@@ -29,7 +30,7 @@ public partial class MainWindow : Window, IClientUi
         InitializeComponent();
         WindowTheme.Apply(this);
         WindowTheme.UseCustomChrome(this, 48);
-        Header.ControlsClicked += () => ControlsWindow.Open(this);
+        Header.ControlsClicked += () => ControlsWindow.Open(this, kind: _session?.PadKind ?? PadKind.DualShock4);
         Header.CrashReportsClicked += OpenCrashReports;
         Header.AboutClicked += () => ThemedDialog.Alert(this, "About CouchLink", AppInfo.AboutText);
         _detailsTimer.Tick += (_, _) =>
@@ -79,12 +80,22 @@ public partial class MainWindow : Window, IClientUi
 
     private void ShowHost()
     {
-        var lobby = new HostLobbyView();
+        var setup = new HostSetupView(AppServices.HostSettings.Controller);
+        setup.BackClicked += ShowStart;
+        setup.StartRequested += kind => StartHosting(setup, kind);
+        Show(setup);
+    }
+
+    /// <summary>Start hosting on the setup screen: the lobby on success, otherwise the reason on the setup screen.</summary>
+    private void StartHosting(HostSetupView setup, PadKind kind)
+    {
+        var lobby = new HostLobbyView(kind);
         if (!lobby.TryStart(out var error))
         {
-            ThemedDialog.Alert(this, "Couldn't start hosting", error ?? "Hosting could not start.");
+            setup.ShowError(error ?? "Hosting could not start.");
             return;
         }
+        AppServices.HostSettings.Controller = kind;
         lobby.Stopped += ShowStart;
         Show(lobby);
     }
@@ -102,25 +113,25 @@ public partial class MainWindow : Window, IClientUi
     {
         _sessionView = new SessionView();
         _sessionView.LeaveClicked += LeaveSession;
-        _sessionView.ControlsClicked += () => ControlsWindow.Open(this);
+        _sessionView.ControlsClicked += () => ControlsWindow.Open(this, kind: _session?.PadKind ?? PadKind.DualShock4);
         Show(_sessionView, headerFocusable: false); // closes the join list, freeing UDP 47800
         _session = new ClientSessionService(host, hostName, Dispatcher, this);
         UpdateSessionView();
         _detailsTimer.Start();
     }
 
-    void IClientUi.StartPlaying(byte slot)
+    void IClientUi.StartPlaying(byte slot, PadKind kind)
     {
         if (_session is not { } session || _closed)
             return;
-        if (!ClientPlay.TryStart(this, session.Host, slot, () => Dispatcher.InvokeAsync(LeaveSession),
+        if (!ClientPlay.TryStart(this, session.Host, slot, kind, () => Dispatcher.InvokeAsync(LeaveSession),
                 () => session.PlayerStatus, () => Dispatcher.InvokeAsync(OpenControlsOverGame), out _play, out var error))
         {
             session.Fail(error!);
             return;
         }
         Keyboard.ClearFocus(); // Raw Input keys still reach a focused control
-        AppServices.DescribeMode = () => $"Client (slot P{slot})";
+        AppServices.DescribeMode = () => $"Client (slot P{slot}, {PadKinds.Label(kind)})";
         UpdateSessionView();
     }
 
@@ -174,7 +185,7 @@ public partial class MainWindow : Window, IClientUi
     {
         if (_play is null || _closed)
             return;
-        ControlsWindow.Open(this, overGame: true, closed: ReturnToGame);
+        ControlsWindow.Open(this, overGame: true, closed: ReturnToGame, kind: _session?.PadKind ?? PadKind.DualShock4);
     }
 
     private void ReturnToGame()

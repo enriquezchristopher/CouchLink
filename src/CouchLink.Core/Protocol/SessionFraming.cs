@@ -1,11 +1,12 @@
 using System.Buffers.Binary;
+using CouchLink.Core.Pads;
 
 namespace CouchLink.Core.Protocol;
 
 /// <summary>
 /// TCP session frames: a u16 length (4-4096, the bytes that follow), the 4-byte <see cref="Wire"/>
-/// header, then the body. JoinRequest: name length (1) + name. Accepted: slot (1, 2-10).
-/// Denied: reason (1, 1-4). Every other message has no body.
+/// header, then the body. JoinRequest: name length (1) + name. Accepted: slot (1, 2-10) + pad kind (1, 1-2).
+/// Denied: reason (1, 1-5). Every other message has no body.
 /// </summary>
 public static class SessionFraming
 {
@@ -17,7 +18,7 @@ public static class SessionFraming
         byte[] body = message.Type switch
         {
             SessionMessageType.JoinRequest => NameBody(message.Name),
-            SessionMessageType.Accepted => [message.Slot],
+            SessionMessageType.Accepted => [message.Slot, (byte)message.PadKind],
             SessionMessageType.Denied => [(byte)message.Reason],
             _ => [],
         };
@@ -50,11 +51,11 @@ public static class SessionFraming
                     throw new InvalidDataException("Bad join request.");
                 return SessionMessage.JoinRequest(name);
             case Wire.TypeAccepted:
-                if (body.Length != 1 || body[0] is < 2 or > 10)
+                if (body.Length != 2 || body[0] is < 2 or > 10 || body[1] is not ((byte)PadKind.DualShock4 or (byte)PadKind.Xbox360))
                     throw new InvalidDataException("Bad accepted message.");
-                return SessionMessage.Accepted(body[0]);
+                return SessionMessage.Accepted(body[0], (PadKind)body[1]);
             case Wire.TypeDenied:
-                if (body.Length != 1 || body[0] is < (byte)DenyReason.Denied or > (byte)DenyReason.PadFailed)
+                if (body.Length != 1 || body[0] is < (byte)DenyReason.Denied or > (byte)DenyReason.XboxFull)
                     throw new InvalidDataException("Bad denied message.");
                 return SessionMessage.Denied((DenyReason)body[0]);
             case Wire.TypeHeartbeat or Wire.TypeLeave or Wire.TypeKicked or Wire.TypeHostEnded:

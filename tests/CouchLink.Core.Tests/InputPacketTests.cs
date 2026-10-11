@@ -27,7 +27,7 @@ public class InputPacketTests
     public void Header_layout_is_fixed()
     {
         var b = Bytes(Sample);
-        Assert.Equal(new byte[] { 0x43, 0x4C, 1, 1, 3, 0 }, b[..6]);
+        Assert.Equal(new byte[] { 0x43, 0x4C, Wire.Version, 1, 3, 0 }, b[..6]);
         Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6 }, b[18..]);
     }
 

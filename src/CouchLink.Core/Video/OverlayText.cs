@@ -1,5 +1,6 @@
 using CouchLink.Core.Audio;
 using CouchLink.Core.Input;
+using CouchLink.Core.Pads;
 
 namespace CouchLink.Core.Video;
 
@@ -55,7 +56,7 @@ public static class OverlayText
     /// led by its action label when it has one. The right stick's direction rows appear only once one has a key.
     /// Read when drawn.
     /// </summary>
-    public static string Controls(ControlSettings settings)
+    public static string Controls(ControlSettings settings, PadKind kind = PadKind.DualShock4)
     {
         const string Help = "(F1 hides, Ctrl+Alt+C changes keys)";
         string title = settings.ProfileName is { } profile
@@ -64,12 +65,12 @@ public static class OverlayText
         // The right stick's keys are listed only once one has a key: by default the mouse is the right stick,
         // and four "(none)" rows would crowd the panel (and widen its first column).
         bool rightStickKeys = KeyNames.RightStick.Any(c => settings.Layout.KeysFor(c).Count > 0);
-        var groups = KeyNames.Groups
+        var groups = KeyNames.GroupsFor(kind)
             .Where(g => rightStickKeys || !ReferenceEquals(g.Controls, KeyNames.RightStick))
             .ToList();
         var names = groups
             .SelectMany(g => g.Controls)
-            .ToDictionary(c => c, c => KeyNames.Labelled(c, settings.LabelFor(c)));
+            .ToDictionary(c => c, c => KeyNames.Labelled(c, settings.LabelFor(c), kind));
         int width = Math.Max(18, names.Values.Max(n => n.Length) + 2);
 
         var lines = new List<string> { title };

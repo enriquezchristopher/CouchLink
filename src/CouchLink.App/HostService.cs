@@ -40,9 +40,10 @@ internal sealed class HostService : IDisposable, IHostEffects
     private StreamSettings _settings;
     private HostVideo _video;
 
-    private HostService(InputReceiver receiver, SessionServer server, ViGEmPadFactory factory, StreamSettings settings, IHostUi ui)
+    private HostService(InputReceiver receiver, SessionServer server, ViGEmPadFactory factory, PadKind kind, StreamSettings settings, IHostUi ui)
     {
         _ui = ui;
+        PadKind = kind;
         _factory = factory;
         _pads = new PadManager(factory, TimeProvider.System);
         _receiver = receiver;
@@ -54,12 +55,12 @@ internal sealed class HostService : IDisposable, IHostEffects
             onKeyframeRequest: (_, _) => { lock (_media) _video.RequestKeyframe(); },
             onTimingPing: (ping, from) => { lock (_media) _video.ReplyToTimingPing(ping, from); });
         _staleTimer = new Timer(_ => ReleaseStale(), null, PadManager.CheckInterval, PadManager.CheckInterval);
-        _server.Start(this, TimeProvider.System, message => AppServices.Log.Write(message), OnError);
+        _server.Start(this, TimeProvider.System, message => AppServices.Log.Write(message), OnError, kind);
         _broadcaster = new DiscoveryBroadcaster(Ports.Discovery,
-            () => HostAnnounce.For(_server.PlayerCount, HostSession.Capacity, PcName.ThisPc), onError: OnError);
+            () => HostAnnounce.For(_server.PlayerCount, _server.Capacity, PcName.ThisPc), onError: OnError);
     }
 
-    public static bool TryStart(StreamSettings settings, IHostUi ui, out HostService? service, out string? error)
+    public static bool TryStart(PadKind kind, StreamSettings settings, IHostUi ui, out HostService? service, out string? error)
     {
         service = null;
         // Ports first: they are the steps most likely to fail, and nothing needs cleaning up yet.
@@ -70,13 +71,13 @@ internal sealed class HostService : IDisposable, IHostEffects
             receiver!.Dispose();
             return false;
         }
-        if (!ViGEmPadFactory.TryCreate(out var factory, out error))
+        if (!ViGEmPadFactory.TryCreate(kind, out var factory, out error))
         {
             server!.Dispose();
             receiver!.Dispose();
             return false;
         }
-        service = new HostService(receiver!, server!, factory!, settings, ui);
+        service = new HostService(receiver!, server!, factory!, kind, settings, ui);
         return true;
     }
 
@@ -88,6 +89,12 @@ internal sealed class HostService : IDisposable, IHostEffects
     }
 
     public int PadCount => _pads.Count;
+
+    /// <summary>The virtual controller every player gets.</summary>
+    public PadKind PadKind { get; }
+
+    /// <summary>Clients this host takes.</summary>
+    public int Capacity => _server.Capacity;
 
     /// <summary>Most recent pad, session, video or audio error, shown to the host instead of failing silently.</summary>
     public string? LastError { get; private set; }
