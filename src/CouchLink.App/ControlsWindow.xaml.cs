@@ -9,6 +9,7 @@ using CouchLink.App.Presentation;
 using CouchLink.App.Theme;
 using CouchLink.App.Ui;
 using CouchLink.Core.Input;
+using CouchLink.Core.Pads;
 using Microsoft.Win32;
 
 namespace CouchLink.App;
@@ -50,14 +51,14 @@ internal sealed partial class ControlsWindow : Window
     }
 
     /// <summary>Shows the editor, or brings the open one forward. <paramref name="overGame"/>: opened with Ctrl+Alt+C over the fullscreen player.</summary>
-    public static void Open(Window? owner, bool overGame = false, Action? closed = null)
+    public static void Open(Window? owner, bool overGame = false, Action? closed = null, PadKind kind = PadKind.DualShock4)
     {
         if (_open is { } existing)
         {
             existing.Activate();
             return;
         }
-        var window = new ControlsWindow { Topmost = overGame };
+        var window = new ControlsWindow(kind) { Topmost = overGame };
         if (owner is { IsVisible: true, WindowState: not WindowState.Minimized } && !overGame)
         {
             window.Owner = owner;
@@ -74,8 +75,9 @@ internal sealed partial class ControlsWindow : Window
     }
 
     /// <summary>Internal for tests; use <see cref="Open"/>.</summary>
-    internal ControlsWindow()
+    internal ControlsWindow(PadKind kind = PadKind.DualShock4)
     {
+        Kind = kind;
         InitializeComponent();
         WindowTheme.Apply(this);
         WindowTheme.UseCustomChrome(this, 32);
@@ -148,6 +150,13 @@ internal sealed partial class ControlsWindow : Window
         Refresh();
     }
 
+    /// <summary>The session's pad: the rows' names follow it, and Xbox 360 has no touchpad row.</summary>
+    internal PadKind Kind { get; }
+
+    internal bool HasRow(PadControl control) => _rows.ContainsKey(control);
+
+    internal string RowAutomationName(PadControl control) => AutomationProperties.GetName(_rows[control]);
+
     /// <summary>The row waiting for a key, or null.</summary>
     internal PadControl? Listening { get; private set; }
 
@@ -160,7 +169,7 @@ internal sealed partial class ControlsWindow : Window
 
     private void BuildRows()
     {
-        foreach (var (group, controls) in KeyNames.Groups)
+        foreach (var (group, controls) in KeyNames.GroupsFor(Kind))
         {
             var heading = new TextBlock { Text = group.ToUpperInvariant(), Style = (Style)FindResource("OverlineText"), Margin = new Thickness(4, 12, 0, 6) };
             var card = new Border { Style = (Style)FindResource("Card"), Padding = new Thickness(4) };
@@ -171,7 +180,7 @@ internal sealed partial class ControlsWindow : Window
                 var row = new Button();
                 row.SetResourceReference(StyleProperty, "ControlRowButton"); // follows Reduce motion live
                 AutomationProperties.SetAutomationId(row, $"Row_{control}");
-                AutomationProperties.SetName(row, KeyNames.Of(control));
+                AutomationProperties.SetName(row, KeyNames.Of(control, Kind));
                 row.Click += (_, _) => Listen(c);
                 _rows[control] = row;
 
@@ -184,7 +193,7 @@ internal sealed partial class ControlsWindow : Window
                     ToolTip = "What this button does in the game, e.g. Shoot",
                 };
                 ThemeProps.SetPlaceholder(label, "Label");
-                AutomationProperties.SetName(label, $"Label for {KeyNames.Of(control)}");
+                AutomationProperties.SetName(label, $"Label for {KeyNames.Of(control, Kind)}");
                 AutomationProperties.SetAutomationId(label, $"Label_{control}");
                 label.LostFocus += (_, _) => CommitLabel(c);
                 label.KeyDown += (_, e) =>
@@ -252,7 +261,7 @@ internal sealed partial class ControlsWindow : Window
             panel.Children.Add(keys);
         }
         var name = new TextBlock { VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
-        name.Inlines.Add(new Run(ControlFilter.RowName(control)));
+        name.Inlines.Add(new Run(ControlFilter.RowName(control, Kind)));
         if (LabelsToggle.IsChecked != true && _settings.LabelFor(control) is { } label)
         {
             var run = new Run($"  ·  {label}");
@@ -290,7 +299,7 @@ internal sealed partial class ControlsWindow : Window
             bool any = false;
             foreach (var control in controls)
             {
-                bool match = ControlFilter.Matches(control, name, _settings.LabelFor(control), query);
+                bool match = ControlFilter.Matches(control, name, _settings.LabelFor(control), query, Kind);
                 _lines[control].Visibility = match ? Visibility.Visible : Visibility.Collapsed;
                 any |= match;
             }
@@ -471,8 +480,8 @@ internal sealed partial class ControlsWindow : Window
             _movedTimer.Start();
         }
         Refresh();
-        if (result.MovedFrom is { } moved)
-            _rows[moved].BringIntoView();
+        if (result.MovedFrom is { } moved && _rows.TryGetValue(moved, out var movedRow))
+            movedRow.BringIntoView(); // Xbox 360 has no touchpad row
     }
 
     private void ShowMessage(string text, BannerKind kind, double seconds = 3)

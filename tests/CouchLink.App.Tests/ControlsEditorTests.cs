@@ -2,6 +2,7 @@ using System.Windows;
 using CouchLink.App.Theme;
 using CouchLink.App.Ui;
 using CouchLink.Core.Input;
+using CouchLink.Core.Pads;
 
 namespace CouchLink.App.Tests;
 
@@ -11,13 +12,13 @@ public class ControlsEditorTests
     // Default layout (KeyLayout.Defaults): Cross = K only, Square = J and left click. Num 5 is free.
     private const ushort K = 0x4B, J = 0x4A, Num5 = 0x65, Esc = 0x1B;
 
-    private static void WithEditor(Action<ControlsWindow> test)
+    private static void WithEditor(Action<ControlsWindow> test, PadKind kind = PadKind.DualShock4)
     {
         Wpf.Run(() =>
         {
             ThemeManager.Install(Application.Current);
             AppServices.Controls.ResetToDefault();
-            var editor = new ControlsWindow();
+            var editor = new ControlsWindow(kind);
             try
             {
                 test(editor);
@@ -106,6 +107,29 @@ public class ControlsEditorTests
             Assert.Null(editor.Moved);
             Assert.Null(editor.Listening);
             Assert.Equal(new ushort[] { Num5 }, AppServices.Controls.Layout.KeysFor(PadControl.Square)); // Bind replaces the row's keys
+        });
+    }
+
+    [Fact]
+    public void An_Xbox_editor_has_Xbox_rows_and_no_touchpad()
+    {
+        WithEditor(editor =>
+        {
+            Assert.False(editor.HasRow(PadControl.Touchpad));
+            Assert.Equal("A", editor.RowAutomationName(PadControl.Cross));
+            editor.FindBox.Text = "lb";
+            Assert.True(editor.IsRowVisible(PadControl.L1));
+            Assert.False(editor.IsRowVisible(PadControl.R1));
+        }, PadKind.Xbox360);
+    }
+
+    [Fact]
+    public void A_DualShock_editor_keeps_its_touchpad_row()
+    {
+        WithEditor(editor =>
+        {
+            Assert.True(editor.HasRow(PadControl.Touchpad));
+            Assert.Equal("Cross", editor.RowAutomationName(PadControl.Cross));
         });
     }
 }

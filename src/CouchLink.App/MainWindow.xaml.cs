@@ -30,7 +30,7 @@ public partial class MainWindow : Window, IClientUi
         InitializeComponent();
         WindowTheme.Apply(this);
         WindowTheme.UseCustomChrome(this, 48);
-        Header.ControlsClicked += () => ControlsWindow.Open(this);
+        Header.ControlsClicked += () => ControlsWindow.Open(this, kind: _session?.PadKind ?? PadKind.DualShock4);
         Header.CrashReportsClicked += OpenCrashReports;
         Header.AboutClicked += () => ThemedDialog.Alert(this, "About CouchLink", AppInfo.AboutText);
         _detailsTimer.Tick += (_, _) =>
@@ -113,7 +113,7 @@ public partial class MainWindow : Window, IClientUi
     {
         _sessionView = new SessionView();
         _sessionView.LeaveClicked += LeaveSession;
-        _sessionView.ControlsClicked += () => ControlsWindow.Open(this);
+        _sessionView.ControlsClicked += () => ControlsWindow.Open(this, kind: _session?.PadKind ?? PadKind.DualShock4);
         Show(_sessionView, headerFocusable: false); // closes the join list, freeing UDP 47800
         _session = new ClientSessionService(host, hostName, Dispatcher, this);
         UpdateSessionView();
@@ -124,7 +124,7 @@ public partial class MainWindow : Window, IClientUi
     {
         if (_session is not { } session || _closed)
             return;
-        if (!ClientPlay.TryStart(this, session.Host, slot, () => Dispatcher.InvokeAsync(LeaveSession),
+        if (!ClientPlay.TryStart(this, session.Host, slot, kind, () => Dispatcher.InvokeAsync(LeaveSession),
                 () => session.PlayerStatus, () => Dispatcher.InvokeAsync(OpenControlsOverGame), out _play, out var error))
         {
             session.Fail(error!);
@@ -185,7 +185,7 @@ public partial class MainWindow : Window, IClientUi
     {
         if (_play is null || _closed)
             return;
-        ControlsWindow.Open(this, overGame: true, closed: ReturnToGame);
+        ControlsWindow.Open(this, overGame: true, closed: ReturnToGame, kind: _session?.PadKind ?? PadKind.DualShock4);
     }
 
     private void ReturnToGame()
