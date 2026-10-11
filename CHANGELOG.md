@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.0.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.12.1...v2.0.0) (2026-10-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* **protocol:** wire version 2; hosts and clients must both be on this version.
+
+### Features
+
+* **app:** draw the session's controller accurately, part by part ([661038f](https://github.com/enriquezchristopher/CouchLink/commit/661038ffcfb49d75aa5a85abadf28f681c37e8c4))
+* **app:** live controller in the Controls editor with click-to-change ([ed0b746](https://github.com/enriquezchristopher/CouchLink/commit/ed0b746449b3617feda4999460b4e0ea37c55cd9))
+* **app:** pick the controller on a Host a game screen before hosting starts ([cd07d8e](https://github.com/enriquezchristopher/CouchLink/commit/cd07d8e8bc01209a635688259f46a9be61568655))
+* **app:** remember the host's controller choice per PC ([b811c4e](https://github.com/enriquezchristopher/CouchLink/commit/b811c4e91a6b6c1f7729ce0f709137d45ff1a97d))
+* **app:** Xbox names in the F1 panel and controls editor during Xbox sessions ([d5ca97d](https://github.com/enriquezchristopher/CouchLink/commit/d5ca97d58b623b6c182ef909289d21095448cfbc))
+* host picks DualShock 4 or Xbox 360 pads, and the controls editor shows a live controller ([623ea5f](https://github.com/enriquezchristopher/CouchLink/commit/623ea5f3924b78e368cdf11f61d1a4b9a1b42bfc))
+* **input:** add PadKind and the DS4-to-Xbox 360 report ([19de7d2](https://github.com/enriquezchristopher/CouchLink/commit/19de7d264d7ed5a4ad66cd59159e11d1d669cdc6))
+* **input:** profiles accept Xbox button names and save in the session's names ([6e5e011](https://github.com/enriquezchristopher/CouchLink/commit/6e5e0110a673b92dd49450b065e035bc3b14048e))
+* **input:** work out which controller parts a pad state lights ([8cdaeab](https://github.com/enriquezchristopher/CouchLink/commit/8cdaeab487d836e195d5476fc9aab6fc7e420cf2))
+* **input:** Xbox 360 control names for the F1 panel and editor ([a71fc1b](https://github.com/enriquezchristopher/CouchLink/commit/a71fc1b4bd0f1cabe4a4c7afa4051578272efc44))
+* **pads:** plug in virtual Xbox 360 pads when the host picks them ([5727cb0](https://github.com/enriquezchristopher/CouchLink/commit/5727cb09b6657fae800c1d4a73332cbe43072d1f))
+* **protocol:** send the pad kind with Accepted and add XboxFull ([5121f98](https://github.com/enriquezchristopher/CouchLink/commit/5121f98445154b2399edcd61e9dd18540df6b6ba))
+* **session:** cap Xbox 360 sessions at 4 players and refuse with XboxFull ([0cbaf0c](https://github.com/enriquezchristopher/CouchLink/commit/0cbaf0c2666b3eb5b5114353d90134bf2519f556))
+* **session:** client keeps the host's pad kind and explains XboxFull ([274b71f](https://github.com/enriquezchristopher/CouchLink/commit/274b71fbd50640edfe9ef4fc577b784c715712d0))
+
+
+### Bug Fixes
+
+* **app:** repaint the controller only on change, keep it out of Tab order, switch parts on click ([ea85af4](https://github.com/enriquezchristopher/CouchLink/commit/ea85af4cfafcb731b78694284885911fd35f6ba8))
+
 ## [1.12.1](https://github.com/enriquezchristopher/CouchLink/compare/v1.12.0...v1.12.1) (2026-10-09)
 
 
