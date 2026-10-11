@@ -6,7 +6,8 @@ namespace CouchLink.Core.Protocol;
 public static class Wire
 {
     public const ushort Magic = 0x4C43; // "CL"
-    public const byte Version = 1;
+    // 2: Accepted carries the pad kind (#49).
+    public const byte Version = 2;
 
     public const byte TypeInput = 1;
     public const byte TypeVideoShard = 2;
