@@ -1,3 +1,4 @@
+using CouchLink.Core.Pads;
 using CouchLink.Core.Protocol;
 
 namespace CouchLink.Core.Session;
@@ -11,7 +12,7 @@ public interface IClientSessionEffects
     void Connect();
     void Send(SessionMessage message);
     void Disconnect();
-    void StartPlaying(byte slot);
+    void StartPlaying(byte slot, PadKind kind);
 
     /// <summary>The session is over; <paramref name="message"/> says why, or is null when the user left.</summary>
     void Ended(string? message);
@@ -34,6 +35,7 @@ public sealed class ClientSession
     public const string HostFull = "Host is full.";
     public const string NoAnswer = "The host didn't answer.";
     public const string PadFailed = "The host couldn't add a controller for you.";
+    public const string XboxFull = "Host is full: Xbox 360 sessions take up to 4 players.";
     public const string LostHost = "Lost the host.";
     public const string KickedMessage = "You were removed by the host.";
     public const string HostEndedMessage = "Host ended the session.";
@@ -57,6 +59,9 @@ public sealed class ClientSession
     public string HostName { get; }
     public ClientState State { get; private set; } = ClientState.Connecting;
     public byte Slot { get; private set; }
+
+    /// <summary>The host's virtual controller, from Accepted. DualShock 4 until then.</summary>
+    public PadKind PadKind { get; private set; } = PadKind.DualShock4;
 
     private long Now => _time.GetTimestamp();
 
@@ -95,14 +100,15 @@ public sealed class ClientSession
         {
             case SessionMessageType.Accepted when State == ClientState.Waiting:
                 Slot = message.Slot;
+                PadKind = message.PadKind;
                 SetState(ClientState.Playing);
-                _effects.StartPlaying(message.Slot);
+                _effects.StartPlaying(message.Slot, message.PadKind);
                 break;
             case SessionMessageType.Accepted when State == ClientState.Reconnecting:
-                if (message.Slot == Slot)
+                if (message.Slot == Slot && message.PadKind == PadKind)
                     SetState(ClientState.Playing);
                 else
-                    Quit(LostHost); // the host forgot us; another slot would be a different player
+                    Quit(LostHost); // the host forgot us, or restarted with other pads: a different player
                 break;
             case SessionMessageType.Denied when State == ClientState.Waiting:
                 End(DenyMessage(message.Reason));
@@ -204,6 +210,7 @@ public sealed class ClientSession
         DenyReason.Full => HostFull,
         DenyReason.TimedOut => NoAnswer,
         DenyReason.PadFailed => PadFailed,
+        DenyReason.XboxFull => XboxFull,
         _ => RequestDenied,
     };
 }

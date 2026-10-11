@@ -9,6 +9,7 @@ using CouchLink.App.Presentation;
 using CouchLink.App.Theme;
 using CouchLink.App.Ui;
 using CouchLink.App.Views;
+using CouchLink.Core.Pads;
 
 namespace CouchLink.App;
 
@@ -109,7 +110,7 @@ public partial class MainWindow : Window, IClientUi
         _detailsTimer.Start();
     }
 
-    void IClientUi.StartPlaying(byte slot)
+    void IClientUi.StartPlaying(byte slot, PadKind kind)
     {
         if (_session is not { } session || _closed)
             return;
@@ -120,7 +121,7 @@ public partial class MainWindow : Window, IClientUi
             return;
         }
         Keyboard.ClearFocus(); // Raw Input keys still reach a focused control
-        AppServices.DescribeMode = () => $"Client (slot P{slot})";
+        AppServices.DescribeMode = () => $"Client (slot P{slot}, {PadKinds.Label(kind)})";
         UpdateSessionView();
     }
 

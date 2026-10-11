@@ -1,3 +1,4 @@
+using CouchLink.Core.Pads;
 using CouchLink.Core.Protocol;
 using CouchLink.Core.Session;
 using Microsoft.Extensions.Time.Testing;
@@ -19,7 +20,7 @@ public class ClientSessionTests
 
         public void Send(SessionMessage message) => Calls.Add($"send {message}");
         public void Disconnect() => Calls.Add("disconnect");
-        public void StartPlaying(byte slot) => Calls.Add($"play P{slot}");
+        public void StartPlaying(byte slot, PadKind kind) => Calls.Add(kind == PadKind.Xbox360 ? $"play P{slot} Xbox360" : $"play P{slot}");
         public void Ended(string? message) => Calls.Add($"ended {message ?? "(left)"}");
         public void StateChanged() { }
     }
@@ -89,6 +90,7 @@ public class ClientSessionTests
     [InlineData(DenyReason.Full, "Host is full.")]
     [InlineData(DenyReason.TimedOut, "The host didn't answer.")]
     [InlineData(DenyReason.PadFailed, "The host couldn't add a controller for you.")]
+    [InlineData(DenyReason.XboxFull, "Host is full: Xbox 360 sessions take up to 4 players.")]
     public void Each_denial_has_its_message(DenyReason reason, string message)
     {
         _session.Start();
@@ -96,6 +98,29 @@ public class ClientSessionTests
         Calls.Clear();
         _session.Received(SessionMessage.Denied(reason));
         Assert.Equal(["disconnect", $"ended {message}"], Calls);
+    }
+
+    [Fact]
+    public void Accepted_passes_the_pad_kind_on()
+    {
+        _session.Start();
+        _session.Connected();
+        Assert.Equal(PadKind.DualShock4, _session.PadKind);
+        _session.Received(SessionMessage.Accepted(3, PadKind.Xbox360));
+        Assert.Equal("play P3 Xbox360", Calls[^1]);
+        Assert.Equal(PadKind.Xbox360, _session.PadKind);
+    }
+
+    [Fact]
+    public void A_rejoin_with_the_other_pad_kind_is_a_different_host_session()
+    {
+        Playing(4);                                   // DualShock 4
+        _session.Disconnected();                      // reconnecting (see A_dropped_connection_while_playing_reconnects)
+        _session.Connected();
+        Calls.Clear();
+        _session.Received(SessionMessage.Accepted(4, PadKind.Xbox360));
+        Assert.Contains("ended Lost the host.", Calls);
+        Assert.Equal(ClientState.Ended, _session.State);
     }
 
     [Fact]
