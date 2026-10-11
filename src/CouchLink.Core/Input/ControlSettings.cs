@@ -23,7 +23,7 @@ public sealed class ControlSettings
 
     public int SensitivityStep => Volatile.Read(ref _step);
 
-    /// <summary>Stick deflection per mouse count for the current step.</summary>
+    /// <summary>Stick deflection per mouse count per millisecond for the current step.</summary>
     public double Sensitivity => SensitivityFor(SensitivityStep);
 
     public bool InvertY => _invertY;
