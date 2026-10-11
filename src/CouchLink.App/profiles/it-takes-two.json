@@ -1,0 +1,33 @@
+{
+  // It Takes Two's own PC keyboard and mouse keys, each on the DualShock 4
+  // button that does the same thing in the game. The mouse moves the camera
+  // (right stick). Esc is CouchLink's, so pause with Enter.
+  "format": 1,
+  "name": "It Takes Two",
+  "game": "It Takes Two",
+  "sensitivity": 5,
+  "invertY": false,
+  "controls": {
+    "LeftUp":    { "keys": ["W"] },
+    "LeftDown":  { "keys": ["S"] },
+    "LeftLeft":  { "keys": ["A"] },
+    "LeftRight": { "keys": ["D"] },
+    "DpadUp":    { "keys": ["Up"] },
+    "DpadDown":  { "keys": ["Down"] },
+    "DpadLeft":  { "keys": ["Left"] },
+    "DpadRight": { "keys": ["Right"] },
+    "Cross":     { "keys": ["Space"], "label": "Jump" },
+    "Circle":    { "keys": ["LCtrl", "Q"], "label": "Crouch / Cancel" },
+    "Square":    { "keys": ["LShift"], "label": "Dash" },
+    "Triangle":  { "keys": ["E"], "label": "Interact" },
+    "L1":        { "keys": ["R"] },
+    "R1":        { "keys": ["F"], "label": "Swing / Grapple" },
+    "L2":        { "keys": ["RightClick"], "label": "Aim / Secondary" },
+    "R2":        { "keys": ["LeftClick"], "label": "Fire / Primary" },
+    "L3":        { "keys": ["CapsLock"], "label": "Sprint" },
+    "R3":        { "keys": ["MiddleClick"], "label": "Find other player" },
+    "Options":   { "keys": ["Enter"], "label": "Pause" },
+    "Share":     { "keys": ["Backspace"] },
+    "Touchpad":  { "keys": ["Tab"] }
+  }
+}
