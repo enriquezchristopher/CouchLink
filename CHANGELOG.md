@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.0](https://github.com/enriquezchristopher/CouchLink/compare/v2.0.0...v2.1.0) (2026-10-11)
+
+
+### Features
+
+* **app:** ship an It Takes Two profile with the game's own keyboard keys ([30eff6b](https://github.com/enriquezchristopher/CouchLink/commit/30eff6b19887fbe5448fc17867fc6da58916934c))
+* **app:** ship an It Takes Two profile with the game's own keyboard keys ([1b8fd10](https://github.com/enriquezchristopher/CouchLink/commit/1b8fd10347fcc00408206bdff86123ac3f354c29))
+
 ## [2.0.0](https://github.com/enriquezchristopher/CouchLink/compare/v1.12.1...v2.0.0) (2026-10-11)
 
 
