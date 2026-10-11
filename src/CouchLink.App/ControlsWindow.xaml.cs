@@ -535,9 +535,16 @@ internal sealed partial class ControlsWindow : Window
             Bind(control, (ushort)vk);
     }
 
+    /// <summary>
+    /// While listening, a mouse button binds to the row, except a click on the picture: that picks another part,
+    /// so clicking a second button switches what is being changed instead of binding Left click.
+    /// </summary>
+    internal bool MouseDownBinds(object? source) =>
+        source is not DependencyObject d || (d != Pad && !Pad.IsAncestorOf(d));
+
     private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (Listening is not { } control)
+        if (Listening is not { } control || !MouseDownBinds(e.OriginalSource))
             return;
         e.Handled = true;
         Bind(control, e.ChangedButton switch

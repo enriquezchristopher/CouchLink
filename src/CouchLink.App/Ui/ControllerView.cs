@@ -69,8 +69,12 @@ internal sealed class ControllerView : Viewbox
         }
     }
 
+    /// <summary>The editor sends a picture 60 times a second; only a change repaints.</summary>
     public void Show(PadPicture picture)
     {
+        if (picture.Lit.SetEquals(_picture.Lit) && (picture.LeftX, picture.LeftY, picture.RightX, picture.RightY)
+                == (_picture.LeftX, _picture.LeftY, _picture.RightX, _picture.RightY))
+            return;
         _picture = picture;
         Paint();
     }
@@ -80,6 +84,10 @@ internal sealed class ControllerView : Viewbox
     internal bool IsLit(PadControl control) => _parts.ContainsKey(control) && _picture.Lit.Contains(control);
 
     internal string PartName(PadControl control) => AutomationProperties.GetName(_parts[control].Hit);
+
+    internal object? GlowOf(PadControl control) => _parts[control].Content.Effect;
+
+    internal bool IsTabStop(PadControl control) => _parts[control].Hit.IsTabStop;
 
     internal void ClickPart(PadControl control) => _parts[control].Hit.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
 
@@ -193,7 +201,8 @@ internal sealed class ControllerView : Viewbox
         content.RenderTransform = wrap is null ? scale : new TransformGroup { Children = { scale, wrap } };
         var hit = new Button
         {
-            Template = Bare, Content = content, Cursor = Cursors.Hand, FocusVisualStyle = null,
+            // Not a tab stop: keyboard users change keys from the rows below, without tabbing through ~20 parts first.
+            Template = Bare, Content = content, Cursor = Cursors.Hand, FocusVisualStyle = null, IsTabStop = false,
             Margin = new Thickness(0), Padding = new Thickness(0), Background = null,
             Width = _box.Right, Height = _box.Bottom,
         };
@@ -291,11 +300,12 @@ internal sealed class ControllerView : Viewbox
         var slot = Box(442, 124, 72, 10, 5, "ChromeBrush");
         slot.Stroke = null;
         Decor(slot);
-        var chevron = (Brush)FindResource("TextMutedBrush");
-        AddPart(PadControl.Share, "Back, change key", new Point(418, 228), [Face(Box(403, 219, 30, 18, 9))],
-            [Stroke("M422 222 L412 228 L422 234", chevron, 2)]);
-        AddPart(PadControl.Options, "Start, change key", new Point(538, 228), [Face(Box(523, 219, 30, 18, 9))],
-            [Stroke("M534 222 L544 228 L534 234", chevron, 2)]);
+        var back = Stroke("M422 222 L412 228 L422 234", Brushes.Transparent, 2);
+        var start = Stroke("M534 222 L544 228 L534 234", Brushes.Transparent, 2);
+        back.SetResourceReference(Shape.StrokeProperty, "TextMutedBrush"); // follows a theme switch
+        start.SetResourceReference(Shape.StrokeProperty, "TextMutedBrush");
+        AddPart(PadControl.Share, "Back, change key", new Point(418, 228), [Face(Box(403, 219, 30, 18, 9))], [back]);
+        AddPart(PadControl.Options, "Start, change key", new Point(538, 228), [Face(Box(523, 219, 30, 18, 9))], [start]);
         var guideRing = new Ellipse { Width = 54, Height = 54, Stroke = new SolidColorBrush(Color.FromRgb(0x7C, 0xC2, 0x42)), StrokeThickness = 2.5 * _unit };
         Canvas.SetLeft(guideRing, 451);
         Canvas.SetTop(guideRing, 201);
@@ -322,9 +332,27 @@ internal sealed class ControllerView : Viewbox
 
     // ---- state ----
 
+    private static readonly DoubleCollection Dashes = Frozen(new DoubleCollection { 3, 2 });
+    private DropShadowEffect? _glow;
+
+    private static T Frozen<T>(T freezable) where T : Freezable
+    {
+        freezable.Freeze();
+        return freezable;
+    }
+
+    /// <summary>One shared glow, rebuilt only when the theme's colour changes.</summary>
+    private DropShadowEffect Glow()
+    {
+        var color = TryFindResource("PrimaryTextBrush") is SolidColorBrush b ? b.Color : Colors.MediumPurple;
+        if (_glow is null || _glow.Color != color)
+            _glow = Frozen(new DropShadowEffect { ShadowDepth = 0, BlurRadius = 14, Color = color, Opacity = 0.9 });
+        return _glow;
+    }
+
     private void Paint()
     {
-        var glowColor = TryFindResource("PrimaryTextBrush") is SolidColorBrush b ? b.Color : Colors.MediumPurple;
+        var glow = Glow();
         foreach (var part in _parts.Values)
         {
             bool lit = _picture.Lit.Contains(part.Control);
@@ -335,11 +363,11 @@ internal sealed class ControllerView : Viewbox
                     face.SetResourceReference(Shape.FillProperty, lit ? "PrimaryBrush" : part.FillKey);
                 face.SetResourceReference(Shape.StrokeProperty, lit ? "OnPrimaryBrush" : marked ? "PrimaryTextBrush" : "BorderStrongBrush");
                 face.StrokeThickness = (lit || marked ? 2.5 : 1.2) * _unit;
-                face.StrokeDashArray = _outlined == part.Control && !lit ? new DoubleCollection { 3, 2 } : null;
+                face.StrokeDashArray = _outlined == part.Control && !lit ? Dashes : null;
             }
             if (part.TriggerFill is { } fill)
                 fill.Opacity = lit ? 1 : 0;
-            part.Content.Effect = lit ? new DropShadowEffect { ShadowDepth = 0, BlurRadius = 14, Color = glowColor, Opacity = 0.9 } : null;
+            part.Content.Effect = lit ? glow : null;
             double s = lit && !Motion.Reduced ? 0.92 : 1;
             part.Scale.ScaleX = part.Scale.ScaleY = s;
         }

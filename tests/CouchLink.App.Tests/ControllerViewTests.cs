@@ -93,4 +93,29 @@ public class ControllerViewTests
         string d = ControllerShapes.Symmetric((10, 0), [[(0, 0)], [(0, 5), (2, 9), (10, 10)]], cx: 10);
         Assert.Equal("M10 0 L0 0 C0 5 2 9 10 10 C18 9 20 5 20 0 L10 0 Z", d);
     }
+
+    [Fact]
+    public void Showing_the_same_picture_again_repaints_nothing()
+    {
+        Wpf.Run(() =>
+        {
+            var view = View(PadKind.DualShock4);
+            var pressed = PadState.Neutral with { Buttons = PadButtons.Cross };
+            view.Show(PadPicture.From(pressed, PadKind.DualShock4));
+            var glow = view.GlowOf(PadControl.Cross);
+            Assert.NotNull(glow);
+            view.Show(PadPicture.From(pressed, PadKind.DualShock4)); // a new but equal picture, as the 60 Hz preview sends
+            Assert.Same(glow, view.GlowOf(PadControl.Cross));
+        });
+    }
+
+    [Fact]
+    public void Picture_parts_are_not_tab_stops()
+    {
+        Wpf.Run(() =>
+        {
+            var view = View(PadKind.Xbox360);
+            Assert.All(view.Parts, part => Assert.False(view.IsTabStop(part)));
+        });
+    }
 }

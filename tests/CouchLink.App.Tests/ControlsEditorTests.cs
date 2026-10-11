@@ -231,4 +231,15 @@ public class ControlsEditorTests
             Assert.Equal("Press your keys to test them · Click a button to change its key", editor.PadCaption.Text);
         }, PadKind.Xbox360);
     }
+
+    [Fact]
+    public void A_click_on_the_picture_while_listening_switches_instead_of_binding_left_click()
+    {
+        WithEditor(editor =>
+        {
+            Assert.False(editor.MouseDownBinds(editor.Pad));
+            Assert.True(editor.MouseDownBinds(editor.FindBox));
+            Assert.True(editor.MouseDownBinds(null));
+        });
+    }
 }
