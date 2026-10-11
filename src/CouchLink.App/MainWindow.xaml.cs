@@ -80,12 +80,22 @@ public partial class MainWindow : Window, IClientUi
 
     private void ShowHost()
     {
-        var lobby = new HostLobbyView();
+        var setup = new HostSetupView(AppServices.HostSettings.Controller);
+        setup.BackClicked += ShowStart;
+        setup.StartRequested += kind => StartHosting(setup, kind);
+        Show(setup);
+    }
+
+    /// <summary>Start hosting on the setup screen: the lobby on success, otherwise the reason on the setup screen.</summary>
+    private void StartHosting(HostSetupView setup, PadKind kind)
+    {
+        var lobby = new HostLobbyView(kind);
         if (!lobby.TryStart(out var error))
         {
-            ThemedDialog.Alert(this, "Couldn't start hosting", error ?? "Hosting could not start.");
+            setup.ShowError(error ?? "Hosting could not start.");
             return;
         }
+        AppServices.HostSettings.Controller = kind;
         lobby.Stopped += ShowStart;
         Show(lobby);
     }

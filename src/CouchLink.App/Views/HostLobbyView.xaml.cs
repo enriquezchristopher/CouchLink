@@ -15,7 +15,7 @@ namespace CouchLink.App.Views;
 
 /// <summary>
 /// "Hosting on PC-03": stream settings (resolution, frame rate, quality) with a warning when the
-/// network link is too slow, Let everyone in, the players with Kick, Stop hosting (which asks first
+/// network link is too slow, the controller (read-only), Let everyone in, the players with Kick, Stop hosting (which asks first
 /// when players are in), and Stream stats. Owns the <see cref="HostService"/> and the approval popups.
 /// </summary>
 internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
@@ -23,11 +23,14 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
     private readonly DispatcherTimer _details = new() { Interval = TimeSpan.FromMilliseconds(500) };
     private readonly Dictionary<int, ApprovalPopup> _asks = [];
     private HostService? _host;
+    private readonly PadKind _kind;
     private HashSet<byte>? _shownSlots;
 
-    public HostLobbyView()
+    public HostLobbyView(PadKind kind = PadKind.DualShock4)
     {
+        _kind = kind;
         InitializeComponent();
+        ControllerText.Text = $"Controller: {PadKinds.Label(kind)} · up to {PadKinds.Capacity(kind)} players";
         Heading.Text = $"Hosting on {PcName.ThisPc}";
         foreach (var resolution in StreamSettings.Resolutions)
             ResolutionBox.Items.Add(new ComboBoxItem { Content = StreamSettings.Label(resolution), Tag = resolution });
@@ -57,7 +60,7 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
 
     public bool TryStart(out string? error)
     {
-        if (!HostService.TryStart(CurrentSettings(), this, out _host, out error))
+        if (!HostService.TryStart(_kind, CurrentSettings(), this, out _host, out error))
             return false;
         ResolutionBox.SelectionChanged += (_, _) => _host?.ChangeSettings(CurrentSettings());
         FrameRateBox.SelectionChanged += (_, _) => _host?.ChangeSettings(CurrentSettings());
@@ -69,8 +72,8 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
                 _host.AllowEveryone = AllowEveryoneBox.IsChecked == true;
         };
         StopButton.Click += (_, _) => Stop();
-        AppServices.DescribeMode = () => $"Host (virtual pads: {_host?.PadCount ?? 0})";
-        AppServices.Log.Write("Hosting started");
+        AppServices.DescribeMode = () => $"Host ({PadKinds.Label(_kind)}, virtual pads: {_host?.PadCount ?? 0})";
+        AppServices.Log.Write($"Hosting started ({PadKinds.Label(_kind)})");
         RefreshPlayers();
         UpdateDetails();
         _details.Start();
@@ -120,7 +123,7 @@ internal sealed partial class HostLobbyView : UserControl, IHostUi, IDisposable
 
     internal void ShowPlayers(IReadOnlyList<PlayerInfo> players)
     {
-        PlayersHeading.Text = $"PLAYERS {players.Count + 1} / {PadKinds.Capacity(PadKind.DualShock4) + 1}";
+        PlayersHeading.Text = $"PLAYERS {players.Count + 1} / {PadKinds.Capacity(_kind) + 1}";
         // The first time every row comes in; after that only players who just joined do.
         bool first = _shownSlots is null;
         var before = _shownSlots ?? [];

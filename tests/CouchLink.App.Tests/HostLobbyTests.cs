@@ -45,6 +45,19 @@ public class HostLobbyTests
     }
 
     [Fact]
+    public void An_Xbox_lobby_shows_its_controller_and_counts_to_five()
+    {
+        Wpf.Run(() =>
+        {
+            ThemeManager.Install(Application.Current);
+            var lobby = new HostLobbyView(PadKind.Xbox360);
+            lobby.ShowPlayers([]);
+            Assert.Equal("PLAYERS 1 / 5", lobby.PlayersHeading.Text);
+            Assert.Equal("Controller: Xbox 360 · up to 4 players", lobby.ControllerText.Text);
+        });
+    }
+
+    [Fact]
     public void Players_get_their_chip_and_reconnecting_players_a_pill()
     {
         Wpf.Run(() =>

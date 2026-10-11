@@ -1,0 +1,39 @@
+<UserControl x:Class="CouchLink.App.Views.HostSetupView" x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:CouchLink.App.Ui">
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="16,12">
+            <Button x:Name="StartButton" Style="{DynamicResource PrimaryButton}" Content="Start hosting" MinHeight="40" IsDefault="True"
+                    AutomationProperties.AutomationId="StartHosting"/>
+        </Border>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+            <StackPanel Margin="16">
+                <StackPanel Orientation="Horizontal">
+                    <Button x:Name="BackButton" Style="{DynamicResource GhostButton}" Padding="6,0"
+                            AutomationProperties.Name="Back" AutomationProperties.AutomationId="HostSetupBack">
+                        <ui:Glyph Data="{StaticResource IconArrowLeft}" Brush="{DynamicResource PrimaryTextBrush}"/>
+                    </Button>
+                    <TextBlock Text="Host a game" Style="{StaticResource TitleText}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Style="{StaticResource BodyMutedText}" Margin="0,4,0,0" TextWrapping="Wrap"
+                           Text="Pick the controller the game will see. Friends can find this PC once you start hosting."/>
+                <ui:Banner x:Name="ErrorBanner" Kind="Error" Margin="0,12,0,0" Visibility="Collapsed"
+                           AutomationProperties.AutomationId="HostSetupError"/>
+                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                    <StackPanel>
+                        <TextBlock Text="CONTROLLER" Style="{StaticResource OverlineText}"/>
+                        <Border Style="{StaticResource Segmented}" Margin="0,8,0,0">
+                            <Grid>
+                                <ui:SegmentIndicator x:Name="PadKindIndicator"/>
+                                <UniformGrid x:Name="PadKindGroup" Rows="1" AutomationProperties.Name="Controller"/>
+                            </Grid>
+                        </Border>
+                        <TextBlock x:Name="HelpText" Style="{StaticResource CaptionText}" Margin="0,8,0,0" TextWrapping="Wrap"
+                                   AutomationProperties.AutomationId="PadKindHelp"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

@@ -42,6 +42,8 @@
                 <Border Style="{StaticResource Card}" Margin="0,12,0,0">
                     <StackPanel>
                         <TextBlock x:Name="PlayersHeading" Style="{StaticResource OverlineText}"/>
+                        <TextBlock x:Name="ControllerText" Style="{StaticResource CaptionText}" Margin="0,6,0,0"
+                                   AutomationProperties.AutomationId="LobbyController"/>
                         <StackPanel x:Name="PlayerList" Margin="0,8,0,0"/>
                         <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="0,10,0,0">
                             <CheckBox x:Name="AllowEveryoneBox" Style="{DynamicResource ToggleSwitch}"
