@@ -343,6 +343,12 @@ During a game, F1 shows the profile's name and what each button does:
   the profile, and F1 shows them during a game.
 - **Load one from elsewhere:** **Browse…** opens a profile from a USB stick
   or any folder.
+- **Xbox or DualShock names:** a profile file can name the buttons either
+  way: `"A"` or `"Cross"`, `"LB"` or `"L1"`, `"Start"` or `"Options"`, and so
+  on. Either works in both kinds of session, on the button in the same place.
+  **Save as…** writes the names of the session's controller, so a profile
+  saved in an Xbox 360 session says `"A"`, `"LB"`. Xbox 360 has no touchpad,
+  so a `"Touchpad"` key only works in a DualShock 4 session.
 - A profile that doesn't load is left out of the list. The editor (for
   **Browse…**) or the log (for the `profiles` folder) says why, for example
   `"Square": unknown key "Spcae"`.

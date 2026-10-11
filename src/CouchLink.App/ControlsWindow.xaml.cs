@@ -427,7 +427,7 @@ internal sealed partial class ControlsWindow : Window
             return;
 
         var profile = _settings.ToProfile(details.ProfileName, details.Game);
-        if (_store.Write(dialog.FileName, profile) is { } error)
+        if (_store.Write(dialog.FileName, profile, Kind) is { } error) // the session's names: A, LB... for Xbox 360
         {
             ShowError(error);
             return;

@@ -1,4 +1,5 @@
 using CouchLink.Core.Input;
+using CouchLink.Core.Pads;
 
 namespace CouchLink.Core.Tests;
 
@@ -265,5 +266,71 @@ public class ProfileFileTests
         Assert.Contains("\"Num8\"", json);
         Assert.DoesNotContain("\"RightDown\"", json); // no keys, no label: left out
         ProfileAssert.Same(profile, Loaded(json));
+    }
+
+    [Fact]
+    public void Xbox_button_names_load_as_the_same_controls()
+    {
+        var p = Loaded(WithControls(
+            "'A':{'keys':['K']},'B':{'keys':['L']},'X':{'keys':['J']},'Y':{'keys':['I']}," +
+            "'LB':{'keys':['Q']},'RB':{'keys':['E']},'LT':{'keys':['LCtrl']},'RT':{'keys':['LShift']}," +
+            "'LS':{'keys':['F']},'RS':{'keys':['MiddleClick']},'Start':{'keys':['Enter']},'Back':{'keys':['Backspace'],'label':'Menu'}"));
+        Assert.Equal([VirtualKeys.Letter('K')], p.Keys[PadControl.Cross]);
+        Assert.Equal([VirtualKeys.Letter('L')], p.Keys[PadControl.Circle]);
+        Assert.Equal([VirtualKeys.Letter('J')], p.Keys[PadControl.Square]);
+        Assert.Equal([VirtualKeys.Letter('I')], p.Keys[PadControl.Triangle]);
+        Assert.Equal([VirtualKeys.Letter('Q')], p.Keys[PadControl.L1]);
+        Assert.Equal([VirtualKeys.Letter('E')], p.Keys[PadControl.R1]);
+        Assert.Equal([VirtualKeys.LControl], p.Keys[PadControl.L2]);
+        Assert.Equal([VirtualKeys.LShift], p.Keys[PadControl.R2]);
+        Assert.Equal([VirtualKeys.Letter('F')], p.Keys[PadControl.L3]);
+        Assert.Equal([VirtualKeys.MButton], p.Keys[PadControl.R3]);
+        Assert.Equal([VirtualKeys.Return], p.Keys[PadControl.Options]);
+        Assert.Equal([VirtualKeys.Back], p.Keys[PadControl.Share]);
+        Assert.Equal("Menu", p.Labels[PadControl.Share]);
+    }
+
+    [Fact]
+    public void Xbox_and_DualShock_names_mix_in_one_file()
+    {
+        var p = Loaded(WithControls("'A':{'keys':['K']},'L1':{'keys':['Q']}"));
+        Assert.Equal([VirtualKeys.Letter('K')], p.Keys[PadControl.Cross]);
+        Assert.Equal([VirtualKeys.Letter('Q')], p.Keys[PadControl.L1]);
+    }
+
+    [Theory]
+    [InlineData("'A':{'keys':['K']},'Cross':{'keys':['J']}", "Control \"A\" is listed twice")]
+    [InlineData("'A':{'keys':['Spcae']}", "\"A\": unknown key \"Spcae\"")]
+    [InlineData("'LB':{'keys':['K']},'RB':{'keys':['K']}", "\"K\" is on both LB and RB")]
+    public void Errors_use_the_name_written_in_the_file(string controls, string error)
+    {
+        Assert.Equal(error, ProfileFile.Load(WithControls(controls)).Error);
+    }
+
+    [Fact]
+    public void Saving_for_Xbox_writes_Xbox_button_names_and_keeps_the_touchpad()
+    {
+        var profile = new ControlProfile("T", null, 5, false,
+            new Dictionary<PadControl, IReadOnlyList<ushort>>
+            {
+                [PadControl.Cross] = [VirtualKeys.Letter('K')],
+                [PadControl.L1] = [VirtualKeys.Letter('Q')],
+                [PadControl.Options] = [VirtualKeys.Return],
+                [PadControl.Touchpad] = [VirtualKeys.Tab],
+                [PadControl.LeftUp] = [VirtualKeys.Letter('W')],
+            },
+            new Dictionary<PadControl, string> { [PadControl.Cross] = "Pass" });
+
+        string xbox = ProfileFile.Save(profile, PadKind.Xbox360);
+        Assert.Contains("\"A\": {", xbox);
+        Assert.Contains("\"LB\": {", xbox);
+        Assert.Contains("\"Start\": {", xbox);
+        Assert.Contains("\"Touchpad\": {", xbox);
+        Assert.Contains("\"LeftUp\": {", xbox);
+        Assert.DoesNotContain("Cross", xbox);
+        ProfileAssert.Same(profile, Loaded(xbox));
+
+        Assert.Equal(ProfileFile.Save(profile), ProfileFile.Save(profile, PadKind.DualShock4));
+        Assert.Contains("\"Cross\": {", ProfileFile.Save(profile));
     }
 }

@@ -1,5 +1,6 @@
 using System.Text;
 using CouchLink.Core.Input;
+using CouchLink.Core.Pads;
 
 namespace CouchLink.Core.Tests;
 
@@ -127,4 +128,13 @@ public sealed class ProfileStoreTests : IDisposable
     [InlineData("  ...  ", "profile.json")]
     public void Suggested_file_names_are_safe(string name, string file) =>
         Assert.Equal(file, ProfileStore.SuggestedFileName(name));
+
+    [Fact]
+    public void Write_for_Xbox_uses_Xbox_names_and_reads_back_the_same()
+    {
+        string path = Path.Combine(_folder, "xbox.json");
+        Assert.Null(Store().Write(path, Sample("Pad"), PadKind.Xbox360));
+        Assert.Contains("\"A\": {", System.IO.File.ReadAllText(path));
+        ProfileAssert.Same(Sample("Pad"), ProfileStore.Read(path).Profile!);
+    }
 }

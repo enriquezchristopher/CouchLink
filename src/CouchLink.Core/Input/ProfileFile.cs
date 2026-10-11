@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using CouchLink.Core.Pads;
 
 namespace CouchLink.Core.Input;
 
@@ -36,8 +37,23 @@ public static class ProfileFile
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // "Café", not "Café"
     };
 
-    private static readonly Dictionary<string, PadControl> ControlNames =
-        Enum.GetValues<PadControl>().ToDictionary(c => c.ToString(), StringComparer.OrdinalIgnoreCase);
+    /// <summary>Xbox 360 names for the buttons. A file may use them instead of the DualShock 4 names.</summary>
+    private static readonly Dictionary<PadControl, string> XboxNames = new()
+    {
+        [PadControl.Cross] = "A", [PadControl.Circle] = "B", [PadControl.Square] = "X", [PadControl.Triangle] = "Y",
+        [PadControl.L1] = "LB", [PadControl.R1] = "RB", [PadControl.L2] = "LT", [PadControl.R2] = "RT",
+        [PadControl.L3] = "LS", [PadControl.R3] = "RS", [PadControl.Options] = "Start", [PadControl.Share] = "Back",
+    };
+
+    /// <summary>Every name a file may use, to its control and the spelling errors quote it with.</summary>
+    private static readonly Dictionary<string, (PadControl Control, string Name)> ControlNames =
+        Enum.GetValues<PadControl>().Select(c => (Key: c.ToString(), Value: (c, c.ToString())))
+            .Concat(XboxNames.Select(x => (Key: x.Value, Value: (x.Key, x.Value))))
+            .ToDictionary(e => e.Key, e => e.Value, StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>A control's name in a file saved for <paramref name="kind"/>: Xbox 360 names its buttons A, LB, Start...</summary>
+    private static string FileName(PadControl control, PadKind kind) =>
+        kind == PadKind.Xbox360 && XboxNames.TryGetValue(control, out var name) ? name : control.ToString();
 
     public static ProfileResult Load(string json)
     {
@@ -61,7 +77,8 @@ public static class ProfileFile
         }
     }
 
-    public static string Save(ControlProfile profile)
+    /// <summary>The file text. Saved for Xbox 360, buttons use Xbox names; either kind loads in both.</summary>
+    public static string Save(ControlProfile profile, PadKind kind = PadKind.DualShock4)
     {
         var buffer = new ArrayBufferWriter<byte>();
         using (var w = new Utf8JsonWriter(buffer, WriteOptions))
@@ -82,7 +99,7 @@ public static class ProfileFile
                     var label = profile.Labels.GetValueOrDefault(control);
                     if (keys.Count == 0 && label is null)
                         continue;
-                    w.WriteStartObject(control.ToString());
+                    w.WriteStartObject(FileName(control, kind));
                     if (keys.Count > 0)
                     {
                         w.WriteStartArray("keys");
@@ -148,35 +165,36 @@ public static class ProfileFile
 
         var keys = new Dictionary<PadControl, IReadOnlyList<ushort>>();
         var labels = new Dictionary<PadControl, string>();
-        var owners = new Dictionary<ushort, PadControl>();
-        var seen = new HashSet<PadControl>();
+        var owners = new Dictionary<ushort, string>();
+        var seen = new Dictionary<PadControl, string>(); // control -> the name it was first listed under
         foreach (var entry in controls.EnumerateObject())
         {
-            if (!ControlNames.TryGetValue(entry.Name, out var control))
+            if (!ControlNames.TryGetValue(entry.Name, out var named))
                 throw new ProfileException($"Unknown control \"{entry.Name}\"");
-            if (!seen.Add(control))
-                throw new ProfileException($"Control \"{control}\" is listed twice");
+            var (control, listed) = named;
+            if (!seen.TryAdd(control, listed))
+                throw new ProfileException($"Control \"{seen[control]}\" is listed twice");
             if (entry.Value.ValueKind != JsonValueKind.Object)
-                throw new ProfileException($"\"{control}\": must be an object with \"keys\" and \"label\"");
+                throw new ProfileException($"\"{listed}\": must be an object with \"keys\" and \"label\"");
             foreach (var field in entry.Value.EnumerateObject())
             {
                 if (field.Name.Equals("keys", StringComparison.OrdinalIgnoreCase))
-                    ReadKeys(control, field.Value, keys, owners);
+                    ReadKeys(control, listed, field.Value, keys, owners);
                 else if (field.Name.Equals("label", StringComparison.OrdinalIgnoreCase))
-                    ReadLabel(control, field.Value, labels);
+                    ReadLabel(control, listed, field.Value, labels);
                 else
-                    throw new ProfileException($"\"{control}\": unknown field \"{field.Name}\"");
+                    throw new ProfileException($"\"{listed}\": unknown field \"{field.Name}\"");
             }
         }
         return new ControlProfile(name, game, step, invertY, keys, labels);
     }
 
-    private static void ReadKeys(PadControl control, JsonElement value,
-        Dictionary<PadControl, IReadOnlyList<ushort>> keys, Dictionary<ushort, PadControl> owners)
+    private static void ReadKeys(PadControl control, string name, JsonElement value,
+        Dictionary<PadControl, IReadOnlyList<ushort>> keys, Dictionary<ushort, string> owners)
     {
         if (value.ValueKind == JsonValueKind.Null)
             return;
-        string notAList = $"\"{control}\": \"keys\" must be a list of key names";
+        string notAList = $"\"{name}\": \"keys\" must be a list of key names";
         if (value.ValueKind != JsonValueKind.Array)
             throw new ProfileException(notAList);
         var list = new List<ushort>();
@@ -186,27 +204,27 @@ public static class ProfileFile
                 throw new ProfileException(notAList);
             string id = item.GetString()!;
             if (!ProfileKeys.TryParse(id, out ushort vk))
-                throw new ProfileException($"\"{control}\": unknown key \"{id}\"");
+                throw new ProfileException($"\"{name}\": unknown key \"{id}\"");
             if (KeyLayout.IsReserved(vk))
-                throw new ProfileException($"\"{control}\": {KeyNames.Of(vk)} is reserved");
+                throw new ProfileException($"\"{name}\": {KeyNames.Of(vk)} is reserved");
             if (list.Contains(vk))
                 continue;
             if (owners.TryGetValue(vk, out var other))
-                throw new ProfileException($"\"{ProfileKeys.IdOf(vk)}\" is on both {other} and {control}");
-            owners[vk] = control;
+                throw new ProfileException($"\"{ProfileKeys.IdOf(vk)}\" is on both {other} and {name}");
+            owners[vk] = name;
             list.Add(vk);
         }
         if (list.Count > 0)
             keys[control] = list.ToArray();
     }
 
-    private static void ReadLabel(PadControl control, JsonElement value, Dictionary<PadControl, string> labels)
+    private static void ReadLabel(PadControl control, string name, JsonElement value, Dictionary<PadControl, string> labels)
     {
         if (value.ValueKind == JsonValueKind.Null)
             return;
         string? raw = value.ValueKind == JsonValueKind.String ? value.GetString() : null;
         if (raw is null || raw.Contains('\n') || raw.Contains('\r') || raw.Trim().Length > MaxLabelLength)
-            throw new ProfileException($"\"{control}\": label must be up to {MaxLabelLength} characters on one line");
+            throw new ProfileException($"\"{name}\": label must be up to {MaxLabelLength} characters on one line");
         string label = raw.Trim();
         if (label.Length > 0)
             labels[control] = label;
