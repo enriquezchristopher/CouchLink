@@ -181,6 +181,9 @@ game. It ends with a pass or fail line for each controller.
 
 1. Start CouchLink and click **Host a game**.
 2. Pick the **Controller** every player gets, then click **Start hosting**.
+
+   ![The Host a game screen with Xbox 360 picked](images/host-setup.png)
+
    Nothing is shared on the network until you do; the back arrow (or Esc)
    returns to the start screen.
    - **DualShock 4** works with most games, like NBA 2K22. Up to 9 players.
@@ -195,6 +198,10 @@ game. It ends with a pass or fail line for each controller.
    window and start the game.
 
 ![The host lobby](images/host-lobby.png)
+
+With Xbox 360 the lobby says so and counts to 5:
+
+![The host lobby in an Xbox 360 session](images/host-lobby-xbox.png)
 
 ### On each joining PC
 
@@ -290,6 +297,8 @@ The controller at the top is drawn as the session's pad. Press your keys to
 test them: the buttons light up, the triggers fill and the sticks lean, and
 the key caps in the list light up too. Click a button on the picture to change
 its key.
+
+![The controls editor in an Xbox 360 session, with A and LB held](images/controls-xbox.png)
 
 - Click a control, then press the key or mouse button for it. Mouse side
   buttons work too. Esc cancels.
