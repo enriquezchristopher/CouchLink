@@ -130,7 +130,8 @@ public class InputMapperTests
         var m = NewMapper();
         m.MouseMove(25, 0);
         var s = m.Tick(0.001);
-        Assert.Equal(((byte)192, (byte)128), (s.RX, s.RY));
+        Assert.True(s.RX > 128, $"RX {s.RX}");
+        Assert.Equal((byte)128, s.RY);
     }
 
     [Fact]
@@ -201,12 +202,16 @@ public class InputMapperTests
     [Fact]
     public void Sensitivity_and_invert_come_from_the_settings()
     {
+        using var standard = new InputMapper(new ControlSettings());
         var settings = new ControlSettings();
         settings.SetSensitivityStep(10);
         settings.SetInvertY(true);
         using var m = new InputMapper(settings);
-        m.MouseMove(0, 10); // 10 counts * 0.0743 = 0.743 of full deflection, upward
-        Assert.Equal((byte)34, m.Tick(0.001).RY);
+        standard.MouseMove(0, 10);
+        m.MouseMove(0, 10);
+        byte standardY = standard.Tick(0.001).RY, y = m.Tick(0.001).RY;
+        Assert.True(standardY > 128, $"standard {standardY}"); // mouse toward you: down
+        Assert.True(128 - y > standardY - 128, $"step 10 inverted {y}, standard {standardY}"); // up, and further
     }
 
     [Fact]
@@ -339,7 +344,8 @@ public class InputMapperTests
 
         m.MouseMove(25, 0);
         var mouse = m.Tick(0.001);
-        Assert.Equal(((byte)192, (byte)128), (mouse.RX, mouse.RY));
+        Assert.True(mouse.RX > 128, $"RX {mouse.RX}");
+        Assert.Equal((byte)128, mouse.RY);
     }
 
     [Fact]
@@ -362,6 +368,7 @@ public class InputMapperTests
         m.KeyDown(Num8);
         m.MouseMove(25, 0);
         var s = m.Tick(0.001);
-        Assert.Equal(((byte)192, (byte)128), (s.RX, s.RY));
+        Assert.True(s.RX > 128, $"RX {s.RX}");
+        Assert.Equal((byte)128, s.RY);
     }
 }

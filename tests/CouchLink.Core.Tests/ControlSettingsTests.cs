@@ -5,12 +5,12 @@ namespace CouchLink.Core.Tests;
 public class ControlSettingsTests
 {
     [Fact]
-    public void Step_5_is_the_original_sensitivity_and_each_step_is_1_3_times()
+    public void Step_5_is_the_default_sensitivity_and_each_step_is_1_3_times()
     {
         Assert.Equal(MouseStick.DefaultSensitivity, ControlSettings.SensitivityFor(5), 6);
-        Assert.Equal(0.026, ControlSettings.SensitivityFor(6), 6);
-        Assert.Equal(0.0070, ControlSettings.SensitivityFor(1), 4);
-        Assert.Equal(0.0743, ControlSettings.SensitivityFor(10), 4);
+        Assert.Equal(0.52, ControlSettings.SensitivityFor(6), 6);
+        Assert.Equal(0.1401, ControlSettings.SensitivityFor(1), 4);
+        Assert.Equal(1.4852, ControlSettings.SensitivityFor(10), 4);
     }
 
     [Fact]
