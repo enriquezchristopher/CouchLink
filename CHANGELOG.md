@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/enriquezchristopher/CouchLink/compare/v2.1.0...v2.1.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* **input:** drive the right stick from mouse speed so camera moves are smooth ([e1d1ddd](https://github.com/enriquezchristopher/CouchLink/commit/e1d1ddd311b7569d0d0a6497c6d941b8b13dcdf4))
+
 ## [2.1.0](https://github.com/enriquezchristopher/CouchLink/compare/v2.0.0...v2.1.0) (2026-10-11)
 
 
